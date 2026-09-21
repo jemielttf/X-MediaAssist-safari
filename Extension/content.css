@@ -21,8 +21,14 @@ article[data-testid="tweet"] .xma-controls:not([data-post-id]) { display: none; 
 	padding: 4px 12px;
 	font: inherit;
 	cursor: pointer;
+	transition: all 0.3s ease-out;
 }
-.xma-save:hover { background: rgba(127, 127, 127, .15); }
+.xma-save:hover {
+	color: #fff;
+	background: #1d9bf0;
+	border-color: #1d9bf0;
+	transition: all 0.15s ease-in-out;
+}
 .xma-save:focus-visible { outline: 3px solid #1d9bf0; outline-offset: 3px; }
 .xma-save:disabled { opacity: .6; cursor: progress; }
 .xma-status { white-space: pre-line; overflow-wrap: anywhere; margin-block: 0.5em; }

@@ -2,7 +2,7 @@
 	"manifest_version": 3,
 	"name": "X Media Assist",
 	"version": "0.2.0",
-	"description": "公開Xポストの動画をMP4、GIF投稿をGIFとしてダウンロードフォルダへ保存します。",
+	"description": "Xに投稿された動画をMP4に、GIFアニメをGIFとしてダウンロードフォルダへ保存します。",
 	"permissions": ["nativeMessaging", "activeTab"],
 	"host_permissions": ["https://cdn.syndication.twimg.com/*"],
 	"background": { "scripts": ["core.js", "background.js"] },
@@ -25,7 +25,7 @@
 		"default_icon": "X-Media-Assist_toolbar-icon.svg"
 	},
 	"icons": {
-		"16": "XX-Media-Assist-iOS-Default-16@1x.png",
+		"16": "X-Media-Assist-iOS-Default-16@1x.png",
 		"32": "X-Media-Assist-iOS-Default-32@1x.png",
 		"128": "X-Media-Assist-iOS-Default-128@1x.png"
 	}

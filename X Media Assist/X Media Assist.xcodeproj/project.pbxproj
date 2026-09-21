@@ -19,6 +19,7 @@
 		BF5954893061A3FE005860FA /* X-Media-Assist-iOS-Default-128@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = BF5954883061A3FE005860FA /* X-Media-Assist-iOS-Default-128@1x.png */; };
 		BF59548A3061A3FE005860FA /* X-Media-Assist-iOS-Default-16@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = BF5954863061A3FE005860FA /* X-Media-Assist-iOS-Default-16@1x.png */; };
 		BF59548B3061A3FE005860FA /* X-Media-Assist-iOS-Default-32@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = BF5954873061A3FE005860FA /* X-Media-Assist-iOS-Default-32@1x.png */; };
+		BF59548D3061B696005860FA /* X-Media-Assist-iOS-Default-128@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = BF59548C3061B696005860FA /* X-Media-Assist-iOS-Default-128@1x.png */; };
 		BFF2F2D43061180500D8D517 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF2F2D33061180500D8D517 /* AppDelegate.swift */; };
 		BFF2F2D83061180500D8D517 /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F2D63061180500D8D517 /* Main.html */; };
 		BFF2F2DA3061180500D8D517 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F2D93061180500D8D517 /* Icon.png */; };
@@ -72,6 +73,7 @@
 		BF5954863061A3FE005860FA /* X-Media-Assist-iOS-Default-16@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "X-Media-Assist-iOS-Default-16@1x.png"; sourceTree = "<group>"; };
 		BF5954873061A3FE005860FA /* X-Media-Assist-iOS-Default-32@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "X-Media-Assist-iOS-Default-32@1x.png"; sourceTree = "<group>"; };
 		BF5954883061A3FE005860FA /* X-Media-Assist-iOS-Default-128@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "X-Media-Assist-iOS-Default-128@1x.png"; sourceTree = "<group>"; };
+		BF59548C3061B696005860FA /* X-Media-Assist-iOS-Default-128@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "X-Media-Assist-iOS-Default-128@1x.png"; path = "../Extension/images/X-Media-Assist-iOS-Default-128@1x.png"; sourceTree = SOURCE_ROOT; };
 		BFF2F2D03061180500D8D517 /* X Media Assist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "X Media Assist.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BFF2F2D33061180500D8D517 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		BFF2F2D73061180500D8D517 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
@@ -162,6 +164,7 @@
 				BFF2F2DB3061180500D8D517 /* Style.css */,
 				BFF2F2DD3061180500D8D517 /* Script.js */,
 				BF5954833061A1FA005860FA /* X-Media-Assist.icon */,
+				BF59548C3061B696005860FA /* X-Media-Assist-iOS-Default-128@1x.png */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -281,6 +284,7 @@
 				BFF2F2E33061180500D8D517 /* Main.storyboard in Resources */,
 				BF5954853061A1FA005860FA /* X-Media-Assist.icon in Resources */,
 				BFF2F2DE3061180500D8D517 /* Script.js in Resources */,
+				BF59548D3061B696005860FA /* X-Media-Assist-iOS-Default-128@1x.png in Resources */,
 				BFF2F2D83061180500D8D517 /* Main.html in Resources */,
 				BFF2F2E53061180600D8D517 /* Assets.xcassets in Resources */,
 				BFF2F2DC3061180500D8D517 /* Style.css in Resources */,
