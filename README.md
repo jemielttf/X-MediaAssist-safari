@@ -50,6 +50,16 @@ Bundle Identifierを変更した後は、Safariを通常終了して起動し直
 ./script/test.sh                        # Node + Swiftの隔離テスト
 ```
 
+## メニューバーと起動設定
+
+起動中はメニューバーにX Media Assistのアイコンが表示されます。ウインドウを閉じても常駐し、アイコンのメニューから再表示・終了できます。
+
+- **Dockに表示しない**：切り替えはすぐに反映され、次回起動時にも引き継ぎます。初期状態はDockに表示します。
+- **ログイン時に起動する**：macOSの `SMAppService.mainApp` で登録・解除します。初期状態は未登録で、システム設定側での変更もメニューを開くたびに反映します。承認が必要な場合は「承認待ち」と表示し、ログイン項目のシステム設定へのメニューを表示します。
+- ログイン時の起動では案内ウインドウを隠し、メニューバーから操作できます。通常の手動起動では案内ウインドウを表示します。
+
+ログイン時起動を使う場合は、アプリを継続利用する場所（例：`/Applications`）に置いてから有効にしてください。
+
 ## 構成
 
 | 場所 | 責務 |
@@ -58,6 +68,7 @@ Bundle Identifierを変更した後は、Safariを通常終了して起動し直
 | `Extension/core.js` | URL検証、Syndication解析、MP4選択、保存の順序制御 |
 | `Extension/background.js` | メッセージ送信元確認、同時実行制御、nativeMessaging |
 | `Extension/popup.*` | URL指定の保存UI |
+| `AppSupport/AppPreferences.swift` | Dock表示の設定保存、ログイン項目の登録・解除 |
 | `Native/GIFConverter.swift` | AVFoundationでフレーム抽出、libgifski C APIでGIF生成 |
 | `Native/MediaSave.swift` | 形式の分岐、GIF失敗時のMP4保持 |
 | `Native/MediaDownload.swift` | URLSessionでストリーム保存、応答検証、上書きしない公開処理 |

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A20000000000000000000001 /* AppPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* AppPreferences.swift */; };
+		A20000000000000000000003 /* X-Media-Assist_toolbar-icon.svg in Resources */ = {isa = PBXBuildFile; fileRef = BF59547B306195A2005860FA /* X-Media-Assist_toolbar-icon.svg */; };
 		A10000000000000000000001 /* MediaDownload.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* MediaDownload.swift */; };
 		A10000000000000000000005 /* GIFConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* GIFConverter.swift */; };
 		A10000000000000000000006 /* MediaSave.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* MediaSave.swift */; };
@@ -63,6 +65,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A20000000000000000000002 /* AppPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppPreferences.swift; path = ../../AppSupport/AppPreferences.swift; sourceTree = "<group>"; };
 		A10000000000000000000002 /* MediaDownload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaDownload.swift; path = ../../Native/MediaDownload.swift; sourceTree = "<group>"; };
 		A10000000000000000000003 /* GIFConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GIFConverter.swift; path = ../../Native/GIFConverter.swift; sourceTree = "<group>"; };
 		A10000000000000000000004 /* MediaSave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaSave.swift; path = ../../Native/MediaSave.swift; sourceTree = "<group>"; };
@@ -147,6 +150,7 @@
 			isa = PBXGroup;
 			children = (
 				BFF2F2D33061180500D8D517 /* AppDelegate.swift */,
+				A20000000000000000000002 /* AppPreferences.swift */,
 				BFF2F2DF3061180500D8D517 /* ViewController.swift */,
 				BFF2F2E13061180500D8D517 /* Main.storyboard */,
 				BFF2F2E43061180600D8D517 /* Assets.xcassets */,
@@ -279,6 +283,7 @@
 		BFF2F2CE3061180500D8D517 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
+				A20000000000000000000003 /* X-Media-Assist_toolbar-icon.svg in Resources */,
 				A10000000000000000000008 /* Licenses in Resources */,
 				BFF2F2DA3061180500D8D517 /* Icon.png in Resources */,
 				BFF2F2E33061180500D8D517 /* Main.storyboard in Resources */,
@@ -331,6 +336,7 @@
 		BFF2F2CC3061180500D8D517 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
+				A20000000000000000000001 /* AppPreferences.swift in Sources */,
 				BFF2F2E03061180500D8D517 /* ViewController.swift in Sources */,
 				BFF2F2D43061180500D8D517 /* AppDelegate.swift in Sources */,
 			);
@@ -499,7 +505,7 @@
 				CODE_SIGN_ENTITLEMENTS = "X Media Assist Extension/Extension.entitlements";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 2NA8B6X498;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -516,7 +522,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../build/gifski-universal";
 				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -543,7 +549,7 @@
 				CODE_SIGN_ENTITLEMENTS = "X Media Assist Extension/Extension.entitlements";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 2NA8B6X498;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -560,7 +566,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../build/gifski-universal";
 				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -589,7 +595,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 2NA8B6X498;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -607,7 +613,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -635,7 +641,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 2NA8B6X498;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -653,7 +659,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
