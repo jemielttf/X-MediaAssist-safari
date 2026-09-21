@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A20000000000000000000001 /* AppPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* AppPreferences.swift */; };
-		A20000000000000000000003 /* X-Media-Assist_toolbar-icon.svg in Resources */ = {isa = PBXBuildFile; fileRef = BF59547B306195A2005860FA /* X-Media-Assist_toolbar-icon.svg */; };
 		A10000000000000000000001 /* MediaDownload.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* MediaDownload.swift */; };
 		A10000000000000000000005 /* GIFConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* GIFConverter.swift */; };
 		A10000000000000000000006 /* MediaSave.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* MediaSave.swift */; };
 		A10000000000000000000008 /* Licenses in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010 /* Licenses */; };
 		A10000000000000000000009 /* Licenses in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010 /* Licenses */; };
+		A20000000000000000000001 /* AppPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* AppPreferences.swift */; };
+		A20000000000000000000003 /* X-Media-Assist_toolbar-icon.svg in Resources */ = {isa = PBXBuildFile; fileRef = BF59547B306195A2005860FA /* X-Media-Assist_toolbar-icon.svg */; };
 		BF595481306195A2005860FA /* X-Media-Assist.svg in Resources */ = {isa = PBXBuildFile; fileRef = BF595476306195A2005860FA /* X-Media-Assist.svg */; };
 		BF595482306195A2005860FA /* X-Media-Assist_toolbar-icon.svg in Resources */ = {isa = PBXBuildFile; fileRef = BF59547B306195A2005860FA /* X-Media-Assist_toolbar-icon.svg */; };
 		BF5954843061A1FA005860FA /* X-Media-Assist.icon in Resources */ = {isa = PBXBuildFile; fileRef = BF5954833061A1FA005860FA /* X-Media-Assist.icon */; };
@@ -65,11 +65,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		A20000000000000000000002 /* AppPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppPreferences.swift; path = ../../AppSupport/AppPreferences.swift; sourceTree = "<group>"; };
 		A10000000000000000000002 /* MediaDownload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaDownload.swift; path = ../../Native/MediaDownload.swift; sourceTree = "<group>"; };
 		A10000000000000000000003 /* GIFConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GIFConverter.swift; path = ../../Native/GIFConverter.swift; sourceTree = "<group>"; };
 		A10000000000000000000004 /* MediaSave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaSave.swift; path = ../../Native/MediaSave.swift; sourceTree = "<group>"; };
 		A10000000000000000000010 /* Licenses */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Licenses; path = ../Licenses; sourceTree = SOURCE_ROOT; };
+		A20000000000000000000002 /* AppPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppPreferences.swift; path = ../../AppSupport/AppPreferences.swift; sourceTree = "<group>"; };
 		BF595476306195A2005860FA /* X-Media-Assist.svg */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "X-Media-Assist.svg"; sourceTree = "<group>"; };
 		BF59547B306195A2005860FA /* X-Media-Assist_toolbar-icon.svg */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "X-Media-Assist_toolbar-icon.svg"; sourceTree = "<group>"; };
 		BF5954833061A1FA005860FA /* X-Media-Assist.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "X-Media-Assist.icon"; sourceTree = "<group>"; };
@@ -511,6 +511,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = NO;
+				EXCLUDED_ARCHS = x86_64;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "X Media Assist Extension/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "X Media Assist Extension";
@@ -555,6 +556,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = NO;
+				EXCLUDED_ARCHS = x86_64;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "X Media Assist Extension/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "X Media Assist Extension";
@@ -601,6 +603,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_USER_SELECTED_FILES = NO;
+				EXCLUDED_ARCHS = x86_64;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "X Media Assist/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "X Media Assist";
@@ -647,6 +650,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_USER_SELECTED_FILES = NO;
+				EXCLUDED_ARCHS = x86_64;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "X Media Assist/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "X Media Assist";
