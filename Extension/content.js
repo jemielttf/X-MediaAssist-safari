@@ -37,7 +37,7 @@
       button.type = "button";
       button.className = "xma-save";
       button.textContent = "↓ 動画を保存";
-      button.title = "このポストの動画をMP4、GIF投稿をGIFで保存";
+      button.title = "この投稿の動画はMP4、GIFアニメはGIFで保存";
       const status = document.createElement("span");
       status.className = "xma-status";
       status.setAttribute("role", "status");

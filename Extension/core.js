@@ -33,8 +33,8 @@
     return m ? Number(m[1]) * Number(m[2]) : 0;
   }
   function extractMedia(data, postId) {
-    if (!isPostId(postId) || !data || data.id_str !== postId) throw new Error("公開ポストを取得できません。削除・非公開・閲覧制限、またはX側の変更が考えられます。");
-    if (!Array.isArray(data.mediaDetails)) throw new Error("このポストから保存できるMP4が見つかりません。引用ポストは引用元を開いてください。");
+    if (!isPostId(postId) || !data || data.id_str !== postId) throw new Error("投稿情報を取得できません。削除・非公開・閲覧制限、またはX側の変更が考えられます。");
+    if (!Array.isArray(data.mediaDetails)) throw new Error("この投稿から保存できる動画やGIFアニメが見つかりません。引用した投稿の動画は、引用元を開いて保存してください。");
     const author = /^[A-Za-z0-9_]{1,15}$/.test(data.user?.screen_name ?? "") ? data.user.screen_name : "x";
     const result = [];
     for (const [index, media] of data.mediaDetails.entries()) {
@@ -45,7 +45,7 @@
       if (!variants.length) throw new Error(`メディア${index + 1}に直接保存できるMP4がありません（ライブ配信・HLSは対象外です）。`);
       result.push({ postId, author, mediaIndex: index + 1, mediaType: media.type, url: variants[0].url });
     }
-    if (!result.length) throw new Error("このポストには動画またはGIF投稿がありません。");
+    if (!result.length) throw new Error("この投稿には動画またはGIFアニメがありません。");
     if (result.length > 4) throw new Error("未対応のメディア構成です。");
     return result;
   }
@@ -81,7 +81,7 @@
         });
       } catch { throw new Error("投稿情報に接続できません。通信状態とSafariの拡張機能のサイト権限を確認してください。"); }
       if (response.status === 429) throw new Error("Xの取得回数制限に達しました。時間を置いて再試行してください。");
-      if (!response.ok) throw new Error(`公開ポストを取得できませんでした（HTTP ${response.status}）。`);
+      if (!response.ok) throw new Error(`投稿情報を取得できませんでした（HTTP ${response.status}）。`);
       let data;
       try { data = await response.json(); } catch { throw new Error("Xからの応答を読み取れませんでした。"); }
       const media = extractMedia(data, postId);

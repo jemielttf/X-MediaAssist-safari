@@ -7,12 +7,12 @@ enum MediaDownloadError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidRequest: return "保存リクエストが正しくありません。"
-        case .invalidResponse: return "MP4配信サーバーからの応答が正しくありません。"
-        case .tooLarge: return "MVPの保存上限（1 GiB）を超えています。"
+        case .invalidResponse: return "動画配信サーバーからの応答が正しくありません。"
+        case .tooLarge: return "保存できるファイルサイズの上限を超えています。"
         case .invalidMP4: return "取得したファイルはMP4として確認できませんでした。"
         case .busy: return "保存処理中です。完了してから再試行してください。"
         case .writeFailed: return "ファイルを保存できません。空き容量とダウンロードフォルダへのアクセスを確認してください。"
-        case .http(let code): return "MP4を取得できませんでした（HTTP \(code)）。"
+        case .http(let code): return "動画を取得できませんでした（HTTP \(code)）。"
         }
     }
 }
