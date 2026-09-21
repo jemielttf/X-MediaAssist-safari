@@ -34,9 +34,9 @@ private final class GIFOutput {
     private let lock = NSLock()
     private var bytes = 0
     private var failure: Error?
-    init(file: FileHandle, limits: GIFConversionLimits) {
+    init(file: FileHandle, limits: GIFConversionLimits, deadline: TimeInterval) {
         self.file = file
-        deadline = ProcessInfo.processInfo.systemUptime + limits.maximumSeconds
+        self.deadline = deadline
         limit = limits.maximumOutputBytes
     }
     func check() throws {
@@ -55,23 +55,88 @@ private final class GIFOutput {
     }
 }
 
+// AVAssetTrack is not Sendable in the current SDK. Metadata loading completes
+// before this one-way handoff; only encodingQueue accesses these objects afterward.
+// Remove this narrow conformance when AVAssetTrack gains SDK Sendable support.
+private struct GIFVideoSource: @unchecked Sendable {
+    let asset: AVAsset
+    let track: AVAssetTrack
+    let duration: Double
+    let size: CGSize
+    let transform: CGAffineTransform
+}
+
 struct GIFConverter {
     private static let slot = DispatchSemaphore(value: 1)
 
-    static func convert(_ input: URL, to output: URL, limits: GIFConversionLimits = .init()) throws {
-        guard slot.wait(timeout: .now()) == .success else { throw GIFConversionError.busy }
+    private static let encodingQueue = DispatchQueue(label: "XMediaAssist.GIFEncoding", qos: .userInitiated)
+
+    private static func reserveSlot() -> Bool {
+        // Immediate try-acquire only: this never blocks a cooperative executor thread.
+        slot.wait(timeout: .now()) == .success
+    }
+
+    // Cancel AVFoundation loading on timeout, and wait for the loading task to exit
+    // before releasing its asset or the conversion slot. The timer is also joined.
+    static func withMetadataDeadline<Value: Sendable>(
+        _ deadline: TimeInterval,
+        cancelLoading: @escaping @Sendable () -> Void,
+        load: @escaping @Sendable () async throws -> Value
+    ) async throws -> Value {
+        let remaining = deadline - ProcessInfo.processInfo.systemUptime
+        guard remaining > 0 else { throw GIFConversionError.timedOut }
+        let value = try await withTaskCancellationHandler {
+            try await withThrowingTaskGroup(of: Value.self) { group in
+                group.addTask { try await load() }
+                group.addTask {
+                    try await Task.sleep(for: .seconds(max(0, deadline - ProcessInfo.processInfo.systemUptime)))
+                    cancelLoading()
+                    throw GIFConversionError.timedOut
+                }
+                defer { group.cancelAll() }
+                do { return try await group.next()! }
+                catch {
+                    if ProcessInfo.processInfo.systemUptime >= deadline { throw GIFConversionError.timedOut }
+                    throw error
+                }
+            }
+        } onCancel: { cancelLoading() }
+        guard ProcessInfo.processInfo.systemUptime < deadline else { throw GIFConversionError.timedOut }
+        return value
+    }
+
+    static func convert(_ input: URL, to output: URL, limits: GIFConversionLimits = .init()) async throws {
+        guard reserveSlot() else { throw GIFConversionError.busy }
         defer { slot.signal() }
+        let deadline = ProcessInfo.processInfo.systemUptime + limits.maximumSeconds
         let inputSize = try input.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
         guard inputSize <= limits.maximumInputBytes else { throw GIFConversionError.limit }
         let asset = AVURLAsset(url: input)
-        guard let track = asset.tracks(withMediaType: .video).first else { throw GIFConversionError.unsupported }
-        let duration = track.timeRange.duration.seconds
-        let size = track.naturalSize
+        let source = try await withMetadataDeadline(deadline, cancelLoading: { asset.cancelLoading() }) {
+            guard let track = try await asset.loadTracks(withMediaType: .video).first else { throw GIFConversionError.unsupported }
+            let (timeRange, size, transform) = try await track.load(.timeRange, .naturalSize, .preferredTransform)
+            return GIFVideoSource(asset: asset, track: track, duration: timeRange.duration.seconds, size: size, transform: transform)
+        }
+        let duration = source.duration, size = source.size
         guard duration.isFinite, duration > 0, size.width > 0, size.height > 0 else { throw GIFConversionError.unsupported }
         guard duration <= limits.maximumDuration, size.width * size.height <= Double(limits.maximumPixels) else { throw GIFConversionError.limit }
+        // The encoder has blocking C calls; keep them off Swift's cooperative executor.
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            encodingQueue.async {
+                do {
+                    try encode(asset: source.asset, track: source.track, duration: duration, transform: source.transform, to: output, limits: limits, deadline: deadline)
+                    continuation.resume()
+                } catch { continuation.resume(throwing: error) }
+            }
+        }
+    }
+
+    private static func encode(asset: AVAsset, track: AVAssetTrack, duration: Double,
+                               transform: CGAffineTransform, to output: URL, limits: GIFConversionLimits, deadline: TimeInterval) throws {
+        guard ProcessInfo.processInfo.systemUptime < deadline else { throw GIFConversionError.timedOut }
         guard FileManager.default.createFile(atPath: output.path, contents: nil, attributes: [.posixPermissions: 0o600]) else { throw GIFConversionError.encoding }
         let file = try FileHandle(forWritingTo: output)
-        let state = GIFOutput(file: file, limits: limits)
+        let state = GIFOutput(file: file, limits: limits, deadline: deadline)
         var completed = false
         defer {
             try? file.close()
@@ -133,7 +198,6 @@ struct GIFConverter {
         let color = CGColorSpace(name: CGColorSpace.sRGB)!
         var index = 0
         var decodedStart: Double?
-        let transform = track.preferredTransform
         while let sample = frames.copyNextSampleBuffer() {
             if CMSampleBufferGetNumSamples(sample) == 0 { continue }
             try state.check()

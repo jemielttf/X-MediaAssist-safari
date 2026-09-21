@@ -11,7 +11,7 @@ final class GIFConversionTests: XCTestCase {
         return url
     }
 
-    func makeVideo(_ url: URL, rotated: Bool = false, times: [Double] = [0, 0.1, 0.2, 0.3], duration: Double = 0.4) throws {
+    func makeVideo(_ url: URL, rotated: Bool = false, times: [Double] = [0, 0.1, 0.2, 0.3], duration: Double = 0.4) async throws {
         let writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
         let input = AVAssetWriterInput(mediaType: .video, outputSettings: [AVVideoCodecKey: AVVideoCodecType.h264, AVVideoWidthKey: 64, AVVideoHeightKey: 32])
         if rotated { input.transform = CGAffineTransform(a: 0, b: 1, c: -1, d: 0, tx: 32, ty: 0) }
@@ -21,7 +21,7 @@ final class GIFConversionTests: XCTestCase {
         writer.startSession(atSourceTime: .zero)
         for frame in times.indices {
             let deadline = Date().addingTimeInterval(5)
-            while !input.isReadyForMoreMediaData && Date() < deadline { Thread.sleep(forTimeInterval: 0.001) }
+            while !input.isReadyForMoreMediaData && Date() < deadline { try await Task.sleep(nanoseconds: 1_000_000) }
             XCTAssertTrue(input.isReadyForMoreMediaData)
             var buffer: CVPixelBuffer?
             XCTAssertEqual(CVPixelBufferPoolCreatePixelBuffer(nil, adaptor.pixelBufferPool!, &buffer), kCVReturnSuccess)
@@ -43,15 +43,15 @@ final class GIFConversionTests: XCTestCase {
         input.markAsFinished()
         let finished = expectation(description: "video encoded")
         writer.finishWriting { finished.fulfill() }
-        wait(for: [finished], timeout: 10)
+        await fulfillment(of: [finished], timeout: 10)
         XCTAssertEqual(writer.status, .completed, "\(String(describing: writer.error))")
     }
 
-    func testRealEncoderPreservesFramesTimingLoopAndOrientation() throws {
+    func testRealEncoderPreservesFramesTimingLoopAndOrientation() async throws {
         for rotated in [false, true] {
             let folder = try directory(), input = folder.appendingPathComponent("input.mp4"), output = folder.appendingPathComponent("output.gif")
-            try makeVideo(input, rotated: rotated)
-            try GIFConverter.convert(input, to: output)
+            try await makeVideo(input, rotated: rotated)
+            try await GIFConverter.convert(input, to: output)
             let source = try XCTUnwrap(CGImageSourceCreateWithURL(output as CFURL, nil))
             XCTAssertEqual(CGImageSourceGetCount(source), 4)
             let image = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil))
@@ -75,9 +75,9 @@ final class GIFConversionTests: XCTestCase {
         }
     }
 
-    func testLimitsTimeoutAndOutputFailureLeaveNoPartialGIF() throws {
+    func testLimitsTimeoutAndOutputFailureLeaveNoPartialGIF() async throws {
         let folder = try directory(), input = folder.appendingPathComponent("input.mp4")
-        try makeVideo(input)
+        try await makeVideo(input)
         var cases = [GIFConversionLimits]()
         var limits = GIFConversionLimits(); limits.maximumDuration = 0.1; cases.append(limits)
         limits = .init(); limits.maximumFrames = 2; cases.append(limits)
@@ -87,42 +87,90 @@ final class GIFConversionTests: XCTestCase {
         limits = .init(); limits.maximumSeconds = 0; cases.append(limits)
         for limits in cases {
             let output = folder.appendingPathComponent("failed.gif")
-            XCTAssertThrowsError(try GIFConverter.convert(input, to: output, limits: limits))
+            do {
+                try await GIFConverter.convert(input, to: output, limits: limits)
+                XCTFail("Conversion should reject this limit")
+            } catch { /* Expected: input limits or encoding failure. */ }
             XCTAssertFalse(FileManager.default.fileExists(atPath: output.path))
         }
+    }
+
+    func testMetadataTimeoutCancelsLoadingAndWaitsForCleanup() async throws {
+        let cancelled = expectation(description: "asset loading cancelled")
+        let started = expectation(description: "loading started")
+        let cleanedUp = expectation(description: "loading cleanup finished")
+        let deadline = ProcessInfo.processInfo.systemUptime + 0.1
+        do {
+            let _: Int = try await GIFConverter.withMetadataDeadline(deadline, cancelLoading: { cancelled.fulfill() }) {
+                started.fulfill()
+                defer { cleanedUp.fulfill() }
+                try await Task.sleep(for: .seconds(10))
+                return 1
+            }
+            XCTFail("Metadata loading must time out")
+        } catch GIFConversionError.timedOut { /* Expected. */ }
+        await fulfillment(of: [started, cancelled, cleanedUp], timeout: 0.1)
+    }
+
+    func testCompletedMetadataLoadDisarmsTimeout() async throws {
+        let cancelled = expectation(description: "finished loading must not be cancelled")
+        cancelled.isInverted = true
+        let deadline = ProcessInfo.processInfo.systemUptime + 0.05
+        let value = try await GIFConverter.withMetadataDeadline(deadline, cancelLoading: { cancelled.fulfill() }) { 42 }
+        XCTAssertEqual(value, 42)
+        await fulfillment(of: [cancelled], timeout: 0.1)
+    }
+
+    func testExpiredConversionBudgetLeavesNoFileAndReleasesSlot() async throws {
+        let folder = try directory(), input = folder.appendingPathComponent("input.mp4")
+        let output = folder.appendingPathComponent("output.gif")
+        try await makeVideo(input)
+        var limits = GIFConversionLimits()
+        limits.maximumSeconds = 0
+        do {
+            try await GIFConverter.convert(input, to: output, limits: limits)
+            XCTFail("Expired budget must time out")
+        } catch GIFConversionError.timedOut { /* Expected. */ }
+        XCTAssertFalse(FileManager.default.fileExists(atPath: output.path))
+        try await GIFConverter.convert(input, to: output)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: output.path))
     }
 
     func request(type: String = "animated_gif", format: String = "auto") throws -> MediaDownloadRequest {
         try MediaDownloadRequest(message: ["type": "download", "url": "https://video.twimg.com/a.mp4", "postId": "123", "author": "example", "mediaIndex": 1, "mediaType": type, "format": format])
     }
 
-    func testGIFSuccessAndDuplicateName() throws {
+    func testGIFSuccessAndDuplicateName() async throws {
         let folder = try directory(), input = folder.appendingPathComponent("input.mp4")
-        try makeVideo(input)
+        try await makeVideo(input)
         let save = MediaSave(request: try request(), directory: folder)
-        XCTAssertEqual(try save.finish(input), "example-123-1.gif")
-        XCTAssertEqual(try save.finish(input), "example-123-1 2.gif")
-        XCTAssertEqual(try save.finish(input), "example-123-1 3.gif")
+        let name0 = try await save.finish(input)
+        XCTAssertEqual(name0, "example-123-1.gif")
+        let name1 = try await save.finish(input)
+        XCTAssertEqual(name1, "example-123-1 2.gif")
+        let name2 = try await save.finish(input)
+        XCTAssertEqual(name2, "example-123-1 3.gif")
         XCTAssertFalse(FileManager.default.fileExists(atPath: folder.appendingPathComponent("example-123-1.mp4").path))
         XCTAssertFalse(try FileManager.default.contentsOfDirectory(atPath: folder.path).contains { $0.hasPrefix(".xma-") })
     }
 
-    func testFailurePreservesMP4AndMP4ModeSkipsConversion() throws {
+    func testFailurePreservesMP4AndMP4ModeSkipsConversion() async throws {
         let folder = try directory(), input = folder.appendingPathComponent("input.mp4")
         let data = Data("test source preserved".utf8)
         try data.write(to: input)
         var called = 0
-        let convert: (URL, URL) throws -> Void = { _, output in
+        let convert: (URL, URL) async throws -> Void = { _, output in
             called += 1
             try Data("partial GIF".utf8).write(to: output)
             throw GIFConversionError.encoding
         }
         let save = MediaSave(request: try request(), directory: folder, convert: convert)
-        XCTAssertEqual(try save.finish(input), "example-123-1.mp4")
+        let name3 = try await save.finish(input)
+        XCTAssertEqual(name3, "example-123-1.mp4")
         XCTAssertEqual(called, 1)
         XCTAssertEqual(try Data(contentsOf: folder.appendingPathComponent("example-123-1.mp4")), data)
         for request in [try request(type: "video"), try request(format: "mp4")] {
-            _ = try MediaSave(request: request, directory: folder, convert: convert).finish(input)
+            _ = try await MediaSave(request: request, directory: folder, convert: convert).finish(input)
         }
         XCTAssertEqual(called, 1)
         XCTAssertFalse(try FileManager.default.contentsOfDirectory(atPath: folder.path).contains { $0.hasPrefix(".xma-") })
@@ -144,11 +192,11 @@ private final class GIFDownloadFixture: URLProtocol {
 }
 
 extension GIFConversionTests {
-    func testVariableFrameTimingAndSingleFrame() throws {
+    func testVariableFrameTimingAndSingleFrame() async throws {
         for times in [[0.0, 0.04, 0.17, 0.21], [0.0]] {
             let folder = try directory(), input = folder.appendingPathComponent("vfr.mp4"), output = folder.appendingPathComponent("vfr.gif")
-            try makeVideo(input, times: times, duration: 0.35)
-            try GIFConverter.convert(input, to: output)
+            try await makeVideo(input, times: times, duration: 0.35)
+            try await GIFConverter.convert(input, to: output)
             let source = try XCTUnwrap(CGImageSourceCreateWithURL(output as CFURL, nil))
             XCTAssertEqual(CGImageSourceGetCount(source), times.count)
             var elapsed = 0.0
@@ -164,9 +212,9 @@ extension GIFConversionTests {
         }
     }
 
-    func testDownloadConvertPublishAndFallbackResponse() throws {
+    func testDownloadConvertPublishAndFallbackResponse() async throws {
         let fixture = try directory().appendingPathComponent("fixture.mp4")
-        try makeVideo(fixture)
+        try await makeVideo(fixture)
         GIFDownloadFixture.body = try Data(contentsOf: fixture)
         defer { GIFDownloadFixture.body = Data() }
         for mode in ["success", "failure", "mp4"] {
@@ -175,15 +223,19 @@ extension GIFConversionTests {
             var response: Result<MediaSaveResult, Error>?
             let config = URLSessionConfiguration.ephemeral
             config.protocolClasses = [GIFDownloadFixture.self]
-            let converter: (URL, URL) throws -> Void = { input, output in
+            let converter: (URL, URL) async throws -> Void = { input, output in
+                // Yield after the URLSession completion callback returns. The input
+                // must remain available throughout asynchronous conversion.
+                try await Task.sleep(nanoseconds: 20_000_000)
+                XCTAssertTrue(FileManager.default.fileExists(atPath: input.path))
                 if mode == "failure" { throw GIFConversionError.limit }
-                try GIFConverter.convert(input, to: output)
+                try await GIFConverter.convert(input, to: output)
             }
             MediaSave(request: try request(format: mode == "mp4" ? "mp4" : "auto"), directory: folder, convert: converter).start(configuration: config) {
                 response = $0
                 done.fulfill()
             }
-            wait(for: [done], timeout: 10)
+            await fulfillment(of: [done], timeout: 10)
             let saved = try XCTUnwrap(response).get()
             XCTAssertEqual(saved.filename, "example-123-1." + (mode == "success" ? "gif" : "mp4"))
             XCTAssertEqual(saved.warning != nil, mode == "failure", saved.warning ?? "")

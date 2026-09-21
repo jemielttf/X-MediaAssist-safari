@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		A10000000000000000000001 /* MediaDownload.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* MediaDownload.swift */; };
+		A10000000000000000000005 /* GIFConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* GIFConverter.swift */; };
+		A10000000000000000000006 /* MediaSave.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* MediaSave.swift */; };
+		A10000000000000000000008 /* Licenses in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010 /* Licenses */; };
+		A10000000000000000000009 /* Licenses in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010 /* Licenses */; };
 		BFF2F2D43061180500D8D517 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF2F2D33061180500D8D517 /* AppDelegate.swift */; };
 		BFF2F2D83061180500D8D517 /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F2D63061180500D8D517 /* Main.html */; };
 		BFF2F2DA3061180500D8D517 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F2D93061180500D8D517 /* Icon.png */; };
@@ -26,10 +30,6 @@
 		BFF2F30A3061180600D8D517 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3023061180600D8D517 /* manifest.json */; };
 		BFF2F30B3061180600D8D517 /* popup.css in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3033061180600D8D517 /* popup.css */; };
 		BFF2F30C3061180600D8D517 /* content.js in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3043061180600D8D517 /* content.js */; };
-		A10000000000000000000005 /* GIFConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003; };
-		A10000000000000000000006 /* MediaSave.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004; };
-		A10000000000000000000008 /* Licenses in App Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010; };
-		A10000000000000000000009 /* Licenses in Extension Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,6 +56,9 @@
 
 /* Begin PBXFileReference section */
 		A10000000000000000000002 /* MediaDownload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaDownload.swift; path = ../../Native/MediaDownload.swift; sourceTree = "<group>"; };
+		A10000000000000000000003 /* GIFConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GIFConverter.swift; path = ../../Native/GIFConverter.swift; sourceTree = "<group>"; };
+		A10000000000000000000004 /* MediaSave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaSave.swift; path = ../../Native/MediaSave.swift; sourceTree = "<group>"; };
+		A10000000000000000000010 /* Licenses */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Licenses; path = ../Licenses; sourceTree = SOURCE_ROOT; };
 		BFF2F2D03061180500D8D517 /* X Media Assist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "X Media Assist.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BFF2F2D33061180500D8D517 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		BFF2F2D73061180500D8D517 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
@@ -77,9 +80,6 @@
 		BFF2F3023061180600D8D517 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../Extension/manifest.json; sourceTree = "<group>"; };
 		BFF2F3033061180600D8D517 /* popup.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; name = popup.css; path = ../../Extension/popup.css; sourceTree = "<group>"; };
 		BFF2F3043061180600D8D517 /* content.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = content.js; path = ../../Extension/content.js; sourceTree = "<group>"; };
-		A10000000000000000000003 /* GIFConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GIFConverter.swift; path = ../../Native/GIFConverter.swift; sourceTree = "<group>"; };
-		A10000000000000000000004 /* MediaSave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaSave.swift; path = ../../Native/MediaSave.swift; sourceTree = "<group>"; };
-		A10000000000000000000010 /* Licenses */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Licenses; path = ../Licenses; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -248,7 +248,7 @@
 		BFF2F2CE3061180500D8D517 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
-				A10000000000000000000008 /* Licenses in App Resources */,
+				A10000000000000000000008 /* Licenses in Resources */,
 				BFF2F2DA3061180500D8D517 /* Icon.png in Resources */,
 				BFF2F2E33061180500D8D517 /* Main.storyboard in Resources */,
 				BFF2F2DE3061180500D8D517 /* Script.js in Resources */,
@@ -260,7 +260,7 @@
 		BFF2F2E93061180600D8D517 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
-				A10000000000000000000009 /* Licenses in Extension Resources */,
+				A10000000000000000000009 /* Licenses in Resources */,
 				BFF2F30C3061180600D8D517 /* content.js in Resources */,
 				BFF2F3083061180600D8D517 /* background.js in Resources */,
 				BFF2F30B3061180600D8D517 /* popup.css in Resources */,
@@ -277,14 +277,14 @@
 		A10000000000000000000007 /* Build gifski */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = ();
-			inputPaths = ();
-			outputPaths = ("$(SRCROOT)/../build/gifski-universal/libgifski.a",);
 			name = "Build gifski";
-			runOnlyForDeploymentPostprocessing = 0;
+			outputPaths = (
+				"$(SRCROOT)/../build/gifski-universal/libgifski.a",
+			);
 			shellPath = /bin/bash;
-			shellScript = "\"$SRCROOT/../script/build_gifski.sh\"";
+			shellScript = (
+				"\"$SRCROOT/../script/build_gifski.sh\"",
+			);
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -457,9 +457,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/../Native/CGifski";
-				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../build/gifski-universal";
 				CODE_SIGN_ENTITLEMENTS = "X Media Assist Extension/Extension.entitlements";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -467,6 +464,7 @@
 				DEVELOPMENT_TEAM = 2NA8B6X498;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "X Media Assist Extension/Info.plist";
@@ -477,7 +475,8 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../build/gifski-universal";
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MARKETING_VERSION = 0.2.0;
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -492,6 +491,7 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/../Native/CGifski";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -501,9 +501,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/../Native/CGifski";
-				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../build/gifski-universal";
 				CODE_SIGN_ENTITLEMENTS = "X Media Assist Extension/Extension.entitlements";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -511,6 +508,7 @@
 				DEVELOPMENT_TEAM = 2NA8B6X498;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "X Media Assist Extension/Info.plist";
@@ -521,7 +519,8 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../build/gifski-universal";
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MARKETING_VERSION = 0.2.0;
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -536,6 +535,7 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/../Native/CGifski";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -566,6 +566,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MARKETING_VERSION = 0.2.0;
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -610,6 +611,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MARKETING_VERSION = 0.2.0;
 				OTHER_LDFLAGS = (
 					"-framework",

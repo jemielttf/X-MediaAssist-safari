@@ -9,7 +9,7 @@ APP_NAME='X Media Assist'
 APP_BUNDLE="$ROOT_DIR/build/DerivedData/Build/Products/Debug/$APP_NAME.app"
 if [[ "$MODE" != --build-only ]]; then pkill -x "$APP_NAME" >/dev/null 2>&1 || true; fi
 # Use the Team and signing settings configured for both targets in Xcode.
-xcodebuild -quiet -project 'X Media Assist/X Media Assist.xcodeproj' -scheme 'X Media Assist' -configuration Debug -derivedDataPath build/DerivedData build
+xcodebuild -quiet -project 'X Media Assist/X Media Assist.xcodeproj' -scheme 'X Media Assist' -configuration Debug -destination "platform=macOS,arch=$(uname -m)" -derivedDataPath build/DerivedData build
 if [[ "$MODE" == --build-only ]]; then exit 0; fi
 if [[ "$MODE" == --debug ]]; then exec lldb -- "$APP_BUNDLE/Contents/MacOS/$APP_NAME"; fi
 open "$APP_BUNDLE"

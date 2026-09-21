@@ -90,7 +90,7 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
     private let directory: URL
     private let maximumBytes: Int64
     private let completion: (Result<String, Error>) -> Void
-    private let finishFile: ((URL) throws -> String)?
+    private let finishFile: ((URL) async throws -> String)?
     private var temporary: URL?
     private var file: FileHandle?
     private var bytes: Int64 = 0
@@ -99,7 +99,7 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
     private var redirects = 0
 
     init(request: MediaDownloadRequest, directory: URL, maximumBytes: Int64 = MediaDownload.maximumBytes,
-         finishFile: ((URL) throws -> String)? = nil, completion: @escaping (Result<String, Error>) -> Void) {
+         finishFile: ((URL) async throws -> String)? = nil, completion: @escaping (Result<String, Error>) -> Void) {
         self.request = request
         self.directory = directory
         self.maximumBytes = maximumBytes
@@ -185,12 +185,28 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
             try file.close()
             self.file = nil
             try MediaFile.validate(temporary, byteCount: bytes)
-            if let finishFile { result = .success(try finishFile(temporary)) }
+            if let finishFile {
+                // Download callbacks have finished. Hold the file until asynchronous
+                // conversion completes, then return cleanup to the delegate queue.
+                Task { @concurrent in
+                    let converted: Result<String, Error>
+                    do { converted = .success(try await finishFile(temporary)) }
+                    catch { converted = .failure(error) }
+                    session.delegateQueue.addOperation {
+                        self.complete(converted, session: session)
+                    }
+                }
+                return
+            }
             else {
                 let saved = try MediaFile.publish(temporary, directory: directory, basename: request.basename)
                 result = .success(saved.lastPathComponent)
             }
         } catch { result = .failure(error) }
+        complete(result, session: session)
+    }
+
+    private func complete(_ result: Result<String, Error>, session: URLSession) {
         try? file?.close()
         if let temporary { try? FileManager.default.removeItem(at: temporary) }
         session.finishTasksAndInvalidate()
