@@ -12,6 +12,13 @@
 		A10000000000000000000006 /* MediaSave.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* MediaSave.swift */; };
 		A10000000000000000000008 /* Licenses in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010 /* Licenses */; };
 		A10000000000000000000009 /* Licenses in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010 /* Licenses */; };
+		BF595481306195A2005860FA /* X-Media-Assist.svg in Resources */ = {isa = PBXBuildFile; fileRef = BF595476306195A2005860FA /* X-Media-Assist.svg */; };
+		BF595482306195A2005860FA /* X-Media-Assist_toolbar-icon.svg in Resources */ = {isa = PBXBuildFile; fileRef = BF59547B306195A2005860FA /* X-Media-Assist_toolbar-icon.svg */; };
+		BF5954843061A1FA005860FA /* X-Media-Assist.icon in Resources */ = {isa = PBXBuildFile; fileRef = BF5954833061A1FA005860FA /* X-Media-Assist.icon */; };
+		BF5954853061A1FA005860FA /* X-Media-Assist.icon in Resources */ = {isa = PBXBuildFile; fileRef = BF5954833061A1FA005860FA /* X-Media-Assist.icon */; };
+		BF5954893061A3FE005860FA /* X-Media-Assist-iOS-Default-128@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = BF5954883061A3FE005860FA /* X-Media-Assist-iOS-Default-128@1x.png */; };
+		BF59548A3061A3FE005860FA /* X-Media-Assist-iOS-Default-16@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = BF5954863061A3FE005860FA /* X-Media-Assist-iOS-Default-16@1x.png */; };
+		BF59548B3061A3FE005860FA /* X-Media-Assist-iOS-Default-32@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = BF5954873061A3FE005860FA /* X-Media-Assist-iOS-Default-32@1x.png */; };
 		BFF2F2D43061180500D8D517 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF2F2D33061180500D8D517 /* AppDelegate.swift */; };
 		BFF2F2D83061180500D8D517 /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F2D63061180500D8D517 /* Main.html */; };
 		BFF2F2DA3061180500D8D517 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F2D93061180500D8D517 /* Icon.png */; };
@@ -59,6 +66,12 @@
 		A10000000000000000000003 /* GIFConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GIFConverter.swift; path = ../../Native/GIFConverter.swift; sourceTree = "<group>"; };
 		A10000000000000000000004 /* MediaSave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaSave.swift; path = ../../Native/MediaSave.swift; sourceTree = "<group>"; };
 		A10000000000000000000010 /* Licenses */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Licenses; path = ../Licenses; sourceTree = SOURCE_ROOT; };
+		BF595476306195A2005860FA /* X-Media-Assist.svg */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "X-Media-Assist.svg"; sourceTree = "<group>"; };
+		BF59547B306195A2005860FA /* X-Media-Assist_toolbar-icon.svg */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "X-Media-Assist_toolbar-icon.svg"; sourceTree = "<group>"; };
+		BF5954833061A1FA005860FA /* X-Media-Assist.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "X-Media-Assist.icon"; sourceTree = "<group>"; };
+		BF5954863061A3FE005860FA /* X-Media-Assist-iOS-Default-16@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "X-Media-Assist-iOS-Default-16@1x.png"; sourceTree = "<group>"; };
+		BF5954873061A3FE005860FA /* X-Media-Assist-iOS-Default-32@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "X-Media-Assist-iOS-Default-32@1x.png"; sourceTree = "<group>"; };
+		BF5954883061A3FE005860FA /* X-Media-Assist-iOS-Default-128@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "X-Media-Assist-iOS-Default-128@1x.png"; sourceTree = "<group>"; };
 		BFF2F2D03061180500D8D517 /* X Media Assist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "X Media Assist.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BFF2F2D33061180500D8D517 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		BFF2F2D73061180500D8D517 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
@@ -96,6 +109,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		BF59547C306195A2005860FA /* images */ = {
+			isa = PBXGroup;
+			children = (
+				BF5954863061A3FE005860FA /* X-Media-Assist-iOS-Default-16@1x.png */,
+				BF5954873061A3FE005860FA /* X-Media-Assist-iOS-Default-32@1x.png */,
+				BF5954883061A3FE005860FA /* X-Media-Assist-iOS-Default-128@1x.png */,
+				BF595476306195A2005860FA /* X-Media-Assist.svg */,
+				BF59547B306195A2005860FA /* X-Media-Assist_toolbar-icon.svg */,
+			);
+			name = images;
+			path = ../Extension/images;
+			sourceTree = SOURCE_ROOT;
+		};
 		BFF2F2C73061180500D8D517 = {
 			isa = PBXGroup;
 			children = (
@@ -135,6 +161,7 @@
 				BFF2F2D93061180500D8D517 /* Icon.png */,
 				BFF2F2DB3061180500D8D517 /* Style.css */,
 				BFF2F2DD3061180500D8D517 /* Script.js */,
+				BF5954833061A1FA005860FA /* X-Media-Assist.icon */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -155,6 +182,7 @@
 		BFF2F2FC3061180600D8D517 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				BF59547C306195A2005860FA /* images */,
 				BFF2F2FD3061180600D8D517 /* popup.js */,
 				BFF2F2FE3061180600D8D517 /* content.css */,
 				BFF2F2FF3061180600D8D517 /* core.js */,
@@ -251,6 +279,7 @@
 				A10000000000000000000008 /* Licenses in Resources */,
 				BFF2F2DA3061180500D8D517 /* Icon.png in Resources */,
 				BFF2F2E33061180500D8D517 /* Main.storyboard in Resources */,
+				BF5954853061A1FA005860FA /* X-Media-Assist.icon in Resources */,
 				BFF2F2DE3061180500D8D517 /* Script.js in Resources */,
 				BFF2F2D83061180500D8D517 /* Main.html in Resources */,
 				BFF2F2E53061180600D8D517 /* Assets.xcassets in Resources */,
@@ -260,12 +289,18 @@
 		BFF2F2E93061180600D8D517 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
+				BF5954893061A3FE005860FA /* X-Media-Assist-iOS-Default-128@1x.png in Resources */,
+				BF59548A3061A3FE005860FA /* X-Media-Assist-iOS-Default-16@1x.png in Resources */,
+				BF59548B3061A3FE005860FA /* X-Media-Assist-iOS-Default-32@1x.png in Resources */,
 				A10000000000000000000009 /* Licenses in Resources */,
 				BFF2F30C3061180600D8D517 /* content.js in Resources */,
 				BFF2F3083061180600D8D517 /* background.js in Resources */,
+				BF5954843061A1FA005860FA /* X-Media-Assist.icon in Resources */,
 				BFF2F30B3061180600D8D517 /* popup.css in Resources */,
 				BFF2F3093061180600D8D517 /* popup.html in Resources */,
 				BFF2F3073061180600D8D517 /* core.js in Resources */,
+				BF595481306195A2005860FA /* X-Media-Assist.svg in Resources */,
+				BF595482306195A2005860FA /* X-Media-Assist_toolbar-icon.svg in Resources */,
 				BFF2F3053061180600D8D517 /* popup.js in Resources */,
 				BFF2F30A3061180600D8D517 /* manifest.json in Resources */,
 				BFF2F3063061180600D8D517 /* content.css in Resources */,
@@ -544,8 +579,9 @@
 		BFF2F2FA3061180600D8D517 /* Debug configuration for PBXNativeTarget "X Media Assist" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "X-Media-Assist";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -589,8 +625,9 @@
 		BFF2F2FB3061180600D8D517 /* Release configuration for PBXNativeTarget "X Media Assist" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "X-Media-Assist";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;

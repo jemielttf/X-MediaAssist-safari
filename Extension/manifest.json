@@ -1,16 +1,32 @@
 {
-  "manifest_version": 3,
-  "name": "X Media Assist",
-  "version": "0.2.0",
-  "description": "公開Xポストの動画をMP4、GIF投稿をGIFとしてダウンロードフォルダへ保存します。",
-  "permissions": ["nativeMessaging", "activeTab"],
-  "host_permissions": ["https://cdn.syndication.twimg.com/*"],
-  "background": { "scripts": ["core.js", "background.js"] },
-  "content_scripts": [{
-    "matches": ["https://x.com/*", "https://twitter.com/*", "https://www.x.com/*", "https://www.twitter.com/*"],
-    "js": ["core.js", "content.js"],
-    "css": ["content.css"],
-    "run_at": "document_idle"
-  }],
-  "action": { "default_title": "X Media Assist", "default_popup": "popup.html" }
+	"manifest_version": 3,
+	"name": "X Media Assist",
+	"version": "0.2.0",
+	"description": "公開Xポストの動画をMP4、GIF投稿をGIFとしてダウンロードフォルダへ保存します。",
+	"permissions": ["nativeMessaging", "activeTab"],
+	"host_permissions": ["https://cdn.syndication.twimg.com/*"],
+	"background": { "scripts": ["core.js", "background.js"] },
+	"content_scripts": [
+		{
+			"matches": [
+				"https://x.com/*",
+				"https://twitter.com/*",
+				"https://www.x.com/*",
+				"https://www.twitter.com/*"
+			],
+			"js": ["core.js", "content.js"],
+			"css": ["content.css"],
+			"run_at": "document_idle"
+		}
+	],
+	"action": {
+		"default_title": "X Media Assist",
+		"default_popup": "popup.html",
+		"default_icon": "X-Media-Assist_toolbar-icon.svg"
+	},
+	"icons": {
+		"16": "XX-Media-Assist-iOS-Default-16@1x.png",
+		"32": "X-Media-Assist-iOS-Default-32@1x.png",
+		"128": "X-Media-Assist-iOS-Default-128@1x.png"
+	}
 }
