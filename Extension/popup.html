@@ -1,0 +1,6 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>X Media Assist</title><link rel="stylesheet" href="popup.css"></head>
+<body><h1>X Media Assist</h1><p>公開ポストの動画・GIF投稿をMP4で保存します。</p>
+<form id="download-form"><label for="post-url">ポストのURL</label><input id="post-url" type="url" placeholder="https://x.com/…/status/…" required autocomplete="off"><button id="save" type="submit">MP4を保存</button></form>
+<p id="status" role="status" aria-live="polite"></p><p class="note">保存先：ダウンロードフォルダ<br>GIFへの変換は次のバージョンで対応予定です。</p>
+<script src="core.js"></script><script src="popup.js"></script></body></html>

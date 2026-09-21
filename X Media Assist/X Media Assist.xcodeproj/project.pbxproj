@@ -1,0 +1,621 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 110;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000001 /* MediaDownload.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* MediaDownload.swift */; };
+		BFF2F2D43061180500D8D517 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF2F2D33061180500D8D517 /* AppDelegate.swift */; };
+		BFF2F2D83061180500D8D517 /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F2D63061180500D8D517 /* Main.html */; };
+		BFF2F2DA3061180500D8D517 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F2D93061180500D8D517 /* Icon.png */; };
+		BFF2F2DC3061180500D8D517 /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F2DB3061180500D8D517 /* Style.css */; };
+		BFF2F2DE3061180500D8D517 /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F2DD3061180500D8D517 /* Script.js */; };
+		BFF2F2E03061180500D8D517 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF2F2DF3061180500D8D517 /* ViewController.swift */; };
+		BFF2F2E33061180500D8D517 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F2E13061180500D8D517 /* Main.storyboard */; };
+		BFF2F2E53061180600D8D517 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F2E43061180600D8D517 /* Assets.xcassets */; };
+		BFF2F2EC3061180600D8D517 /* X Media Assist Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BFF2F2EB3061180600D8D517 /* X Media Assist Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		BFF2F2F13061180600D8D517 /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF2F2F03061180600D8D517 /* SafariWebExtensionHandler.swift */; };
+		BFF2F3053061180600D8D517 /* popup.js in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F2FD3061180600D8D517 /* popup.js */; };
+		BFF2F3063061180600D8D517 /* content.css in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F2FE3061180600D8D517 /* content.css */; };
+		BFF2F3073061180600D8D517 /* core.js in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F2FF3061180600D8D517 /* core.js */; };
+		BFF2F3083061180600D8D517 /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3003061180600D8D517 /* background.js */; };
+		BFF2F3093061180600D8D517 /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3013061180600D8D517 /* popup.html */; };
+		BFF2F30A3061180600D8D517 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3023061180600D8D517 /* manifest.json */; };
+		BFF2F30B3061180600D8D517 /* popup.css in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3033061180600D8D517 /* popup.css */; };
+		BFF2F30C3061180600D8D517 /* content.js in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3043061180600D8D517 /* content.js */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		BFF2F2ED3061180600D8D517 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BFF2F2C83061180500D8D517 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BFF2F2EA3061180600D8D517;
+			remoteInfo = "X Media Assist Extension";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		BFF2F2F83061180600D8D517 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				BFF2F2EC3061180600D8D517 /* X Media Assist Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		A10000000000000000000002 /* MediaDownload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaDownload.swift; path = ../../Native/MediaDownload.swift; sourceTree = "<group>"; };
+		BFF2F2D03061180500D8D517 /* X Media Assist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "X Media Assist.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		BFF2F2D33061180500D8D517 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		BFF2F2D73061180500D8D517 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
+		BFF2F2D93061180500D8D517 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		BFF2F2DB3061180500D8D517 /* Style.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Style.css; sourceTree = "<group>"; };
+		BFF2F2DD3061180500D8D517 /* Script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Script.js; sourceTree = "<group>"; };
+		BFF2F2DF3061180500D8D517 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		BFF2F2E23061180500D8D517 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		BFF2F2E43061180600D8D517 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		BFF2F2E63061180600D8D517 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BFF2F2EB3061180600D8D517 /* X Media Assist Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "X Media Assist Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		BFF2F2F03061180600D8D517 /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		BFF2F2F23061180600D8D517 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BFF2F2FD3061180600D8D517 /* popup.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = popup.js; path = ../../Extension/popup.js; sourceTree = "<group>"; };
+		BFF2F2FE3061180600D8D517 /* content.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; name = content.css; path = ../../Extension/content.css; sourceTree = "<group>"; };
+		BFF2F2FF3061180600D8D517 /* core.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = core.js; path = ../../Extension/core.js; sourceTree = "<group>"; };
+		BFF2F3003061180600D8D517 /* background.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = background.js; path = ../../Extension/background.js; sourceTree = "<group>"; };
+		BFF2F3013061180600D8D517 /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = popup.html; path = ../../Extension/popup.html; sourceTree = "<group>"; };
+		BFF2F3023061180600D8D517 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../Extension/manifest.json; sourceTree = "<group>"; };
+		BFF2F3033061180600D8D517 /* popup.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; name = popup.css; path = ../../Extension/popup.css; sourceTree = "<group>"; };
+		BFF2F3043061180600D8D517 /* content.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = content.js; path = ../../Extension/content.js; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		BFF2F2CD3061180500D8D517 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		BFF2F2E83061180600D8D517 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		BFF2F2C73061180500D8D517 = {
+			isa = PBXGroup;
+			children = (
+				BFF2F2D23061180500D8D517 /* X Media Assist */,
+				BFF2F2EF3061180600D8D517 /* X Media Assist Extension */,
+				BFF2F2D13061180500D8D517 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		BFF2F2D13061180500D8D517 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BFF2F2D03061180500D8D517 /* X Media Assist.app */,
+				BFF2F2EB3061180600D8D517 /* X Media Assist Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BFF2F2D23061180500D8D517 /* X Media Assist */ = {
+			isa = PBXGroup;
+			children = (
+				BFF2F2D33061180500D8D517 /* AppDelegate.swift */,
+				BFF2F2DF3061180500D8D517 /* ViewController.swift */,
+				BFF2F2E13061180500D8D517 /* Main.storyboard */,
+				BFF2F2E43061180600D8D517 /* Assets.xcassets */,
+				BFF2F2E63061180600D8D517 /* Info.plist */,
+				BFF2F2D53061180500D8D517 /* Resources */,
+			);
+			path = "X Media Assist";
+			sourceTree = "<group>";
+		};
+		BFF2F2D53061180500D8D517 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				BFF2F2D63061180500D8D517 /* Main.html */,
+				BFF2F2D93061180500D8D517 /* Icon.png */,
+				BFF2F2DB3061180500D8D517 /* Style.css */,
+				BFF2F2DD3061180500D8D517 /* Script.js */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		BFF2F2EF3061180600D8D517 /* X Media Assist Extension */ = {
+			isa = PBXGroup;
+			children = (
+				BFF2F2FC3061180600D8D517 /* Resources */,
+				BFF2F2F03061180600D8D517 /* SafariWebExtensionHandler.swift */,
+				A10000000000000000000002 /* MediaDownload.swift */,
+				BFF2F2F23061180600D8D517 /* Info.plist */,
+			);
+			path = "X Media Assist Extension";
+			sourceTree = "<group>";
+		};
+		BFF2F2FC3061180600D8D517 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				BFF2F2FD3061180600D8D517 /* popup.js */,
+				BFF2F2FE3061180600D8D517 /* content.css */,
+				BFF2F2FF3061180600D8D517 /* core.js */,
+				BFF2F3003061180600D8D517 /* background.js */,
+				BFF2F3013061180600D8D517 /* popup.html */,
+				BFF2F3023061180600D8D517 /* manifest.json */,
+				BFF2F3033061180600D8D517 /* popup.css */,
+				BFF2F3043061180600D8D517 /* content.js */,
+			);
+			name = Resources;
+			path = "X Media Assist Extension";
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		BFF2F2CF3061180500D8D517 /* X Media Assist */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BFF2F2F93061180600D8D517 /* Build configuration list for PBXNativeTarget "X Media Assist" */;
+			buildPhases = (
+				BFF2F2CC3061180500D8D517 /* Sources */,
+				BFF2F2CD3061180500D8D517 /* Frameworks */,
+				BFF2F2CE3061180500D8D517 /* Resources */,
+				BFF2F2F83061180600D8D517 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BFF2F2EE3061180600D8D517 /* PBXTargetDependency */,
+			);
+			name = "X Media Assist";
+			productName = "X Media Assist";
+			productReference = BFF2F2D03061180500D8D517 /* X Media Assist.app */;
+			productType = "com.apple.product-type.application";
+		};
+		BFF2F2EA3061180600D8D517 /* X Media Assist Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BFF2F2F53061180600D8D517 /* Build configuration list for PBXNativeTarget "X Media Assist Extension" */;
+			buildPhases = (
+				BFF2F2E73061180600D8D517 /* Sources */,
+				BFF2F2E83061180600D8D517 /* Frameworks */,
+				BFF2F2E93061180600D8D517 /* Resources */,
+			);
+			buildRules = (
+			);
+			name = "X Media Assist Extension";
+			productName = "X Media Assist Extension";
+			productReference = BFF2F2EB3061180600D8D517 /* X Media Assist Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BFF2F2C83061180500D8D517 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					BFF2F2CF3061180500D8D517 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					BFF2F2EA3061180600D8D517 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+				};
+			};
+			buildConfigurationList = BFF2F2CB3061180500D8D517 /* Build configuration list for PBXProject "X Media Assist" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = BFF2F2C73061180500D8D517;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = BFF2F2D13061180500D8D517 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				BFF2F2CF3061180500D8D517 /* X Media Assist */,
+				BFF2F2EA3061180600D8D517 /* X Media Assist Extension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		BFF2F2CE3061180500D8D517 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				BFF2F2DA3061180500D8D517 /* Icon.png in Resources */,
+				BFF2F2E33061180500D8D517 /* Main.storyboard in Resources */,
+				BFF2F2DE3061180500D8D517 /* Script.js in Resources */,
+				BFF2F2D83061180500D8D517 /* Main.html in Resources */,
+				BFF2F2E53061180600D8D517 /* Assets.xcassets in Resources */,
+				BFF2F2DC3061180500D8D517 /* Style.css in Resources */,
+			);
+		};
+		BFF2F2E93061180600D8D517 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				BFF2F30C3061180600D8D517 /* content.js in Resources */,
+				BFF2F3083061180600D8D517 /* background.js in Resources */,
+				BFF2F30B3061180600D8D517 /* popup.css in Resources */,
+				BFF2F3093061180600D8D517 /* popup.html in Resources */,
+				BFF2F3073061180600D8D517 /* core.js in Resources */,
+				BFF2F3053061180600D8D517 /* popup.js in Resources */,
+				BFF2F30A3061180600D8D517 /* manifest.json in Resources */,
+				BFF2F3063061180600D8D517 /* content.css in Resources */,
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		BFF2F2CC3061180500D8D517 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				BFF2F2E03061180500D8D517 /* ViewController.swift in Sources */,
+				BFF2F2D43061180500D8D517 /* AppDelegate.swift in Sources */,
+			);
+		};
+		BFF2F2E73061180600D8D517 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				BFF2F2F13061180600D8D517 /* SafariWebExtensionHandler.swift in Sources */,
+				A10000000000000000000001 /* MediaDownload.swift in Sources */,
+			);
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		BFF2F2EE3061180600D8D517 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BFF2F2EA3061180600D8D517 /* X Media Assist Extension */;
+			targetProxy = BFF2F2ED3061180600D8D517 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		BFF2F2D63061180500D8D517 /* Main.html */ = {
+			isa = PBXVariantGroup;
+			children = (
+				BFF2F2D73061180500D8D517 /* Base */,
+			);
+			name = Main.html;
+			sourceTree = "<group>";
+		};
+		BFF2F2E13061180500D8D517 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				BFF2F2E23061180500D8D517 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		BFF2F2F33061180600D8D517 /* Debug configuration for PBXProject "X Media Assist" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		BFF2F2F43061180600D8D517 /* Release configuration for PBXProject "X Media Assist" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		BFF2F2F63061180600D8D517 /* Debug configuration for PBXNativeTarget "X Media Assist Extension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = "X Media Assist Extension/Extension.entitlements";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2NA8B6X498;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "X Media Assist Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "X Media Assist Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 0.1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jemielttf.XMediaAssist.Extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		BFF2F2F73061180600D8D517 /* Release configuration for PBXNativeTarget "X Media Assist Extension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = "X Media Assist Extension/Extension.entitlements";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2NA8B6X498;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "X Media Assist Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "X Media Assist Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 0.1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jemielttf.XMediaAssist.Extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		BFF2F2FA3061180600D8D517 /* Debug configuration for PBXNativeTarget "X Media Assist" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2NA8B6X498;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "X Media Assist/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "X Media Assist";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				INFOPLIST_KEY_NSViewGestureRecognizerIsExclusive = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jemielttf.XMediaAssist;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		BFF2F2FB3061180600D8D517 /* Release configuration for PBXNativeTarget "X Media Assist" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2NA8B6X498;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "X Media Assist/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "X Media Assist";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				INFOPLIST_KEY_NSViewGestureRecognizerIsExclusive = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jemielttf.XMediaAssist;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		BFF2F2CB3061180500D8D517 /* Build configuration list for PBXProject "X Media Assist" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BFF2F2F33061180600D8D517 /* Debug configuration for PBXProject "X Media Assist" */,
+				BFF2F2F43061180600D8D517 /* Release configuration for PBXProject "X Media Assist" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		BFF2F2F53061180600D8D517 /* Build configuration list for PBXNativeTarget "X Media Assist Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BFF2F2F63061180600D8D517 /* Debug configuration for PBXNativeTarget "X Media Assist Extension" */,
+				BFF2F2F73061180600D8D517 /* Release configuration for PBXNativeTarget "X Media Assist Extension" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		BFF2F2F93061180600D8D517 /* Build configuration list for PBXNativeTarget "X Media Assist" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BFF2F2FA3061180600D8D517 /* Debug configuration for PBXNativeTarget "X Media Assist" */,
+				BFF2F2FB3061180600D8D517 /* Release configuration for PBXNativeTarget "X Media Assist" */,
+			);
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = BFF2F2C83061180500D8D517 /* Project object */;
+	validationLevel = 1;
+}

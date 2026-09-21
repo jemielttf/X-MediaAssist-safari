@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "X Media Assist",
+  "version": "0.1.0",
+  "description": "公開Xポストの動画・GIF投稿をMP4としてダウンロードフォルダへ保存します。",
+  "permissions": ["nativeMessaging", "activeTab"],
+  "host_permissions": ["https://cdn.syndication.twimg.com/*"],
+  "background": { "scripts": ["core.js", "background.js"] },
+  "content_scripts": [{
+    "matches": ["https://x.com/*", "https://twitter.com/*", "https://www.x.com/*", "https://www.twitter.com/*"],
+    "js": ["core.js", "content.js"],
+    "css": ["content.css"],
+    "run_at": "document_idle"
+  }],
+  "action": { "default_title": "X Media Assist", "default_popup": "popup.html" }
+}
