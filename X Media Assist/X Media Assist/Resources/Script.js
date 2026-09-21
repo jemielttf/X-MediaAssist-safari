@@ -8,3 +8,7 @@ function showError() {
 document.querySelector(".open-preferences").addEventListener("click", () => {
     webkit.messageHandlers.controller.postMessage("open-preferences");
 });
+
+document.querySelector(".open-licenses").addEventListener("click", () => {
+    webkit.messageHandlers.controller.postMessage("open-licenses");
+});

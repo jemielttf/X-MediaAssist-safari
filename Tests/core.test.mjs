@@ -9,7 +9,7 @@ const url = "https://video.twimg.com/ext_tw_video/123/pu/vid/1280x720/sample.mp4
 const variant = (bitrate, address = url) => ({ content_type: "video/mp4", bitrate, url: address });
 const media = (type = "video", variants = [variant(1000)]) => ({ type, video_info: { variants } });
 const post = (items = [media()]) => ({ id_str: id, user: { screen_name: "example" }, mediaDetails: items });
-const connected = download => request => request.type === "ping" ? Promise.resolve({ ok: true, protocolVersion: 1 }) : download(request);
+const connected = download => request => request.type === "ping" ? Promise.resolve({ ok: true, protocolVersion: 2 }) : download(request);
 const fetchPost = data => async () => ({ ok: true, status: 200, json: async () => data });
 
 test("post IDs remain strings, including values beyond JS safe integers", () => {
@@ -39,7 +39,7 @@ test("selects highest bitrate MP4, ignoring HLS and hostile URLs", () => {
 test("uses resolution to rank variants without bitrate", () => {
   assert.equal(c.extractMedia(post([media("video", [variant(undefined, url.replace("1280x720", "320x180")), variant(undefined)])]), id)[0].url, url);
 });
-test("GIF remains typed but saves MP4; indexes preserve photo positions", () => {
+test("GIF classification is preserved for native conversion; indexes preserve photo positions", () => {
   const result = c.extractMedia(post([{ type: "photo" }, media("animated_gif"), media()]), id);
   assert.equal(result.length, 2);
   assert.equal(result[0].mediaType, "animated_gif");
@@ -86,7 +86,7 @@ test("a lost response does not incorrectly assert that nothing was saved", () =>
   assert.match(c.resultMessage(null), /ダウンロードフォルダ/);
 });
 test("native connection failure or stale protocol stops before fetching or saving", async () => {
-  for (const sendNative of [() => new Promise(() => {}), async () => { throw Error("XPC invalidated"); }, async () => undefined, async () => ({ ok: true })]) {
+  for (const sendNative of [() => new Promise(() => {}), async () => { throw Error("XPC invalidated"); }, async () => undefined, async () => ({ ok: true }), async () => ({ ok: true, protocolVersion: 1 })]) {
     const result = await c.downloadPost(id, {
       sendNative, connectionTimeout: 5,
       fetchImpl: () => assert.fail("must not fetch before connection succeeds")
@@ -112,7 +112,7 @@ test("message watchdog rejects a missing response and accepts a normal response"
   assert.equal(await c.withTimeout(() => Promise.resolve("done"), 100, "no response"), "done");
   await assert.rejects(c.withTimeout(() => { throw Error("disconnected"); }, 100, "no response"), /disconnected/);
   const result = await c.requestDownload(id, async message => {
-    assert.deepEqual(message, { type: "downloadPost", postId: id });
+    assert.deepEqual(message, { type: "downloadPost", postId: id, format: "auto" });
     return { ok: true, saved: ["saved.mp4"] };
   });
   assert.equal(result.ok, true);
@@ -147,4 +147,29 @@ test("background verifies sender and suppresses duplicate in-flight requests", a
   assert.equal((await listener(message, sender)).ok, false);
   resolve({ ok: true }); await pending;
   const retry = listener(message, sender); resolve({ ok: true }); assert.equal((await retry).ok, true);
+});
+
+test("GIF fallback warnings retain MP4 names and allow remaining media", async () => {
+  let count = 0;
+  const result = await c.downloadPost(id, {
+    fetchImpl: fetchPost(post([media("animated_gif"), media()])),
+    sendNative: connected(async request => {
+      assert.equal(request.format, "auto");
+      return ++count === 1 ? { ok: true, filename: "fallback.mp4", warning: "GIF変換に失敗したためMP4を保存しました。" } : { ok: true, filename: "video.mp4" };
+    })
+  });
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.saved, ["fallback.mp4", "video.mp4"]);
+  assert.match(c.resultMessage(result), /GIF変換に失敗/);
+  assert.match(c.resultMessage(result), /fallback.mp4/);
+});
+test("MP4 override is passed explicitly without altering GIF classification", async () => {
+  const result = await c.downloadPost(id, {
+    format: "mp4", fetchImpl: fetchPost(post([media("animated_gif")])),
+    sendNative: connected(async request => {
+      assert.equal(request.format, "mp4"); assert.equal(request.mediaType, "animated_gif");
+      return { ok: true, filename: "source.mp4" };
+    })
+  });
+  assert.equal(result.ok, true);
 });

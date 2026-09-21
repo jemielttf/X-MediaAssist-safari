@@ -1,25 +1,33 @@
 # X Media Assist for Safari
 
-公開Xポストの動画を、最高ビットレートのMP4でMacのダウンロードフォルダへ保存するMVPです。`animated_gif` もMP4のまま保存します。GIF変換は次段階に分離しています。
+公開Xポストの通常動画はMP4、`animated_gif` はgifskiでGIFへ変換してMacのダウンロードフォルダへ保存するSafari拡張です。GIFはXが配信するMP4から再生成するもので、アップロード時の原本GIFを復元するものではありません。
 
 実施した検証と未確認範囲は [Docs/verification.md](Docs/verification.md) に記録しています。
 
-## MVPの範囲
+## 保存できるもの
 
-- Xの動画付きポストに「MP4を保存」を追加。タイムラインの追加読み込み・ポストDOMの再利用に追従します。
-- Safariのツールバーボタンから、投稿URLを入力して保存することもできます。
+- Xの動画付きポストに「動画を保存」を追加。タイムラインの追加読み込み・ポストDOMの再利用に追従します。
+- Safariのツールバーボタンから、投稿URLを入力して保存することもできます。形式は既定の「自動」のほか「MP4」を選べます。この選択はポップアップを開いている間だけ有効で、投稿内ボタンは常に自動です。
 - 公開Syndication応答の `mediaDetails[].video_info.variants` から最高ビットレートのMP4を選択します。同値・未指定の場合はURL中の解像度を比較します。
 - 複数メディアは順次保存。静止画を除き、元のメディア番号を保持します。
-- 保存先は `~/Downloads/投稿者-投稿ID-メディア番号.mp4`。同名ファイルは上書きせず、拡張子の前に半角スペースと数字を付け、`投稿者-投稿ID-メディア番号 2.mp4`、`投稿者-投稿ID-メディア番号 3.mp4` のように保存します。
+- 保存先は `~/Downloads/投稿者-投稿ID-メディア番号.mp4` または `.gif`。同名ファイルは上書きせず、拡張子の前に半角スペースと数字を付け、`投稿者-投稿ID-メディア番号 2.mp4`、`投稿者-投稿ID-メディア番号 3.mp4` のように保存します。
 - 通信と保存の失敗を画面表示。途中まで保存できた場合は、そのファイル名を表示します。
 
-非公開・削除済み・閲覧制限のあるポスト、Syndicationで公開されないメディア、ライブ配信/HLS、引用先の自動ダウンロード、静止画、GIFへの変換は対象外です。引用動画は引用元のポストを開いてください。画質選択・保存先変更・履歴・再開機能も今回の対象外です。
+非公開・削除済み・閲覧制限のあるポスト、Syndicationで公開されないメディア、ライブ配信/HLS、引用先の自動ダウンロード、静止画は対象外です。引用動画は引用元のポストを開いてください。画質選択・保存先変更・履歴・再開機能も今回の対象外です。
 
 ## 起動
 
 macOS 13以降を対象としています。生成したXcodeプロジェクトはXcode 27形式です。今回の開発・動作確認環境はmacOS 27 / Xcode 27 / Safari 27です。
 
+Rust 1.98.1（rustup）が必要です。Xcodeのビルドフェーズとスクリプトの両方で、同じ固定版gifskiの静的ライブラリを生成します。初回はCargo依存のダウンロードが必要です。FFmpegや外部Gifski.appは不要です。
+
+gifskiは固定コミットを参照するGit submoduleです。新規取得時は `git clone --recurse-submodules https://github.com/jemielttf/X-MediaAssist-safari.git` を使用するか、既存のcloneで以下の初期化コマンドを実行してください。
+
 ```bash
+git submodule update --init --recursive
+rustup toolchain install 1.98.1 --profile minimal
+# Universal/Releaseビルド時は両ターゲットを用意
+rustup target add --toolchain 1.98.1 aarch64-apple-darwin x86_64-apple-darwin
 ./script/build_and_run.sh
 ```
 
@@ -28,7 +36,7 @@ CodexのRunボタンも同じコマンドを実行します。アプリは `buil
 1. XcodeのSigning & Capabilitiesで、本体とExtensionの両ターゲットに同じTeamと開発用証明書を設定します。スクリプトもプロジェクトの署名設定を使用し、アドホック署名への上書きは行いません。本体のBundle Identifierは `com.jemielttf.XMediaAssist`、Extensionは `com.jemielttf.XMediaAssist.Extension` です。
 2. 案内アプリのボタンからSafariの拡張機能設定を開き、**X Media Assist** を有効にします。見つからない場合はアプリを起動し直し、Safariの設定を開き直してください。
 3. 使用するSafariプロファイルで有効にし、Xと `cdn.syndication.twimg.com` へのアクセスを許可してください。
-4. 公開動画ポストを開き直し、投稿内の「MP4を保存」、またはツールバーの拡張ボタンから保存します。
+4. 公開動画ポストを開き直し、投稿内の「動画を保存」、またはツールバーの拡張ボタンから保存します。
 5. 完了表示までタブ・ポップアップを開いておいてください。途中で閉じた場合や通信が切れた場合は、再試行前にダウンロードフォルダを確認してください。
 
 初期MVPの検証ではアドホック署名とSafariの「未署名の機能拡張を許可」を使用しましたが、現在のスクリプトはXcodeの開発用署名設定に従います。配布用の署名・公証・App Store対応は含めていません。
@@ -50,11 +58,13 @@ Bundle Identifierを変更した後は、Safariを通常終了して起動し直
 | `Extension/core.js` | URL検証、Syndication解析、MP4選択、保存の順序制御 |
 | `Extension/background.js` | メッセージ送信元確認、同時実行制御、nativeMessaging |
 | `Extension/popup.*` | URL指定の保存UI |
+| `Native/GIFConverter.swift` | AVFoundationでフレーム抽出、libgifski C APIでGIF生成 |
+| `Native/MediaSave.swift` | 形式の分岐、GIF失敗時のMP4保持 |
 | `Native/MediaDownload.swift` | URLSessionでストリーム保存、応答検証、上書きしない公開処理 |
 | `X Media Assist/` | macOS案内アプリ、Safari Web ExtensionのXcodeプロジェクト |
 | `Tests/` | JavaScript/Swiftの回帰テスト、ブラウザ用UI fixture |
 
-SafariのnativeMessagingは同梱されたApp Extensionが受信し、MVPではそのプロセスが保存を行います。別の常駐ヘルパー、App Group、データベースは導入していません。案内アプリ自体にダウンロード処理を中継する構成ではありません。
+SafariのnativeMessagingは同梱されたApp Extensionが受信し、そのプロセスがダウンロード・変換・保存を行います。別の常駐ヘルパー、App Group、データベースは導入していません。案内アプリ自体にダウンロード処理を中継する構成ではありません。
 
 ## 保存境界と制約
 
@@ -62,15 +72,50 @@ SafariのnativeMessagingは同梱されたApp Extensionが受信し、MVPでは�
 - Swiftでも通信先をHTTPSの `video.twimg.com` のMP4へ再検証し、リダイレクトも同じ条件・最大3回に制限します。
 - 拡張の権限はsandbox、ネットワーク送信、Downloads書き込みです。
 - HTTP 200、Content-Type、Content-Length（ある場合）、MP4 `ftyp` ヘッダーを検査してからファイル名を確定します。完全なMP4デコード検証を毎回行うわけではありません。
-- 一度に最大3件、1ファイル1 GiBまで、通信の無応答60秒、1ファイルの全体時間10分までです。
+- 一度に最大3件、1ファイル1 GiBまで、通信の無応答60秒、転送は通常動画10分・GIF変換対象8分までです。
 - ネイティブ保存結果の応答待ちは1ファイル650秒まで、画面側の応答待ちは最大4ファイルの順次保存を含め45分までです。応答喪失時は自動再試行せず、保存先の確認を案内します。待ち時間切れはネイティブ処理のキャンセルを意味しません。
-- 一時ファイルを保存先と同じフォルダに作り、完了後に `link(2)` で公開することで既存ファイルの上書きを防ぎます。通常の成功・失敗時は一時ファイルを削除します。プロセスの強制終了では `.xma-*.part` が残る可能性があります。
+- 一時ファイルを保存先と同じフォルダに作り、完了後に `link(2)` で公開することで既存ファイルの上書きを防ぎます。通常の成功・失敗時は一時ファイルを削除します。プロセスの強制終了では `.xma-*` が残る可能性があります。
 - 一部保存後に失敗したポストを再試行すると、保存済みメディアも別名で再保存されます。
 - Syndicationは公開仕様の保証がないため、X側の変更で取得できなくなる可能性があります。認証付きAPIへの自動フォールバックは行いません。
 
-## 次段階：animated_gif → gifski
+## GIF変換
 
-`mediaType` はJavaScriptからSwiftまで維持していますが、現段階の出力は常にMP4です。次段階ではSwift側にAVFoundationのフレーム抽出とlibgifskiのエンコードを追加し、GIF/MP4/両方の出力設定、キャンセル、進捗を設計します。gifskiのライブラリ・バイナリ・ライセンスは今回取り込んでいません。組み込み前に配布方針とライセンスを確認します。
+- gifski **1.34.0** をソースからビルドし、品質90、無限ループ、sRGBで出力します。映像の向きとフレーム時刻を反映し、50 fpsを超える場合は間引きます。GIFの時間単位は1/100秒です。
+- 変換対象の上限は30秒、入力1,500フレーム、1フレーム2,073,600ピクセル、入力/出力各100 MiB、変換120秒です。全フレームをメモリへ蓄積せず、順次エンコーダへ渡します。
+- 同時変換は1件です。別のGIFが変換中、上限超過、デコード・エンコード失敗などの場合はMP4を保存し、ファイル名と理由を表示します。複数メディアの残りの保存は継続します。
+- GIF保存に成功した場合は中間MP4を削除します。不完全なGIFは公開せず削除します。通常動画とMP4指定時は変換しません。
+- 時間制限はフレーム読み取り・エンコーダのコールバックで確認します。OSのデコード呼び出しや実行中の量子化を即時強制終了する仕組みではありません。拡張プロセスがOSやブラウザに強制終了された場合の復元は未対応です。
+- 数値の進捗、手動キャンセル、GIFとMP4の両方保存、画質・サイズの設定は次段階です。
+
+## ライセンスとソース配布
+
+Copyright 2026 X Media Assist contributors. プロジェクト全体の配布ライセンスは **AGPL-3.0-or-later** です。本文は [LICENSE](LICENSE) を参照してください。第三者コードはそれぞれの著作権表示・ライセンスを維持し、[Licenses/THIRD_PARTY_NOTICES.txt](Licenses/THIRD_PARTY_NOTICES.txt) 、[Rust標準ライブラリの表示](Licenses/Rust-standard-library.html) と [Vendor/README.md](Vendor/README.md) に記録しています。案内アプリと拡張ポップアップからもライセンス本文を開けます。
+
+配布はビルド済みアプリを対象とし、自分でビルドする場合はこのリポジトリをcloneしてください。配布ページには、アプリをビルドしたコミットのリリースタグと、そのタグのソース・ビルド手順へのリンクを記載します。
+
+リポジトリ: https://github.com/jemielttf/X-MediaAssist-safari
+
+### リリース時の手順
+
+1. リリース対象の変更をコミットし、親リポジトリとsubmoduleに未コミット変更がないことを確認します。
+2. そのコミットからRelease構成でビルドし、配布物の動作を確認します。修正が必要になった場合は、修正をコミットしてビルドし直します。
+3. ビルドに使ったコミットにリリースタグを付け、対応するコミットとタグを公開します。
+4. 配布ページにビルド済みアプリと、同じリリースタグのソース・ビルド手順へのリンクを掲載します。gifskiとCargo依存も、固定した版のソースを継続して取得できる状態を維持します。
+
+### 配布版と同じソースからビルドする場合
+
+```bash
+git clone --recurse-submodules https://github.com/jemielttf/X-MediaAssist-safari.git
+cd X-MediaAssist-safari
+git switch --detach <配布ページに記載されたリリースタグ>
+git submodule update --init --recursive
+```
+
+その後、上記「起動」の手順に従ってRustツールチェーンとXcodeを用意し、両ターゲットのTeam・署名を自分の設定に変更してビルドします。配布者の秘密鍵や証明書はリポジトリに含めません。
+
+親リポジトリのタグがgifskiのコミットを固定し、gifski内の `Cargo.lock` がRust依存を固定します。ビルドには `cargo build --locked` を使用し、Rust自体は `rust-toolchain.toml` で固定します。初回は依存ソースを取得するネットワーク接続が必要です。GitHubが自動生成する「Source code」ZIP/tar.gzにはsubmoduleの実ソースが含まれないため、上記のclone手順を使用してください。
+
+専用のソースアーカイブ作成は通常の配布手順に含めません。ライブラリ更新時は `python3 script/generate_notices.py` で著作権表示を再生成します。配布用署名・公証は別工程です。
 
 ## 技術資料
 

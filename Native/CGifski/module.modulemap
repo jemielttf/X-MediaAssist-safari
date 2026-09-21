@@ -1,0 +1,5 @@
+module CGifski [system] {
+    header "../../Vendor/gifski/gifski.h"
+    link "gifski"
+    export *
+}

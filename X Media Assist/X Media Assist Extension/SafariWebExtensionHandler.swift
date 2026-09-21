@@ -16,7 +16,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
                 throw MediaDownloadError.invalidRequest
             }
             if message["type"] as? String == "ping" {
-                respond(["ok": true, "protocolVersion": 1])
+                respond(["ok": true, "protocolVersion": 2])
                 return
             }
             let request = try MediaDownloadRequest(message: message)
@@ -26,12 +26,12 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
             if accepted { Self.activeRequests.insert(request.basename) }
             Self.lock.unlock()
             guard accepted else { throw MediaDownloadError.busy }
-            MediaDownload(request: request, directory: directory) { result in
+            MediaSave(request: request, directory: directory).start { result in
                 Self.lock.lock()
                 Self.activeRequests.remove(request.basename)
                 Self.lock.unlock()
                 switch result {
-                case .success(let filename): respond(["ok": true, "filename": filename])
+                case .success(let saved): respond(saved.message)
                 case .failure(let error):
                     let description: String
                     if let known = error as? MediaDownloadError { description = known.localizedDescription }
@@ -39,7 +39,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
                     else { description = MediaDownloadError.writeFailed.localizedDescription }
                     respond(["ok": false, "error": description])
                 }
-            }.start()
+            }
         } catch {
             respond(["ok": false, "error": (error as? MediaDownloadError)?.localizedDescription ?? MediaDownloadError.writeFailed.localizedDescription])
         }

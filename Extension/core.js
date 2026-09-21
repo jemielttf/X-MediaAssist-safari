@@ -59,20 +59,21 @@
       ]);
     } finally { clearTimeout(timer); }
   }
-  function requestDownload(postId, sendMessage) {
+  function requestDownload(postId, sendMessage, format = "auto") {
     // Four sequential native transfers (10 minutes each), plus IPC and metadata margins.
-    return withTimeout(() => sendMessage({ type: "downloadPost", postId }), 45 * 60 * 1000,
+    return withTimeout(() => sendMessage({ type: "downloadPost", postId, format }), 45 * 60 * 1000,
       "拡張機能から保存結果が届きません。ダウンロードフォルダを確認し、Safariを終了して起動し直してください。");
   }
-  async function downloadPost(postId, { fetchImpl = fetch, sendNative, connectionTimeout = 15000, downloadTimeout = 650000 }) {
+  async function downloadPost(postId, { fetchImpl = fetch, sendNative, connectionTimeout = 15000, downloadTimeout = 650000, format = "auto" }) {
     const saved = [];
+    const warnings = [];
     try {
       // Check the native extension before fetching or starting any file writes.
       const connectionError = "保存機能に接続できません。Safariを終了して起動し直し、X Media Assistが有効か確認してください。";
       let ready;
       try { ready = await withTimeout(() => sendNative({ type: "ping" }), connectionTimeout, connectionError); }
       catch { throw new Error(connectionError); }
-      if (ready?.ok !== true || ready?.protocolVersion !== 1) throw new Error(connectionError);
+      if (ready?.ok !== true || ready?.protocolVersion !== 2) throw new Error(connectionError);
       let response;
       try {
         response = await fetchImpl(syndicationURL(postId), {
@@ -86,21 +87,23 @@
       const media = extractMedia(data, postId);
       for (const item of media) {
         let reply;
-        try { reply = await withTimeout(() => sendNative({ type: "download", ...item }), downloadTimeout, "native timeout"); }
+        try { reply = await withTimeout(() => sendNative({ type: "download", ...item, format }), downloadTimeout, "native timeout"); }
         catch { throw new Error("保存アプリとの通信が切れました。保存結果をダウンロードフォルダで確認してから再試行してください。"); }
         if (!reply?.ok || typeof reply.filename !== "string") throw new Error(reply?.error || "保存結果を確認できませんでした。");
         saved.push(reply.filename);
+        if (typeof reply.warning === "string") warnings.push(`${reply.filename}: ${reply.warning}`);
       }
-      return { ok: true, saved };
+      return { ok: warnings.length === 0, saved, warnings };
     } catch (error) {
-      return { ok: false, saved, error: error.message || "保存に失敗しました。" };
+      return { ok: false, saved, warnings, error: error.message || "保存に失敗しました。" };
     }
   }
   function resultMessage(result) {
     if (!result || typeof result.ok !== "boolean") return "保存結果を確認できません。ダウンロードフォルダを確認してから再試行してください。";
     const saved = Array.isArray(result?.saved) ? result.saved : [];
+    const warning = Array.isArray(result.warnings) ? result.warnings.join("\n") : "";
     if (result?.ok) return `${saved.length}件をダウンロードフォルダへ保存しました。\n${saved.join("\n")}`;
-    return `${saved.length ? `${saved.length}件は保存済みです。\n${saved.join("\n")}\n` : ""}${result?.error || "保存に失敗しました。"}`;
+    return `${saved.length ? `${saved.length}件は保存済みです。\n${saved.join("\n")}\n` : ""}${[warning, result?.error].filter(Boolean).join("\n") || "保存に失敗しました。"}`;
   }
   globalThis.XMediaCore = Object.freeze({ isPostId, parsePostURL, isXPage, isMP4URL, syndicationURL, extractMedia, withTimeout, requestDownload, downloadPost, resultMessage });
 })();

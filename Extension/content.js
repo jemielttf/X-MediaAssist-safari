@@ -36,8 +36,8 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "xma-save";
-      button.textContent = "↓ MP4を保存";
-      button.title = "このポストの動画・GIF投稿を最高品質のMP4で保存";
+      button.textContent = "↓ 動画を保存";
+      button.title = "このポストの動画をMP4、GIF投稿をGIFで保存";
       const status = document.createElement("span");
       status.className = "xma-status";
       status.setAttribute("role", "status");
@@ -49,7 +49,7 @@
         event.preventDefault();
         if (!event.isTrusted || button.disabled) return;
         button.disabled = true;
-        button.textContent = "保存中…";
+        button.textContent = "取得・変換中…";
         status.textContent = "完了までこのタブを開いておいてください。";
         try {
           const result = await core.requestDownload(id, message => browser.runtime.sendMessage(message));

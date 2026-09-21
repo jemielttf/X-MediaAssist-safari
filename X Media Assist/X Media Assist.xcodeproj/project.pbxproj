@@ -26,6 +26,10 @@
 		BFF2F30A3061180600D8D517 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3023061180600D8D517 /* manifest.json */; };
 		BFF2F30B3061180600D8D517 /* popup.css in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3033061180600D8D517 /* popup.css */; };
 		BFF2F30C3061180600D8D517 /* content.js in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3043061180600D8D517 /* content.js */; };
+		A10000000000000000000005 /* GIFConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003; };
+		A10000000000000000000006 /* MediaSave.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004; };
+		A10000000000000000000008 /* Licenses in App Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010; };
+		A10000000000000000000009 /* Licenses in Extension Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -73,6 +77,9 @@
 		BFF2F3023061180600D8D517 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../Extension/manifest.json; sourceTree = "<group>"; };
 		BFF2F3033061180600D8D517 /* popup.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; name = popup.css; path = ../../Extension/popup.css; sourceTree = "<group>"; };
 		BFF2F3043061180600D8D517 /* content.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = content.js; path = ../../Extension/content.js; sourceTree = "<group>"; };
+		A10000000000000000000003 /* GIFConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GIFConverter.swift; path = ../../Native/GIFConverter.swift; sourceTree = "<group>"; };
+		A10000000000000000000004 /* MediaSave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaSave.swift; path = ../../Native/MediaSave.swift; sourceTree = "<group>"; };
+		A10000000000000000000010 /* Licenses */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Licenses; path = ../Licenses; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,6 +102,7 @@
 				BFF2F2D23061180500D8D517 /* X Media Assist */,
 				BFF2F2EF3061180600D8D517 /* X Media Assist Extension */,
 				BFF2F2D13061180500D8D517 /* Products */,
+				A10000000000000000000010 /* Licenses */,
 			);
 			sourceTree = "<group>";
 		};
@@ -137,6 +145,8 @@
 				BFF2F2FC3061180600D8D517 /* Resources */,
 				BFF2F2F03061180600D8D517 /* SafariWebExtensionHandler.swift */,
 				A10000000000000000000002 /* MediaDownload.swift */,
+				A10000000000000000000004 /* MediaSave.swift */,
+				A10000000000000000000003 /* GIFConverter.swift */,
 				BFF2F2F23061180600D8D517 /* Info.plist */,
 			);
 			path = "X Media Assist Extension";
@@ -184,6 +194,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = BFF2F2F53061180600D8D517 /* Build configuration list for PBXNativeTarget "X Media Assist Extension" */;
 			buildPhases = (
+				A10000000000000000000007 /* Build gifski */,
 				BFF2F2E73061180600D8D517 /* Sources */,
 				BFF2F2E83061180600D8D517 /* Frameworks */,
 				BFF2F2E93061180600D8D517 /* Resources */,
@@ -237,6 +248,7 @@
 		BFF2F2CE3061180500D8D517 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
+				A10000000000000000000008 /* Licenses in App Resources */,
 				BFF2F2DA3061180500D8D517 /* Icon.png in Resources */,
 				BFF2F2E33061180500D8D517 /* Main.storyboard in Resources */,
 				BFF2F2DE3061180500D8D517 /* Script.js in Resources */,
@@ -248,6 +260,7 @@
 		BFF2F2E93061180600D8D517 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
+				A10000000000000000000009 /* Licenses in Extension Resources */,
 				BFF2F30C3061180600D8D517 /* content.js in Resources */,
 				BFF2F3083061180600D8D517 /* background.js in Resources */,
 				BFF2F30B3061180600D8D517 /* popup.css in Resources */,
@@ -259,6 +272,21 @@
 			);
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A10000000000000000000007 /* Build gifski */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = ();
+			inputPaths = ();
+			outputPaths = ("$(SRCROOT)/../build/gifski-universal/libgifski.a",);
+			name = "Build gifski";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "\"$SRCROOT/../script/build_gifski.sh\"";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		BFF2F2CC3061180500D8D517 /* Sources */ = {
@@ -273,6 +301,8 @@
 			files = (
 				BFF2F2F13061180600D8D517 /* SafariWebExtensionHandler.swift in Sources */,
 				A10000000000000000000001 /* MediaDownload.swift in Sources */,
+				A10000000000000000000006 /* MediaSave.swift in Sources */,
+				A10000000000000000000005 /* GIFConverter.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */
@@ -427,6 +457,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/../Native/CGifski";
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../build/gifski-universal";
 				CODE_SIGN_ENTITLEMENTS = "X Media Assist Extension/Extension.entitlements";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -438,17 +471,20 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "X Media Assist Extension/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "X Media Assist Extension";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright 2026 X Media Assist contributors. AGPL-3.0-or-later.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
+					"-lgifski",
+					"-framework",
+					Security,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.jemielttf.XMediaAssist.Extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -465,6 +501,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/../Native/CGifski";
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../build/gifski-universal";
 				CODE_SIGN_ENTITLEMENTS = "X Media Assist Extension/Extension.entitlements";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -476,17 +515,20 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "X Media Assist Extension/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "X Media Assist Extension";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright 2026 X Media Assist contributors. AGPL-3.0-or-later.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
+					"-lgifski",
+					"-framework",
+					Security,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.jemielttf.XMediaAssist.Extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -516,7 +558,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "X Media Assist/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "X Media Assist";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright 2026 X Media Assist contributors. AGPL-3.0-or-later.";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				INFOPLIST_KEY_NSViewGestureRecognizerIsExclusive = NO;
@@ -524,7 +566,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -560,7 +602,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "X Media Assist/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "X Media Assist";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright 2026 X Media Assist contributors. AGPL-3.0-or-later.";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				INFOPLIST_KEY_NSViewGestureRecognizerIsExclusive = NO;
@@ -568,7 +610,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,

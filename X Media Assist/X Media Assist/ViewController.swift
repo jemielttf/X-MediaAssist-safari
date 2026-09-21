@@ -26,6 +26,12 @@ class ViewController: NSViewController, WKNavigationDelegate, WKScriptMessageHan
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.body as? String == "open-licenses" {
+            if let page = Bundle.main.resourceURL?.appendingPathComponent("Licenses/index.html") {
+                NSWorkspace.shared.open(page)
+            }
+            return
+        }
         guard message.body as? String == "open-preferences" else { return }
         SFSafariApplication.showPreferencesForExtension(withIdentifier: extensionBundleIdentifier) { [weak self] error in
             DispatchQueue.main.async {

@@ -23,6 +23,8 @@ struct MediaDownloadRequest {
     let author: String
     let mediaIndex: Int
     let mediaType: String
+    let format: String
+    var convertsGIF: Bool { mediaType == "animated_gif" && format == "auto" }
     var basename: String { "\(author)-\(postId)-\(mediaIndex)" }
 
     init(message: [String: Any]) throws {
@@ -41,6 +43,9 @@ struct MediaDownloadRequest {
         self.author = author
         self.mediaIndex = mediaIndex
         self.mediaType = mediaType
+        let format = message["format"] as? String ?? "auto"
+        guard ["auto", "mp4"].contains(format) else { throw MediaDownloadError.invalidRequest }
+        self.format = format
     }
 
     static func isAllowedURL(_ url: URL) -> Bool {
@@ -63,9 +68,10 @@ enum MediaFile {
 
     // link(2) publishes a complete file atomically, failing if the name exists.
     // Temporary and final files are in the same directory/filesystem.
-    static func publish(_ temporary: URL, directory: URL, basename: String) throws -> URL {
+    static func publish(_ temporary: URL, directory: URL, basename: String, fileExtension: String = "mp4") throws -> URL {
+        guard ["mp4", "gif"].contains(fileExtension) else { throw MediaDownloadError.invalidRequest }
         for suffix in 1...1000 {
-            let name = basename + (suffix == 1 ? "" : " \(suffix)") + ".mp4"
+            let name = basename + (suffix == 1 ? "" : " \(suffix)") + "." + fileExtension
             let destination = directory.appendingPathComponent(name)
             let result = temporary.withUnsafeFileSystemRepresentation { source in
                 destination.withUnsafeFileSystemRepresentation { target in Darwin.link(source!, target!) }
@@ -84,6 +90,7 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
     private let directory: URL
     private let maximumBytes: Int64
     private let completion: (Result<String, Error>) -> Void
+    private let finishFile: ((URL) throws -> String)?
     private var temporary: URL?
     private var file: FileHandle?
     private var bytes: Int64 = 0
@@ -92,11 +99,12 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
     private var redirects = 0
 
     init(request: MediaDownloadRequest, directory: URL, maximumBytes: Int64 = MediaDownload.maximumBytes,
-         completion: @escaping (Result<String, Error>) -> Void) {
+         finishFile: ((URL) throws -> String)? = nil, completion: @escaping (Result<String, Error>) -> Void) {
         self.request = request
         self.directory = directory
         self.maximumBytes = maximumBytes
         self.completion = completion
+        self.finishFile = finishFile
     }
 
     func start(configuration: URLSessionConfiguration = .ephemeral) {
@@ -105,7 +113,7 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
         configuration.urlCredentialStorage = nil
         configuration.urlCache = nil
         configuration.timeoutIntervalForRequest = 60
-        configuration.timeoutIntervalForResource = 600
+        configuration.timeoutIntervalForResource = request.convertsGIF ? 480 : 600
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 1
         let session = URLSession(configuration: configuration, delegate: self, delegateQueue: queue)
@@ -139,7 +147,8 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
             }
             expectedBytes = http.expectedContentLength
             guard expectedBytes <= maximumBytes else { throw MediaDownloadError.tooLarge }
-            let temporaryURL = directory.appendingPathComponent(".xma-\(UUID().uuidString).part")
+            // AVFoundation needs the container extension when opening a local file.
+            let temporaryURL = directory.appendingPathComponent(".xma-\(UUID().uuidString).part.mp4")
             guard FileManager.default.createFile(atPath: temporaryURL.path, contents: nil, attributes: [.posixPermissions: 0o600]) else {
                 throw MediaDownloadError.writeFailed
             }
@@ -176,8 +185,11 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
             try file.close()
             self.file = nil
             try MediaFile.validate(temporary, byteCount: bytes)
-            let saved = try MediaFile.publish(temporary, directory: directory, basename: request.basename)
-            result = .success(saved.lastPathComponent)
+            if let finishFile { result = .success(try finishFile(temporary)) }
+            else {
+                let saved = try MediaFile.publish(temporary, directory: directory, basename: request.basename)
+                result = .success(saved.lastPathComponent)
+            }
         } catch { result = .failure(error) }
         try? file?.close()
         if let temporary { try? FileManager.default.removeItem(at: temporary) }
