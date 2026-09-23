@@ -16,7 +16,7 @@ body {
 	background: light-dark(#f6f7f9, #1c1d21);
 }
 main {
-	max-width: 470px;
+	max-width: 400px;
 	padding: 28px;
 }
 h1 {
