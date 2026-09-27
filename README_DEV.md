@@ -17,7 +17,7 @@ Xに投稿された動画はMP4、GIFアニメはgifskiでGIFへ変換してMac�
 
 ## 起動
 
-macOS 14以降を対象としています。生成したXcodeプロジェクトはXcode 27形式です。今回の開発・動作確認環境はmacOS 27 / Xcode 27 / Safari 27です。
+macOS 14以降のApple Silicon搭載Mac（arm64）のみ対応しています。Intel搭載Mac（x86_64）には対応していません。生成したXcodeプロジェクトはXcode 27形式です。今回の開発・動作確認環境はmacOS 27 / Xcode 27 / Safari 27です。
 
 Rust 1.98.1（rustup）が必要です。Xcodeのビルドフェーズとスクリプトの両方で、同じ固定版gifskiの静的ライブラリを生成します。初回はCargo依存のダウンロードが必要です。FFmpegや外部Gifski.appは不要です。
 
@@ -26,8 +26,8 @@ gifskiは固定コミットを参照するGit submoduleです。新規取得時�
 ```bash
 git submodule update --init --recursive
 rustup toolchain install 1.98.1 --profile minimal
-# Universal/Releaseビルド時は両ターゲットを用意
-rustup target add --toolchain 1.98.1 aarch64-apple-darwin x86_64-apple-darwin
+# Apple Silicon向けのターゲットを用意
+rustup target add --toolchain 1.98.1 aarch64-apple-darwin
 ./script/build_and_run.sh
 ```
 
