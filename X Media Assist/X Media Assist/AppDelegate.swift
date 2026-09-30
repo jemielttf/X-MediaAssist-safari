@@ -76,7 +76,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) { updateMenu() }
 
     private func updateMenu() {
-        dockMenuItem.state = preferences.hidesDockIcon ? .on : .off
+        dockMenuItem.state = NSApp.activationPolicy() == .accessory ? .on : .off
         let status = preferences.loginItemStatus
         loginMenuItem.state = status == .enabled ? .on : (status == .requiresApproval ? .mixed : .off)
         loginMenuItem.title = status == .requiresApproval ? "ログイン時に起動する（承認待ち）" : "ログイン時に起動する"
@@ -93,12 +93,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func applyDockVisibility() {
-        NSApp.setActivationPolicy(preferences.hidesDockIcon ? .accessory : .regular)
+        if !NSApp.setActivationPolicy(preferences.hidesDockIcon ? .accessory : .regular) {
+            NSLog("X Media Assist could not apply the saved Dock visibility setting.")
+        }
+        updateMenu()
     }
 
     @objc private func toggleDockVisibility() {
-        preferences.hidesDockIcon.toggle()
-        applyDockVisibility()
+        let hidden = NSApp.activationPolicy() != .accessory
+        let applied = preferences.setHidesDockIcon(hidden) {
+            NSApp.setActivationPolicy($0 ? .accessory : .regular)
+        }
+        if !applied {
+            let alert = NSAlert()
+            alert.messageText = "Dockの表示設定を変更できませんでした。"
+            alert.addButton(withTitle: "OK")
+            NSApp.activate()
+            alert.runModal()
+        }
         updateMenu()
     }
 

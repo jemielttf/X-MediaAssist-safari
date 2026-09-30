@@ -6,7 +6,7 @@ let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().path
 
 let package = Package(
     name: "XMediaAssistCore",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v14)],
     products: [.library(name: "XMediaAssistCore", targets: ["XMediaAssistCore"])],
     targets: [
         .target(name: "XMediaAssistAppSupport", path: "AppSupport"),

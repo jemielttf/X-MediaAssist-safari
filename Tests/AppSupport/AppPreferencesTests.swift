@@ -32,13 +32,34 @@ final class AppPreferencesTests: XCTestCase {
         let service = LoginItemStub()
         let preferences = AppPreferences(defaults: defaults, loginItem: service)
         XCTAssertFalse(preferences.hidesDockIcon)
-        preferences.hidesDockIcon = true
+        XCTAssertTrue(preferences.setHidesDockIcon(true) { hidden in
+            XCTAssertTrue(hidden)
+            XCTAssertFalse(preferences.hidesDockIcon)
+            return true
+        })
         let reloaded = AppPreferences(defaults: try XCTUnwrap(UserDefaults(suiteName: suite)), loginItem: service)
         XCTAssertTrue(reloaded.hidesDockIcon)
-        reloaded.hidesDockIcon = false
+        XCTAssertTrue(reloaded.setHidesDockIcon(false) { hidden in
+            XCTAssertFalse(hidden)
+            XCTAssertTrue(reloaded.hidesDockIcon)
+            return true
+        })
         XCTAssertFalse(preferences.hidesDockIcon)
         XCTAssertEqual(service.registrations, 0)
         XCTAssertEqual(service.unregistrations, 0)
+    }
+
+    @MainActor
+    func testFailedDockChangeKeepsSavedPreference() async throws {
+        let suite = "XMediaAssist.Tests.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let preferences = AppPreferences(defaults: defaults, loginItem: LoginItemStub())
+        for savedValue in [false, true] {
+            preferences.hidesDockIcon = savedValue
+            XCTAssertFalse(preferences.setHidesDockIcon(!savedValue) { _ in false })
+            XCTAssertEqual(preferences.hidesDockIcon, savedValue)
+        }
     }
 
     @MainActor

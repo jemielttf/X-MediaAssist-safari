@@ -7,7 +7,7 @@ if [[ ! -f Vendor/gifski/Cargo.toml ]]; then
     exit 1
 fi
 export PATH="$HOME/.cargo/bin:$PATH"
-export MACOSX_DEPLOYMENT_TARGET=13.0
+export MACOSX_DEPLOYMENT_TARGET=14.0
 export CARGO_TARGET_DIR="$ROOT_DIR/build/gifski"
 command -v cargo >/dev/null || { echo 'Rust is required: install rustup before building.' >&2; exit 1; }
 LIBRARIES=()

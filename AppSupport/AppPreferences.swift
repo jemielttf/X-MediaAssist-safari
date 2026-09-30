@@ -26,6 +26,12 @@ final class AppPreferences {
         set { defaults.set(newValue, forKey: "hidesDockIcon") }
     }
 
+    func setHidesDockIcon(_ hidden: Bool, applying apply: (Bool) -> Bool) -> Bool {
+        guard apply(hidden) else { return false }
+        hidesDockIcon = hidden
+        return true
+    }
+
     // macOS is the source of truth, including changes made in System Settings.
     var loginItemStatus: SMAppService.Status { loginItem.status }
 
