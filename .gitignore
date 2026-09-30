@@ -7,3 +7,16 @@ DerivedData/
 xcuserdata/
 .playwright-cli/
 output/
+Docs/*
+
+# Secrets / signing material
+.env
+.env.*
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.cer
+*.mobileprovision
+*.provisionprofile
