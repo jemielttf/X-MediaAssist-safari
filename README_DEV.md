@@ -2,7 +2,6 @@
 
 Xに投稿された動画はMP4、GIFアニメはgifskiでGIFへ変換してMacのダウンロードフォルダへ保存するSafari拡張です。GIFはXが配信するMP4から再生成するもので、アップロード時の原本GIFを復元するものではありません。
 
-実施した検証と未確認範囲は [Docs/verification.md](Docs/verification.md) に記録しています。
 
 ## 保存できるもの
 
