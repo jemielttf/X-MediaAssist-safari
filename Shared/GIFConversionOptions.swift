@@ -51,15 +51,8 @@ public struct GIFPreferences {
 
     public var options: GIFConversionOptions {
         get {
-            guard var stored = defaults.dictionary(forKey: Self.key) else { return .defaults }
-            // Preserve the selected tier in preferences saved with the previous qualities.
-            // Native IPC continues to accept only the current allowlist.
-            if let quality = stored["quality"] as? NSNumber,
-               CFGetTypeID(quality) != CFBooleanGetTypeID(),
-               let updated = [90.0: 95, 75.0: 85, 50.0: 70][quality.doubleValue] {
-                stored["quality"] = updated
-            }
-            guard let options = try? GIFConversionOptions(message: stored) else { return .defaults }
+            guard let stored = defaults.dictionary(forKey: Self.key),
+                  let options = try? GIFConversionOptions(message: stored) else { return .defaults }
             return options
         }
         nonmutating set { defaults.set(newValue.message, forKey: Self.key) }

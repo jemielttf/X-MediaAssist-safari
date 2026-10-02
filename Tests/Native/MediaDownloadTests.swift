@@ -98,19 +98,6 @@ final class MediaDownloadTests: XCTestCase {
         XCTAssertEqual(native.options, .defaults)
     }
 
-    func testPreviousQualityPreferencesPreserveSelectedTier() throws {
-        let suite = "XMediaAssist.Tests.GIF.\(UUID())"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-        let preferences = GIFPreferences(defaults: defaults)
-        for (previous, current) in [(90, 95), (75, 85), (50, 70)] {
-            defaults.set(["quality": previous, "maximumFrameRate": 25, "scale": 0.75], forKey: "gifConversionOptions")
-            XCTAssertEqual(preferences.options, try GIFConversionOptions(message: [
-                "quality": current, "maximumFrameRate": 25, "scale": 0.75
-            ]))
-        }
-    }
-
     func testRequestKeepsExactIDAndGIFType() throws {
         var values = message()
         values["mediaType"] = "animated_gif"
