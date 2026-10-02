@@ -18,7 +18,7 @@ function showGIFOptions(options) {
     document.getElementById("gif-fps").value = String(options.maximumFrameRate);
     document.getElementById("gif-scale").value = String(options.scale);
     document.getElementById("gif-options").disabled = false;
-    document.getElementById("gif-status").textContent = "変更は自動保存され、通常のGIFダウンロードに適用されます。";
+    document.getElementById("gif-status").textContent = "通常のGIF保存に使います。変更は自動保存されます。";
 }
 function showGIFError() {
     document.getElementById("gif-options").disabled = true;

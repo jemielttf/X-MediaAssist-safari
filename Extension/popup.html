@@ -20,17 +20,26 @@
 				<label><input type="radio" name="format" value="mp4"> MP4</label>
 			</fieldset>
 
-			<fieldset id="gif-options" class="gif-options" disabled>
-                <legend>GIF設定</legend>
-                <label for="gif-quality">GIF Quality</label>
-                <select id="gif-quality"><option value="90">High</option><option value="75">Medium</option><option value="50">Low</option></select>
-                <label for="gif-fps">Max frame rate</label>
-                <select id="gif-fps"><option value="30">30 fps</option><option value="25">25 fps</option><option value="20" selected>20 fps</option><option value="15">15 fps</option></select>
-                <label for="gif-scale">GIF Size</label>
-                <select id="gif-scale"><option value="1">100%</option><option value="0.75">75%</option><option value="0.5">50%</option></select>
-                <p class="note">元のタイミングを保ち、指定値を目安にフレーム数を抑えます。低fpsの映像は増やしません。</p>
+			<fieldset id="gif-options" class="gif-options" aria-describedby="gif-state" disabled>
+                <legend>GIF設定 <span class="gif-scope">今回のみ</span></legend>
+                <p id="gif-state" class="gif-description" role="status">基本設定を読み込み中…</p>
+                <div class="gif-option-row">
+                    <label for="gif-quality">画質</label>
+                    <select id="gif-quality"><option value="90">高</option><option value="75">中</option><option value="50">低</option></select>
+                </div>
+                <div class="gif-option-row">
+                    <label for="gif-fps">最大フレームレート</label>
+                    <select id="gif-fps" aria-describedby="gif-timing-note"><option value="30">30 fps</option><option value="25">25 fps</option><option value="20" selected>20 fps</option><option value="15">15 fps</option></select>
+                </div>
+                <div class="gif-option-row">
+                    <label for="gif-scale">出力サイズ</label>
+                    <select id="gif-scale" aria-describedby="gif-size-note"><option value="1">100%</option><option value="0.75">75%</option><option value="0.5">50%</option></select>
+                </div>
+                <div class="gif-help">
+                    <p id="gif-timing-note">元のタイミングを保ち、上限を目安に間引きます。元よりフレーム数を増やしません。</p>
+                    <p id="gif-size-note">サイズは縦横比を保って縮小します。</p>
+                </div>
             </fieldset>
-            <p class="note">GIF設定は今回の保存だけに適用します。MP4選択時は使用しません。</p>
 			<button id="save" type="submit">動画を保存</button>
 		</form>
 		<p id="status" role="status" aria-live="polite"></p>
