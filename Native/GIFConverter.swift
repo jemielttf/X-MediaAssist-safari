@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#if SWIFT_PACKAGE
+import XMediaAssistPreferences
+#endif
 import AVFoundation
 import CoreImage
 import ImageIO
@@ -8,6 +11,8 @@ struct GIFConversionLimits {
     var maximumDuration = 30.0
     var maximumFrames = 1500
     var maximumPixels = 1920 * 1080
+    var maximumInputPixels = 3840 * 2160
+    var maximumInputSamples = 18_000
     var maximumInputBytes = 100 * 1024 * 1024
     var maximumOutputBytes = 100 * 1024 * 1024
     var maximumSeconds = 120.0
@@ -68,6 +73,8 @@ private struct GIFVideoSource: @unchecked Sendable {
 
 struct GIFConverter {
     private static let slot = DispatchSemaphore(value: 1)
+    // gifski clamps delays to at least two centiseconds.
+    private static let minimumFrameDuration = 0.02
 
     private static let encodingQueue = DispatchQueue(label: "XMediaAssist.GIFEncoding", qos: .userInitiated)
 
@@ -105,7 +112,7 @@ struct GIFConverter {
         return value
     }
 
-    static func convert(_ input: URL, to output: URL, limits: GIFConversionLimits = .init()) async throws {
+    static func convert(_ input: URL, to output: URL, options: GIFConversionOptions = .defaults, limits: GIFConversionLimits = .init()) async throws {
         guard reserveSlot() else { throw GIFConversionError.busy }
         defer { slot.signal() }
         let deadline = ProcessInfo.processInfo.systemUptime + limits.maximumSeconds
@@ -118,13 +125,14 @@ struct GIFConverter {
             return GIFVideoSource(asset: asset, track: track, duration: timeRange.duration.seconds, size: size, transform: transform)
         }
         let duration = source.duration, size = source.size
-        guard duration.isFinite, duration > 0, size.width > 0, size.height > 0 else { throw GIFConversionError.unsupported }
-        guard duration <= limits.maximumDuration, size.width * size.height <= Double(limits.maximumPixels) else { throw GIFConversionError.limit }
+        guard duration.isFinite, duration > 0, size.width.isFinite, size.height.isFinite, size.width > 0, size.height > 0 else { throw GIFConversionError.unsupported }
+        guard duration <= limits.maximumDuration, size.width * size.height <= Double(limits.maximumInputPixels) else { throw GIFConversionError.limit }
+        _ = try outputRect(CGRect(origin: .zero, size: size).applying(source.transform), options: options, limits: limits)
         // The encoder has blocking C calls; keep them off Swift's cooperative executor.
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             encodingQueue.async {
                 do {
-                    try encode(asset: source.asset, track: source.track, duration: duration, transform: source.transform, to: output, limits: limits, deadline: deadline)
+                    try encode(asset: source.asset, track: source.track, duration: duration, transform: source.transform, to: output, options: options, limits: limits, deadline: deadline)
                     continuation.resume()
                 } catch { continuation.resume(throwing: error) }
             }
@@ -132,7 +140,7 @@ struct GIFConverter {
     }
 
     private static func encode(asset: AVAsset, track: AVAssetTrack, duration: Double,
-                               transform: CGAffineTransform, to output: URL, limits: GIFConversionLimits, deadline: TimeInterval) throws {
+                               transform: CGAffineTransform, to output: URL, options: GIFConversionOptions, limits: GIFConversionLimits, deadline: TimeInterval) throws {
         guard ProcessInfo.processInfo.systemUptime < deadline else { throw GIFConversionError.timedOut }
         guard FileManager.default.createFile(atPath: output.path, contents: nil, attributes: [.posixPermissions: 0o600]) else { throw GIFConversionError.encoding }
         let file = try FileHandle(forWritingTo: output)
@@ -149,25 +157,23 @@ struct GIFConverter {
         guard timingReader.startReading() else { throw GIFConversionError.unsupported }
         defer { timingReader.cancelReading() }
         var times = [Double]()
+        var sampleCount = 0
         while let sample = timing.copyNextSampleBuffer() {
-            if CMSampleBufferGetNumSamples(sample) == 0 { continue }
             try state.check()
+            sampleCount += 1
+            guard sampleCount <= limits.maximumInputSamples else { throw GIFConversionError.limit }
+            if CMSampleBufferGetNumSamples(sample) == 0 { continue }
             let pts = CMSampleBufferGetPresentationTimeStamp(sample).seconds
-            guard pts.isFinite, times.count < limits.maximumFrames else { throw GIFConversionError.limit }
+            guard pts.isFinite else { throw GIFConversionError.limit }
             times.append(pts)
         }
         guard timingReader.status == .completed, !times.isEmpty else { throw GIFConversionError.unsupported }
         // Compressed samples may be in decode order (B frames); decoded output is presentation order.
         times.sort()
-        let start = times[0]
-        var selected = [Double]()
-        for time in times {
-            if selected.isEmpty || time - selected.last! >= 0.02 - 0.000001 { selected.append(time) }
-        }
-        selected = selected.map { $0 - start }
+        let selected = try selectedTimes(times, duration: duration, options: options, maximumFrames: limits.maximumFrames)
         // gifski uses a positive first PTS as the final frame delay and shifts all PTS by it.
-        let finalDelay = max(0.02, duration - selected.last!)
-        var settings = GifskiSettings(width: 0, height: 0, quality: 90, fast: false, repeat: 0)
+        let finalDelay = max(minimumFrameDuration, duration - selected.last!)
+        var settings = GifskiSettings(width: 0, height: 0, quality: UInt8(options.quality), fast: false, repeat: 0)
         guard let encoder = gifski_new(&settings) else { throw GIFConversionError.encoding }
         var finished = false
         defer { if !finished { state.abort(GIFConversionError.encoding); _ = gifski_finish(encoder) } }
@@ -198,9 +204,12 @@ struct GIFConverter {
         let color = CGColorSpace(name: CGColorSpace.sRGB)!
         var index = 0
         var decodedStart: Double?
+        var decodedSamples = 0
         while let sample = frames.copyNextSampleBuffer() {
-            if CMSampleBufferGetNumSamples(sample) == 0 { continue }
             try state.check()
+            decodedSamples += 1
+            guard decodedSamples <= limits.maximumInputSamples else { throw GIFConversionError.limit }
+            if CMSampleBufferGetNumSamples(sample) == 0 { continue }
             let pts = CMSampleBufferGetPresentationTimeStamp(sample).seconds
             guard pts.isFinite else { throw GIFConversionError.unsupported }
             guard index < selected.count else { continue }
@@ -209,8 +218,14 @@ struct GIFConverter {
             if relativePTS < selected[index] - 0.000001 { continue }
             try autoreleasepool {
                 guard let pixels = CMSampleBufferGetImageBuffer(sample) else { throw GIFConversionError.unsupported }
-                let image = CIImage(cvPixelBuffer: pixels).transformed(by: transform)
-                let rect = image.extent.integral
+                let inputWidth = CVPixelBufferGetWidth(pixels), inputHeight = CVPixelBufferGetHeight(pixels)
+                guard inputHeight > 0, inputWidth <= limits.maximumInputPixels / inputHeight else { throw GIFConversionError.limit }
+                let oriented = CIImage(cvPixelBuffer: pixels).transformed(by: transform)
+                let rect = try outputRect(oriented.extent, options: options, limits: limits)
+                // Normalize after orientation, then scale uniformly. Render from (0, 0),
+                // avoiding translation-dependent rounding or a blank edge.
+                let image = oriented.transformed(by: CGAffineTransform(translationX: -oriented.extent.minX, y: -oriented.extent.minY))
+                    .transformed(by: CGAffineTransform(scaleX: options.scale, y: options.scale))
                 let width = Int(rect.width), height = Int(rect.height)
                 guard width > 0, height > 0, width <= limits.maximumPixels / height else { throw GIFConversionError.limit }
                 var rgba = [UInt8](repeating: 0, count: width * height * 4)
@@ -230,6 +245,46 @@ struct GIFConverter {
               CGImageSourceGetCount(source) > 0,
               CGImageSourceCreateImageAtIndex(source, 0, nil) != nil else { throw GIFConversionError.encoding }
         completed = true
+    }
+
+    /// Select at most one frame per fixed time bucket, retaining the original PTS.
+    /// Input timestamps are sorted; empty buckets are never filled with duplicates.
+    static func selectedTimes(_ times: [Double], duration: Double, options: GIFConversionOptions, maximumFrames: Int) throws -> [Double] {
+        guard let start = times.first, times.allSatisfy({ $0.isFinite }),
+              duration.isFinite, duration > 0 else { throw GIFConversionError.unsupported }
+        var selected = [Double]()
+        var lastBucket = -1.0
+        // Only compensate for floating-point rounding at an exact boundary.
+        let epsilon = 0.000000001
+        for time in times {
+            let pts = time - start
+            guard pts.isFinite, pts >= 0 else { throw GIFConversionError.unsupported }
+            let bucket = floor((pts + epsilon) * options.maximumFrameRate)
+            guard bucket > lastBucket else { continue }
+            if let last = selected.last {
+                // A candidate near a bucket boundary may be too close to the
+                // previous frame. Leave this bucket open for its next candidate.
+                guard pts - last >= minimumFrameDuration - epsilon else { continue }
+                // Drop a short final tail rather than lengthen the animation.
+                guard duration - pts >= minimumFrameDuration - epsilon else { continue }
+            }
+            guard selected.count < maximumFrames else { throw GIFConversionError.limit }
+            selected.append(pts)
+            lastBucket = bucket
+        }
+        return selected
+    }
+
+    static func outputRect(_ oriented: CGRect, options: GIFConversionOptions, limits: GIFConversionLimits) throws -> CGRect {
+        guard !oriented.isNull, !oriented.isInfinite,
+              oriented.origin.x.isFinite, oriented.origin.y.isFinite,
+              oriented.width.isFinite, oriented.height.isFinite,
+              oriented.width > 0, oriented.height > 0 else { throw GIFConversionError.unsupported }
+        // Uniform scaling preserves aspect ratio, up to unavoidable whole-pixel rounding.
+        let width = max(1, floor(oriented.width * options.scale))
+        let height = max(1, floor(oriented.height * options.scale))
+        guard width * height <= Double(limits.maximumPixels) else { throw GIFConversionError.limit }
+        return CGRect(x: 0, y: 0, width: width, height: height)
     }
 
     private static func check(_ result: GifskiError) throws {

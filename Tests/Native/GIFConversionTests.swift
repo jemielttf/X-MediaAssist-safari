@@ -1,6 +1,7 @@
 import XCTest
 import AVFoundation
 import ImageIO
+import XMediaAssistPreferences
 @testable import XMediaAssistCore
 
 final class GIFConversionTests: XCTestCase {
@@ -32,7 +33,7 @@ final class GIFConversionTests: XCTestCase {
             for y in 0..<32 { for x in 0..<64 {
                 let n = y * stride + x * 4
                 bytes[n] = frame % 2 == 0 ? 0 : 255
-                bytes[n + 1] = 0
+                bytes[n + 1] = UInt8((frame * 37) % 180)
                 bytes[n + 2] = frame % 2 == 0 ? 255 : 0
                 bytes[n + 3] = 255
             } }
@@ -45,6 +46,114 @@ final class GIFConversionTests: XCTestCase {
         writer.finishWriting { finished.fulfill() }
         await fulfillment(of: [finished], timeout: 10)
         XCTAssertEqual(writer.status, .completed, "\(String(describing: writer.error))")
+    }
+
+    func options(fps: Double = 20, scale: Double = 1, quality: Int = 90) throws -> GIFConversionOptions {
+        try GIFConversionOptions(message: ["quality": quality, "maximumFrameRate": fps, "scale": scale])
+    }
+
+    func testPTSSelectionPreservesSlowSources() throws {
+        for (sourceFPS, cap) in [(15, 20), (20, 20), (24, 30), (30, 30)] {
+            let pts = (0..<sourceFPS).map { Double($0) / Double(sourceFPS) }
+            XCTAssertEqual(try GIFConverter.selectedTimes(pts, duration: 1, options: options(fps: Double(cap)), maximumFrames: 1500), pts)
+        }
+    }
+
+    func testPTSSelectionKeepsExpectedCountsForAllCapsAndFractionalRates() throws {
+        for rate in [15.0, 20, 24, 25, 30, 60, 30000.0 / 1001, 60000.0 / 1001, 30.001, 19.999, 20.001] {
+            let pts = (0..<Int(ceil(rate * 10))).map { Double($0) / rate }
+            for cap in [15.0, 20, 25, 30] {
+                let selected = try GIFConverter.selectedTimes(pts, duration: 10, options: options(fps: cap), maximumFrames: 1500)
+                XCTAssertEqual(Double(selected.count), min(rate, cap) * 10, accuracy: 1, "source \(rate), cap \(cap)")
+                XCTAssertLessThanOrEqual(selected.count, Int(cap * 10))
+                XCTAssertTrue(selected.allSatisfy(pts.contains), "Retain source PTS without interpolation")
+                for (a, b) in zip(selected, selected.dropFirst()) {
+                    XCTAssertGreaterThanOrEqual(b - a, 0.02 - 0.000000001)
+                }
+            }
+        }
+        let thirty = (0..<30).map { Double($0) / 30 }
+        let expectedIndices = [0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21, 23, 24, 26, 27, 29]
+        XCTAssertEqual(try GIFConverter.selectedTimes(thirty, duration: 1, options: options(), maximumFrames: 1500), expectedIndices.map { thirty[$0] })
+    }
+
+    func testPTSSelectionHandlesBucketBoundariesDuplicatesAndVFRGaps() throws {
+        let boundaries = [0.0, 0, 0.049, 0.05, 0.05, 0.099, 0.1, 0.149, 0.15]
+        XCTAssertEqual(try GIFConverter.selectedTimes(boundaries, duration: 0.2, options: options(), maximumFrames: 1500), [0, 0.05, 0.1, 0.15])
+        // Reject the 2ms boundary candidate, but allow the later frame in that bucket.
+        let vfr = [0.0, 0.099, 0.101, 0.122, 0.15, 2.099, 2.101, 2.13]
+        let expected = [0.0, 0.099, 0.122, 0.15, 2.099, 2.13]
+        XCTAssertEqual(try GIFConverter.selectedTimes(vfr, duration: 3, options: options(), maximumFrames: 1500), expected)
+        let shifted = try GIFConverter.selectedTimes(vfr.map { $0 + 4 }, duration: 3, options: options(), maximumFrames: 1500)
+        XCTAssertEqual(shifted.count, expected.count)
+        for (actual, wanted) in zip(shifted, expected) { XCTAssertEqual(actual, wanted, accuracy: 0.000000001) }
+        XCTAssertEqual(try GIFConverter.selectedTimes([0, 0.049, 0.051, 0.15], duration: 0.2, options: options(), maximumFrames: 1500), [0, 0.051, 0.15])
+        XCTAssertEqual(try GIFConverter.selectedTimes([0, 0.09, 0.11], duration: 0.2, options: options(), maximumFrames: 1500), [0, 0.09, 0.11])
+        XCTAssertEqual(try GIFConverter.selectedTimes([0, 0.09, 0.109999, 0.12], duration: 0.2, options: options(), maximumFrames: 1500), [0, 0.09, 0.12])
+    }
+
+    func testPTSSelectionDropsShortTailAndChecksSelectedFrameLimit() throws {
+        let pts = [0.0, 0.1, 0.2, 0.399]
+        XCTAssertEqual(try GIFConverter.selectedTimes(pts, duration: 0.4, options: options(), maximumFrames: 3), [0, 0.1, 0.2])
+        XCTAssertEqual(try GIFConverter.selectedTimes([0, 0.1, 0.38], duration: 0.4, options: options(), maximumFrames: 3), [0, 0.1, 0.38])
+        XCTAssertEqual(try GIFConverter.selectedTimes([0], duration: 0.01, options: options(), maximumFrames: 1), [0])
+        let long = (0..<1800).map { Double($0) / 60 }
+        XCTAssertEqual(try GIFConverter.selectedTimes(long, duration: 30, options: options(), maximumFrames: 600).count, 600)
+        XCTAssertThrowsError(try GIFConverter.selectedTimes(long, duration: 30, options: options(), maximumFrames: 599))
+    }
+
+    func testRealEncoderAllSizesAndOrientations() async throws {
+        for rotated in [false, true] {
+            let folder = try directory(), input = folder.appendingPathComponent("input.mp4")
+            try await makeVideo(input, rotated: rotated)
+            for scale in [1.0, 0.75, 0.5] {
+                let output = folder.appendingPathComponent("\(scale).gif")
+                try await GIFConverter.convert(input, to: output, options: options(scale: scale))
+                let source = try XCTUnwrap(CGImageSourceCreateWithURL(output as CFURL, nil))
+                let image = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil))
+                XCTAssertEqual(image.width, Int(Double(rotated ? 32 : 64) * scale))
+                XCTAssertEqual(image.height, Int(Double(rotated ? 64 : 32) * scale))
+                XCTAssertEqual(Double(image.width) / Double(image.height), rotated ? 0.5 : 2)
+            }
+        }
+    }
+
+    func testInputAndOutputLimitsAreSeparate() async throws {
+        let fourK = CGRect(x: -2160, y: 0, width: 3840, height: 2160)
+        XCTAssertEqual(try GIFConverter.outputRect(fourK, options: options(scale: 0.5), limits: .init()), CGRect(x: 0, y: 0, width: 1920, height: 1080))
+        XCTAssertThrowsError(try GIFConverter.outputRect(fourK, options: options(), limits: .init()))
+        let folder = try directory(), input = folder.appendingPathComponent("input.mp4"), output = folder.appendingPathComponent("output.gif")
+        try await makeVideo(input, times: (0..<60).map { Double($0) / 60 }, duration: 1)
+        var limits = GIFConversionLimits()
+        limits.maximumFrames = 20
+        limits.maximumPixels = 32 * 16
+        try await GIFConverter.convert(input, to: output, options: options(scale: 0.5), limits: limits)
+        let limitedOutput = folder.appendingPathComponent("limited.gif")
+        limits.maximumInputSamples = 30
+        do {
+            try await GIFConverter.convert(input, to: limitedOutput, options: options(scale: 0.5), limits: limits)
+            XCTFail("Input sample safety cap must be enforced")
+        } catch GIFConversionError.limit { }
+        XCTAssertFalse(FileManager.default.fileExists(atPath: limitedOutput.path))
+        limits.maximumInputSamples = 18_000
+        limits.maximumInputPixels = 32 * 16
+        do {
+            try await GIFConverter.convert(input, to: limitedOutput, options: options(scale: 0.5), limits: limits)
+            XCTFail("Input decode size safety cap must be enforced")
+        } catch GIFConversionError.limit { }
+    }
+
+    func testSavePassesValidatedOptionsToConverter() async throws {
+        let folder = try directory(), input = folder.appendingPathComponent("input.mp4")
+        try Data("source".utf8).write(to: input)
+        let expected = try options(fps: 25, scale: 0.75, quality: 50)
+        let request = try MediaDownloadRequest(message: ["type": "download", "url": "https://video.twimg.com/a.mp4", "postId": "123", "author": "example", "mediaIndex": 1, "mediaType": "animated_gif", "gifOptions": expected.message])
+        let save = MediaSave(request: request, directory: folder) { _, output, options in
+            XCTAssertEqual(options, expected)
+            try Data("complete".utf8).write(to: output)
+        }
+        let filename = try await save.finish(input)
+        XCTAssertEqual(filename, "example-123-1.gif")
     }
 
     func testRealEncoderPreservesFramesTimingLoopAndOrientation() async throws {
@@ -159,7 +268,7 @@ final class GIFConversionTests: XCTestCase {
         let data = Data("test source preserved".utf8)
         try data.write(to: input)
         var called = 0
-        let convert: (URL, URL) async throws -> Void = { _, output in
+        let convert: (URL, URL, GIFConversionOptions) async throws -> Void = { _, output, _ in
             called += 1
             try Data("partial GIF".utf8).write(to: output)
             throw GIFConversionError.encoding
@@ -192,23 +301,51 @@ private final class GIFDownloadFixture: URLProtocol {
 }
 
 extension GIFConversionTests {
+    func assertGIFTiming(_ output: URL, selected: [Double], duration: Double, file: StaticString = #filePath, line: UInt = #line) throws {
+        let source = try XCTUnwrap(CGImageSourceCreateWithURL(output as CFURL, nil), file: file, line: line)
+        let count = CGImageSourceGetCount(source)
+        XCTAssertEqual(count, selected.count, file: file, line: line)
+        var elapsed = 0.0
+        for index in 0..<min(count, selected.count) {
+            // GIF quantizes timestamps to centiseconds. Check cumulative timing so
+            // repeated rounding or minimum-delay padding cannot hide duration drift.
+            XCTAssertEqual(elapsed, selected[index], accuracy: 0.0051, file: file, line: line)
+            let props = try XCTUnwrap(CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [String: Any], file: file, line: line)
+            let gif = try XCTUnwrap(props[kCGImagePropertyGIFDictionary as String] as? [String: Any], file: file, line: line)
+            let delay = try XCTUnwrap(gif[kCGImagePropertyGIFUnclampedDelayTime as String] as? Double, file: file, line: line)
+            XCTAssertGreaterThanOrEqual(delay, 0.02, file: file, line: line)
+            elapsed += delay
+        }
+        XCTAssertEqual(elapsed, max(0.02, duration), accuracy: 0.0051, file: file, line: line)
+    }
+
     func testVariableFrameTimingAndSingleFrame() async throws {
-        for times in [[0.0, 0.04, 0.17, 0.21], [0.0]] {
+        for (times, fps, selected, duration) in [
+            ([0.0, 0.04, 0.17, 0.21], 30.0, [0.0, 0.04, 0.17, 0.21], 0.35),
+            ([0.0, 0.04, 0.17, 0.21], 20.0, [0.0, 0.17, 0.21], 0.35),
+            ([0.0, 0.099, 0.101, 0.122, 0.15, 0.999], 20.0, [0.0, 0.099, 0.122, 0.15], 1.0),
+            ([0.0, 0.1, 2.099, 2.101, 2.13], 20.0, [0.0, 0.1, 2.099, 2.13], 3.0),
+            ([0.0, 0.1, 0.201], 20.0, [0.0, 0.1], 0.21),
+            ([0.0], 20.0, [0.0], 0.35),
+            ([0.0], 20.0, [0.0], 0.01)
+        ] {
             let folder = try directory(), input = folder.appendingPathComponent("vfr.mp4"), output = folder.appendingPathComponent("vfr.gif")
-            try await makeVideo(input, times: times, duration: 0.35)
-            try await GIFConverter.convert(input, to: output)
-            let source = try XCTUnwrap(CGImageSourceCreateWithURL(output as CFURL, nil))
-            XCTAssertEqual(CGImageSourceGetCount(source), times.count)
-            var elapsed = 0.0
-            for index in times.indices {
-                let props = try XCTUnwrap(CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [String: Any])
-                let gif = try XCTUnwrap(props[kCGImagePropertyGIFDictionary as String] as? [String: Any])
-                let delay = try XCTUnwrap(gif[kCGImagePropertyGIFUnclampedDelayTime as String] as? Double)
-                let expected = (index + 1 < times.count ? times[index + 1] : 0.35) - times[index]
-                XCTAssertEqual(delay, expected, accuracy: 0.015)
-                elapsed += delay
-            }
-            XCTAssertEqual(elapsed, 0.35, accuracy: 0.02)
+            try await makeVideo(input, times: times, duration: duration)
+            try await GIFConverter.convert(input, to: output, options: options(fps: fps))
+            try assertGIFTiming(output, selected: selected, duration: duration)
+        }
+    }
+
+    func testRealEncoderCapsThirtyFPSWithoutRetimingFrames() async throws {
+        let folder = try directory(), input = folder.appendingPathComponent("thirty.mp4")
+        let times = (0..<30).map { Double($0) / 30 }
+        try await makeVideo(input, times: times, duration: 1)
+        for cap in [15.0, 20, 25, 30] {
+            let output = folder.appendingPathComponent("\(cap).gif")
+            let selected = try GIFConverter.selectedTimes(times, duration: 1, options: options(fps: cap), maximumFrames: 1500)
+            XCTAssertEqual(selected.count, Int(cap))
+            try await GIFConverter.convert(input, to: output, options: options(fps: cap))
+            try assertGIFTiming(output, selected: selected, duration: 1)
         }
     }
 
@@ -223,13 +360,13 @@ extension GIFConversionTests {
             var response: Result<MediaSaveResult, Error>?
             let config = URLSessionConfiguration.ephemeral
             config.protocolClasses = [GIFDownloadFixture.self]
-            let converter: (URL, URL) async throws -> Void = { input, output in
+            let converter: (URL, URL, GIFConversionOptions) async throws -> Void = { input, output, options in
                 // Yield after the URLSession completion callback returns. The input
                 // must remain available throughout asynchronous conversion.
                 try await Task.sleep(nanoseconds: 20_000_000)
                 XCTAssertTrue(FileManager.default.fileExists(atPath: input.path))
                 if mode == "failure" { throw GIFConversionError.limit }
-                try await GIFConverter.convert(input, to: output)
+                try await GIFConverter.convert(input, to: output, options: options)
             }
             MediaSave(request: try request(format: mode == "mp4" ? "mp4" : "auto"), directory: folder, convert: converter).start(configuration: config) {
                 response = $0

@@ -1,3 +1,6 @@
+#if SWIFT_PACKAGE
+import XMediaAssistPreferences
+#endif
 import Foundation
 import Darwin
 
@@ -23,11 +26,12 @@ struct MediaDownloadRequest {
     let author: String
     let mediaIndex: Int
     let mediaType: String
+    let gifOptions: GIFConversionOptions
     let format: String
     var convertsGIF: Bool { mediaType == "animated_gif" && format == "auto" }
     var basename: String { "\(author)-\(postId)-\(mediaIndex)" }
 
-    init(message: [String: Any]) throws {
+    init(message: [String: Any], defaultGIFOptions: GIFConversionOptions = .defaults) throws {
         guard message["type"] as? String == "download",
               let rawURL = message["url"] as? String, rawURL.count <= 4096,
               let url = URL(string: rawURL), Self.isAllowedURL(url),
@@ -46,6 +50,9 @@ struct MediaDownloadRequest {
         let format = message["format"] as? String ?? "auto"
         guard ["auto", "mp4"].contains(format) else { throw MediaDownloadError.invalidRequest }
         self.format = format
+        do {
+            gifOptions = try message["gifOptions"].map { try GIFConversionOptions(message: $0) } ?? defaultGIFOptions
+        } catch { throw MediaDownloadError.invalidRequest }
     }
 
     static func isAllowedURL(_ url: URL) -> Bool {

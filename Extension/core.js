@@ -1,6 +1,15 @@
 /* Shared by the isolated content script, background, popup, and Node tests. */
 (() => {
   "use strict";
+  const GIF_DEFAULTS = Object.freeze({ quality: 90, maximumFrameRate: 20, scale: 1 });
+  function validateGIFOptions(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value) ||
+        Object.keys(value).length !== 3 || ![90, 75, 50].includes(value.quality) ||
+        ![30, 25, 20, 15].includes(value.maximumFrameRate) || ![1, 0.75, 0.5].includes(value.scale)) {
+      throw new Error("GIF設定が正しくありません。");
+    }
+    return { quality: value.quality, maximumFrameRate: value.maximumFrameRate, scale: value.scale };
+  }
   const POST_ID = /^[1-9][0-9]{0,19}$/;
   const HOSTS = new Set(["x.com", "www.x.com", "twitter.com", "www.twitter.com"]);
   function isPostId(value) { return typeof value === "string" && POST_ID.test(value); }
@@ -59,12 +68,12 @@
       ]);
     } finally { clearTimeout(timer); }
   }
-  function requestDownload(postId, sendMessage, format = "auto") {
+  function requestDownload(postId, sendMessage, format = "auto", gifOptions) {
     // Four sequential native transfers (10 minutes each), plus IPC and metadata margins.
-    return withTimeout(() => sendMessage({ type: "downloadPost", postId, format }), 45 * 60 * 1000,
+    return withTimeout(() => sendMessage({ type: "downloadPost", postId, format, ...(gifOptions === undefined ? {} : { gifOptions: validateGIFOptions(gifOptions) }) }), 45 * 60 * 1000,
       "拡張機能から保存結果が届きません。ダウンロードフォルダを確認し、Safariを終了して起動し直してください。");
   }
-  async function downloadPost(postId, { fetchImpl = fetch, sendNative, connectionTimeout = 15000, downloadTimeout = 650000, format = "auto" }) {
+  async function downloadPost(postId, { fetchImpl = fetch, sendNative, connectionTimeout = 15000, downloadTimeout = 650000, format = "auto", gifOptions }) {
     const saved = [];
     const warnings = [];
     try {
@@ -73,7 +82,8 @@
       let ready;
       try { ready = await withTimeout(() => sendNative({ type: "ping" }), connectionTimeout, connectionError); }
       catch { throw new Error(connectionError); }
-      if (ready?.ok !== true || ready?.protocolVersion !== 2) throw new Error(connectionError);
+      if (ready?.ok !== true || ready?.protocolVersion !== 3) throw new Error(connectionError);
+      const resolvedGIFOptions = validateGIFOptions(gifOptions === undefined ? (ready.gifOptions ?? GIF_DEFAULTS) : gifOptions);
       let response;
       try {
         response = await fetchImpl(syndicationURL(postId), {
@@ -87,7 +97,7 @@
       const media = extractMedia(data, postId);
       for (const item of media) {
         let reply;
-        try { reply = await withTimeout(() => sendNative({ type: "download", ...item, format }), downloadTimeout, "native timeout"); }
+        try { reply = await withTimeout(() => sendNative({ type: "download", ...item, format, gifOptions: resolvedGIFOptions }), downloadTimeout, "native timeout"); }
         catch { throw new Error("保存アプリとの通信が切れました。保存結果をダウンロードフォルダで確認してから再試行してください。"); }
         if (!reply?.ok || typeof reply.filename !== "string") throw new Error(reply?.error || "保存結果を確認できませんでした。");
         saved.push(reply.filename);
@@ -105,5 +115,5 @@
     if (result?.ok) return `${saved.length}件をダウンロードフォルダへ保存しました。\n${saved.join("\n")}`;
     return `${saved.length ? `${saved.length}件は保存済みです。\n${saved.join("\n")}\n` : ""}${[warning, result?.error].filter(Boolean).join("\n") || "保存に失敗しました。"}`;
   }
-  globalThis.XMediaCore = Object.freeze({ isPostId, parsePostURL, isXPage, isMP4URL, syndicationURL, extractMedia, withTimeout, requestDownload, downloadPost, resultMessage });
+  globalThis.XMediaCore = Object.freeze({ GIF_DEFAULTS, validateGIFOptions, isPostId, parsePostURL, isXPage, isMP4URL, syndicationURL, extractMedia, withTimeout, requestDownload, downloadPost, resultMessage });
 })();

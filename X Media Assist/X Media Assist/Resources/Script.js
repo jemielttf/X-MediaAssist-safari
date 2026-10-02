@@ -12,3 +12,22 @@ document.querySelector(".open-preferences").addEventListener("click", () => {
 document.querySelector(".open-licenses").addEventListener("click", () => {
     webkit.messageHandlers.controller.postMessage("open-licenses");
 });
+
+function showGIFOptions(options) {
+    document.getElementById("gif-quality").value = String(options.quality);
+    document.getElementById("gif-fps").value = String(options.maximumFrameRate);
+    document.getElementById("gif-scale").value = String(options.scale);
+    document.getElementById("gif-options").disabled = false;
+    document.getElementById("gif-status").textContent = "変更は自動保存され、通常のGIFダウンロードに適用されます。";
+}
+function showGIFError() {
+    document.getElementById("gif-options").disabled = true;
+    document.getElementById("gif-status").textContent = "GIF設定を読み込み・保存できませんでした。アプリを開き直してください。";
+}
+document.getElementById("gif-options").addEventListener("change", () => {
+    webkit.messageHandlers.controller.postMessage({ type: "set-gif-options", gifOptions: {
+        quality: Number(document.getElementById("gif-quality").value),
+        maximumFrameRate: Number(document.getElementById("gif-fps").value),
+        scale: Number(document.getElementById("gif-scale").value)
+    }});
+});

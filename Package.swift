@@ -9,10 +9,11 @@ let package = Package(
     platforms: [.macOS(.v14)],
     products: [.library(name: "XMediaAssistCore", targets: ["XMediaAssistCore"])],
     targets: [
-        .target(name: "XMediaAssistAppSupport", path: "AppSupport"),
+        .target(name: "XMediaAssistPreferences", path: "Shared"),
+        .target(name: "XMediaAssistAppSupport", dependencies: ["XMediaAssistPreferences"], path: "AppSupport"),
         .testTarget(name: "XMediaAssistAppSupportTests", dependencies: ["XMediaAssistAppSupport"], path: "Tests/AppSupport"),
         .systemLibrary(name: "CGifski", path: "Native/CGifski"),
-        .target(name: "XMediaAssistCore", dependencies: ["CGifski"], path: "Native", exclude: ["CGifski"],
+        .target(name: "XMediaAssistCore", dependencies: ["CGifski", "XMediaAssistPreferences"], path: "Native", exclude: ["CGifski"],
                 linkerSettings: [.unsafeFlags(["-L", root + "/build/gifski-universal"])]),
         .testTarget(name: "XMediaAssistCoreTests", dependencies: ["XMediaAssistCore"], path: "Tests/Native")
     ]

@@ -16,10 +16,10 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
                 throw MediaDownloadError.invalidRequest
             }
             if message["type"] as? String == "ping" {
-                respond(["ok": true, "protocolVersion": 2])
+                respond(["ok": true, "protocolVersion": 3, "gifOptions": try GIFPreferences.appGroup().options.message])
                 return
             }
-            let request = try MediaDownloadRequest(message: message)
+            let request = try MediaDownloadRequest(message: message, defaultGIFOptions: try GIFPreferences.appGroup().options)
             let directory = try FileManager.default.url(for: .downloadsDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             Self.lock.lock()
             let accepted = Self.activeRequests.count < 3 && !Self.activeRequests.contains(request.basename)

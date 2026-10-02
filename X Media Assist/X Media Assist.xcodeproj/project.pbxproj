@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A30000000000000000000001 = {isa = PBXBuildFile; fileRef = A30000000000000000000003; };
+		A30000000000000000000002 = {isa = PBXBuildFile; fileRef = A30000000000000000000003; };
 		A10000000000000000000001 /* MediaDownload.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* MediaDownload.swift */; };
 		A10000000000000000000005 /* GIFConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* GIFConverter.swift */; };
 		A10000000000000000000006 /* MediaSave.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* MediaSave.swift */; };
@@ -65,6 +67,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A30000000000000000000003 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GIFConversionOptions.swift; path = ../../Shared/GIFConversionOptions.swift; sourceTree = "<group>"; };
 		A10000000000000000000002 /* MediaDownload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaDownload.swift; path = ../../Native/MediaDownload.swift; sourceTree = "<group>"; };
 		A10000000000000000000003 /* GIFConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GIFConverter.swift; path = ../../Native/GIFConverter.swift; sourceTree = "<group>"; };
 		A10000000000000000000004 /* MediaSave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MediaSave.swift; path = ../../Native/MediaSave.swift; sourceTree = "<group>"; };
@@ -151,6 +154,7 @@
 			children = (
 				BFF2F2D33061180500D8D517 /* AppDelegate.swift */,
 				A20000000000000000000002 /* AppPreferences.swift */,
+				A30000000000000000000003 /* GIFConversionOptions.swift */,
 				BFF2F2DF3061180500D8D517 /* ViewController.swift */,
 				BFF2F2E13061180500D8D517 /* Main.storyboard */,
 				BFF2F2E43061180600D8D517 /* Assets.xcassets */,
@@ -337,6 +341,7 @@
 			isa = PBXSourcesBuildPhase;
 			files = (
 				A20000000000000000000001 /* AppPreferences.swift in Sources */,
+				A30000000000000000000001 /* GIFConversionOptions.swift in Sources */,
 				BFF2F2E03061180500D8D517 /* ViewController.swift in Sources */,
 				BFF2F2D43061180500D8D517 /* AppDelegate.swift in Sources */,
 			);
@@ -346,6 +351,7 @@
 			files = (
 				BFF2F2F13061180600D8D517 /* SafariWebExtensionHandler.swift in Sources */,
 				A10000000000000000000001 /* MediaDownload.swift in Sources */,
+				A30000000000000000000002 /* GIFConversionOptions.swift in Sources */,
 				A10000000000000000000006 /* MediaSave.swift in Sources */,
 				A10000000000000000000005 /* GIFConverter.swift in Sources */,
 			);
@@ -623,6 +629,7 @@
 					"-framework",
 					WebKit,
 				);
+				CODE_SIGN_ENTITLEMENTS = "X Media Assist/App.entitlements";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jemielttf.XMediaAssist;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -670,6 +677,7 @@
 					"-framework",
 					WebKit,
 				);
+				CODE_SIGN_ENTITLEMENTS = "X Media Assist/App.entitlements";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jemielttf.XMediaAssist;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;

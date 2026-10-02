@@ -1,5 +1,6 @@
 import XCTest
 import ServiceManagement
+import XMediaAssistPreferences
 @testable import XMediaAssistAppSupport
 
 @MainActor
@@ -24,6 +25,20 @@ private final class LoginItemStub: LoginItemService {
 }
 
 final class AppPreferencesTests: XCTestCase {
+    @MainActor
+    func testGIFPreferencePersistsInSharedStoreWithoutChangingDockPreference() async throws {
+        let suite = "XMediaAssist.Tests.GIFApp.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = GIFPreferences(defaults: defaults)
+        let app = AppPreferences(defaults: defaults, loginItem: LoginItemStub(), gifPreferences: store)
+        XCTAssertEqual(try app.gifOptions(), .defaults)
+        let options = try GIFConversionOptions(message: ["quality": 50, "maximumFrameRate": 25, "scale": 0.5])
+        try app.setGIFOptions(options)
+        XCTAssertEqual(GIFPreferences(defaults: try XCTUnwrap(UserDefaults(suiteName: suite))).options, options)
+        XCTAssertFalse(app.hidesDockIcon)
+    }
+
     @MainActor
     func testDockPreferencePersistsWithoutChangingLoginRegistration() async throws {
         let suite = "XMediaAssist.Tests.\(UUID())"

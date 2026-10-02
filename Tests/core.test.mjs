@@ -9,7 +9,7 @@ const url = "https://video.twimg.com/ext_tw_video/123/pu/vid/1280x720/sample.mp4
 const variant = (bitrate, address = url) => ({ content_type: "video/mp4", bitrate, url: address });
 const media = (type = "video", variants = [variant(1000)]) => ({ type, video_info: { variants } });
 const post = (items = [media()]) => ({ id_str: id, user: { screen_name: "example" }, mediaDetails: items });
-const connected = download => request => request.type === "ping" ? Promise.resolve({ ok: true, protocolVersion: 2 }) : download(request);
+const connected = download => request => request.type === "ping" ? Promise.resolve({ ok: true, protocolVersion: 3 }) : download(request);
 const fetchPost = data => async () => ({ ok: true, status: 200, json: async () => data });
 
 test("post IDs remain strings, including values beyond JS safe integers", () => {
@@ -172,4 +172,68 @@ test("MP4 override is passed explicitly without altering GIF classification", as
     })
   });
   assert.equal(result.ok, true);
+});
+
+test("GIF defaults, base preferences and download overrides reach native without persistence", async () => {
+  const base = { quality: 75, maximumFrameRate: 25, scale: 0.75 };
+  const override = { quality: 50, maximumFrameRate: 15, scale: 0.5 };
+  for (const [stored, supplied, expected] of [[undefined, undefined, c.GIF_DEFAULTS], [base, undefined, base], [base, override, override]]) {
+    const sent = [];
+    const result = await c.downloadPost(id, {
+      gifOptions: supplied, fetchImpl: fetchPost(post([media("animated_gif")])),
+      sendNative: async request => {
+        sent.push(request);
+        if (request.type === "ping") return { ok: true, protocolVersion: 3, gifOptions: stored };
+        assert.deepEqual(request.gifOptions, expected);
+        return { ok: true, filename: "saved.gif" };
+      }
+    });
+    assert.equal(result.ok, true);
+    assert.deepEqual(sent.map(request => request.type), ["ping", "download"]);
+  }
+  assert.deepEqual(base, { quality: 75, maximumFrameRate: 25, scale: 0.75 });
+  await c.requestDownload(id, async message => {
+    assert.deepEqual(message.gifOptions, override);
+    return { ok: true, saved: [] };
+  }, "auto", override);
+});
+
+test("GIF validation rejects unsupported types and values before a download", async () => {
+  for (const raw of [null, [], {}, { ...c.GIF_DEFAULTS, quality: 91 }, { ...c.GIF_DEFAULTS, maximumFrameRate: 50 }, { ...c.GIF_DEFAULTS, scale: true }, { ...c.GIF_DEFAULTS, scale: "1" }]) {
+    assert.throws(() => c.validateGIFOptions(raw));
+    const result = await c.downloadPost(id, {
+      gifOptions: raw, sendNative: connected(() => assert.fail("must not download")),
+      fetchImpl: () => assert.fail("must not fetch")
+    });
+    assert.equal(result.ok, false);
+    assert.match(result.error, /GIF設定/);
+  }
+});
+
+test("version 2 native is rejected to prevent silently ignoring GIF options", async () => {
+  const result = await c.downloadPost(id, {
+    sendNative: async () => ({ ok: true, protocolVersion: 2 }),
+    fetchImpl: () => assert.fail("must not fetch")
+  });
+  assert.equal(result.ok, false);
+});
+
+test("background exposes GIF defaults only to popup and forwards download overrides", async () => {
+  let listener, received;
+  const nativeCalls = [];
+  const base = { quality: 75, maximumFrameRate: 25, scale: 0.75 };
+  const context = vm.createContext({
+    XMediaCore: { ...c, downloadPost: async (_, options) => { received = options; return { ok: true }; } },
+    browser: { runtime: { id: "self", getURL: path => `safari-web-extension://id/${path}`,
+      sendNativeMessage: async (_, message) => { nativeCalls.push(message.type); return { ok: true, protocolVersion: 3, gifOptions: base }; },
+      onMessage: { addListener: fn => { listener = fn; } } } }
+  });
+  vm.runInContext(await readFile(new URL("../Extension/background.js", import.meta.url), "utf8"), context);
+  const popup = { id: "self", url: "safari-web-extension://id/popup.html" };
+  assert.deepEqual((await listener({ type: "getGIFOptions" }, popup)).gifOptions, base);
+  assert.equal((await listener({ type: "getGIFOptions" }, { id: "self", url: "https://x.com/home", tab: {} })).ok, false);
+  assert.equal((await listener({ type: "setGIFOptions", gifOptions: base }, popup)).ok, false);
+  await listener({ type: "downloadPost", postId: id, gifOptions: base }, popup);
+  assert.deepEqual(received.gifOptions, base);
+  assert.deepEqual(nativeCalls, ["ping"]);
 });

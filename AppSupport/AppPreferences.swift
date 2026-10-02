@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#if SWIFT_PACKAGE
+import XMediaAssistPreferences
+#endif
 import Foundation
 import ServiceManagement
 
@@ -14,11 +17,20 @@ extension SMAppService: LoginItemService {}
 @MainActor
 final class AppPreferences {
     private let defaults: UserDefaults
+    private let gifPreferences: GIFPreferences?
     private let loginItem: any LoginItemService
 
-    init(defaults: UserDefaults = .standard, loginItem: any LoginItemService = SMAppService.mainApp) {
+    init(defaults: UserDefaults = .standard, loginItem: any LoginItemService = SMAppService.mainApp,
+         gifPreferences: GIFPreferences? = nil) {
         self.defaults = defaults
         self.loginItem = loginItem
+        self.gifPreferences = gifPreferences
+    }
+
+    func gifOptions() throws -> GIFConversionOptions { try (gifPreferences ?? GIFPreferences.appGroup()).options }
+
+    func setGIFOptions(_ options: GIFConversionOptions) throws {
+        try (gifPreferences ?? GIFPreferences.appGroup()).options = options
     }
 
     var hidesDockIcon: Bool {
