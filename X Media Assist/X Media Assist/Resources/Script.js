@@ -14,9 +14,9 @@ document.querySelector(".open-licenses").addEventListener("click", () => {
 });
 
 function showGIFOptions(options) {
-    document.getElementById("gif-quality").value = String(options.quality);
-    document.getElementById("gif-fps").value = String(options.maximumFrameRate);
-    document.getElementById("gif-scale").value = String(options.scale);
+    document.querySelector(`input[name="gif-quality"][value="${options.quality}"]`).checked = true;
+    document.querySelector(`input[name="gif-fps"][value="${options.maximumFrameRate}"]`).checked = true;
+    document.querySelector(`input[name="gif-scale"][value="${options.scale}"]`).checked = true;
     document.getElementById("gif-options").disabled = false;
     document.getElementById("gif-status").textContent = "通常のGIF保存に使います。変更は自動保存されます。";
 }
@@ -26,8 +26,8 @@ function showGIFError() {
 }
 document.getElementById("gif-options").addEventListener("change", () => {
     webkit.messageHandlers.controller.postMessage({ type: "set-gif-options", gifOptions: {
-        quality: Number(document.getElementById("gif-quality").value),
-        maximumFrameRate: Number(document.getElementById("gif-fps").value),
-        scale: Number(document.getElementById("gif-scale").value)
+        quality: Number(document.querySelector('input[name="gif-quality"]:checked').value),
+        maximumFrameRate: Number(document.querySelector('input[name="gif-fps"]:checked').value),
+        scale: Number(document.querySelector('input[name="gif-scale"]:checked').value)
     }});
 });

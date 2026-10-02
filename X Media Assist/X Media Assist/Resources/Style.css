@@ -110,7 +110,7 @@ body.state-off :is(.state-on, .state-unknown) {
     background: light-dark(#f6f7f9, #25282e);
     color: light-dark(#20242b, #f1f3f5);
 }
-.gif-options legend {
+.gif-options > legend {
     padding-inline: 6px;
     font-weight: 600;
     font-size: 15px;
@@ -133,32 +133,66 @@ body.state-off :is(.state-on, .state-unknown) {
     line-height: 1.7;
 }
 .gif-options .gif-description { margin: 0 0 12px; }
-.gif-option-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 100px;
-    align-items: center;
-    gap: 12px;
-    margin-block: 8px;
+.gif-option-group {
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
 }
-.gif-option-row label { font-weight: 500; }
-.gif-options select {
-    box-sizing: border-box;
-    width: 100%;
+.gif-option-group + .gif-option-group { margin-top: 16px; }
+.gif-option-group legend {
+    padding: 0;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.gif-choices {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+.gif-choices-four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.gif-choice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     min-height: 40px;
-    padding: 6px 8px;
+    box-sizing: border-box;
+    padding: 6px 4px;
     border: 1px solid light-dark(#858e9b, #7c8696);
     border-radius: 8px;
     background: light-dark(#fff, #30353e);
-    color: inherit;
-    font: inherit;
+    font-weight: 500;
     cursor: pointer;
 }
-.gif-options select:disabled {
+.gif-choices-four .gif-choice { gap: 4px; font-size: 13px; }
+.gif-choice input {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: light-dark(#0869c8, #82bcff);
+}
+.gif-choice span { white-space: nowrap; }
+.gif-choice:has(input:checked) {
+    border-color: light-dark(#0869c8, #82bcff);
+    background: light-dark(#eaf3ff, #203d5d);
+}
+.gif-choice:has(input:focus-visible) {
+    outline: 2px solid light-dark(#0869c8, #82bcff);
+    outline-offset: 3px;
+}
+.gif-choice input:focus-visible { outline: none; }
+.gif-choice:has(input:disabled) {
     background: light-dark(#e9ecf0, #292d34);
     color: light-dark(#606975, #a9b2bf);
     border-color: light-dark(#b6bdc7, #596271);
     cursor: default;
-    opacity: 1;
+}
+.gif-choice:has(input:disabled:checked) {
+    border-color: light-dark(#858e9b, #7c8696);
+    background: light-dark(#dce3ec, #394350);
 }
 .gif-help {
     margin-top: 14px;
@@ -173,5 +207,5 @@ body.state-off :is(.state-on, .state-unknown) {
 }
 @media (max-width: 340px) {
     .gif-options { padding-inline: 12px; }
-    .gif-option-row { grid-template-columns: minmax(0, 1fr) 90px; gap: 8px; }
+    .gif-choices-four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

@@ -20,9 +20,9 @@ document.querySelectorAll('input[name="format"]').forEach(control => control.add
 const loadGIFOptions = browser.runtime.sendMessage({ type: "getGIFOptions" }).then(reply => {
 	if (!reply?.ok) throw new Error(reply?.error || "GIF基本設定を読み込めませんでした。");
 	const options = XMediaCore.validateGIFOptions(reply.gifOptions);
-	document.getElementById("gif-quality").value = String(options.quality);
-	document.getElementById("gif-fps").value = String(options.maximumFrameRate);
-	document.getElementById("gif-scale").value = String(options.scale);
+	document.querySelector(`input[name="gif-quality"][value="${options.quality}"]`).checked = true;
+	document.querySelector(`input[name="gif-fps"][value="${options.maximumFrameRate}"]`).checked = true;
+	document.querySelector(`input[name="gif-scale"][value="${options.scale}"]`).checked = true;
 	gifOptionsReady = true;
 }).catch(error => {
 	gifOptionsFailed = true;
@@ -58,9 +58,9 @@ document
 					(message) => browser.runtime.sendMessage(message),
 					document.querySelector('input[name="format"]:checked').value,
 					gifOptionsReady ? {
-						quality: Number(document.getElementById("gif-quality").value),
-						maximumFrameRate: Number(document.getElementById("gif-fps").value),
-						scale: Number(document.getElementById("gif-scale").value)
+						quality: Number(document.querySelector('input[name="gif-quality"]:checked').value),
+						maximumFrameRate: Number(document.querySelector('input[name="gif-fps"]:checked').value),
+						scale: Number(document.querySelector('input[name="gif-scale"]:checked').value)
 					} : undefined,
 				),
 			);
