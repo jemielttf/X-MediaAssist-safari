@@ -9,7 +9,7 @@ public struct GIFConversionOptions: Equatable, Sendable {
     public let scale: Double
 
     public static let defaults = GIFConversionOptions()
-    private init() { quality = 90; maximumFrameRate = 20; scale = 1 }
+    private init() { quality = 95; maximumFrameRate = 20; scale = 1 }
 
     public enum ValidationError: Error { case invalidOptions }
 
@@ -24,7 +24,7 @@ public struct GIFConversionOptions: Equatable, Sendable {
                   allowed.contains(value.doubleValue) else { throw ValidationError.invalidOptions }
             return value.doubleValue
         }
-        quality = Int(try number("quality", allowed: [90, 75, 50]))
+        quality = Int(try number("quality", allowed: [95, 85, 70]))
         maximumFrameRate = try number("maximumFrameRate", allowed: [30, 25, 20, 15])
         scale = try number("scale", allowed: [1, 0.75, 0.5])
     }
@@ -51,8 +51,15 @@ public struct GIFPreferences {
 
     public var options: GIFConversionOptions {
         get {
-            guard let stored = defaults.object(forKey: Self.key),
-                  let options = try? GIFConversionOptions(message: stored) else { return .defaults }
+            guard var stored = defaults.dictionary(forKey: Self.key) else { return .defaults }
+            // Preserve the selected tier in preferences saved with the previous qualities.
+            // Native IPC continues to accept only the current allowlist.
+            if let quality = stored["quality"] as? NSNumber,
+               CFGetTypeID(quality) != CFBooleanGetTypeID(),
+               let updated = [90.0: 95, 75.0: 85, 50.0: 70][quality.doubleValue] {
+                stored["quality"] = updated
+            }
+            guard let options = try? GIFConversionOptions(message: stored) else { return .defaults }
             return options
         }
         nonmutating set { defaults.set(newValue.message, forKey: Self.key) }

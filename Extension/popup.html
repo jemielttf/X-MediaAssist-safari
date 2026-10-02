@@ -1,68 +1,67 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width,initial-scale=1" />
-		<title>X Media Assist</title>
-		<link rel="stylesheet" href="popup.css" />
-	</head>
-	<body>
-		<h1>X Media Assist</h1>
-		<p>動画はMP4、GIFアニメはGIFで保存します。</p>
-		<form id="download-form">
-			<label for="post-url">投稿のURL :</label>
-			<input id="post-url" type="url"
-				placeholder="https://x.com/…/status/…" required autocomplete="off">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>X Media Assist</title>
+<link rel="stylesheet" href="popup.css">
+</head>
+<body class="popup">
+<main class="app">
+  <h1>X Media Assist</h1>
 
-			<fieldset class="format-options" aria-labelledby="format-label">
-				<span id="format-label">保存形式 :</span>
-				<label><input type="radio" name="format" value="auto" checked> Auto</label>
-				<label><input type="radio" name="format" value="mp4"> MP4</label>
-			</fieldset>
+  <form id="download-form">
+  <div class="field">
+    <label class="label" for="post-url">投稿のURL</label>
+    <input class="input" id="post-url" required type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://x.com/example/status/123">
+  </div>
 
-			<fieldset id="gif-options" class="gif-options" aria-describedby="gif-state" disabled>
-                <legend>GIF設定 <span class="gif-scope">今回のみ</span></legend>
-                <p id="gif-state" class="gif-description" role="status">基本設定を読み込み中…</p>
-                <fieldset class="gif-option-group">
-                    <legend>画質</legend>
-                    <div class="gif-choices">
-                        <label class="gif-choice"><input type="radio" name="gif-quality" value="90" checked><span>高</span></label>
-                        <label class="gif-choice"><input type="radio" name="gif-quality" value="75"><span>中</span></label>
-                        <label class="gif-choice"><input type="radio" name="gif-quality" value="50"><span>低</span></label>
-                    </div>
-                </fieldset>
-                <fieldset class="gif-option-group" aria-describedby="gif-timing-note">
-                    <legend>最大フレームレート</legend>
-                    <div class="gif-choices gif-choices-four">
-                        <label class="gif-choice"><input type="radio" name="gif-fps" value="30"><span>30 fps</span></label>
-                        <label class="gif-choice"><input type="radio" name="gif-fps" value="25"><span>25 fps</span></label>
-                        <label class="gif-choice"><input type="radio" name="gif-fps" value="20" checked><span>20 fps</span></label>
-                        <label class="gif-choice"><input type="radio" name="gif-fps" value="15"><span>15 fps</span></label>
-                    </div>
-                </fieldset>
-                <fieldset class="gif-option-group" aria-describedby="gif-size-note">
-                    <legend>出力サイズ</legend>
-                    <div class="gif-choices">
-                        <label class="gif-choice"><input type="radio" name="gif-scale" value="1" checked><span>100%</span></label>
-                        <label class="gif-choice"><input type="radio" name="gif-scale" value="0.75"><span>75%</span></label>
-                        <label class="gif-choice"><input type="radio" name="gif-scale" value="0.5"><span>50%</span></label>
-                    </div>
-                </fieldset>
-                <div class="gif-help">
-                    <p id="gif-timing-note">元のタイミングを保ち、上限を目安に間引きます。元よりフレーム数を増やしません。</p>
-                    <p id="gif-size-note">サイズは縦横比を保って縮小します。</p>
-                </div>
-            </fieldset>
-			<button id="save" type="submit">動画を保存</button>
-		</form>
-		<p id="status" role="status" aria-live="polite"></p>
-		<p class="note">
-			保存先：ダウンロードフォルダ<br>GIFに変換できなかった場合は、MP4で保存します。
-		</p>
-		<p class="note">
-			<a href="Licenses/index.html" target="_blank">ライセンス・著作権表示</a>
-		</p>
-		<script src="core.js"></script>
-		<script src="popup.js"></script>
-	</body>
+  <div class="field">
+    <span class="label" id="l-fmt">保存形式</span>
+    <div class="seg" role="radiogroup" aria-labelledby="l-fmt">
+      <label><input type="radio" name="format" value="auto" checked><span>Auto</span></label>
+      <label><input type="radio" name="format" value="mp4"><span>MP4</span></label>
+    </div>
+  </div>
+
+  <section class="card gif" id="gif">
+    <div class="head"><h2 id="gif-title">GIF設定</h2><span class="tag">今回のみ</span></div>
+    <fieldset id="gif-options" aria-labelledby="gif-title" disabled>
+
+    <div class="row">
+      <span class="label" id="l-q">画質</span>
+      <div class="seg" role="radiogroup" aria-labelledby="l-q">
+        <label><input type="radio" name="gif-quality" value="95" checked><span>高</span></label>
+        <label><input type="radio" name="gif-quality" value="85"><span>中</span></label>
+        <label><input type="radio" name="gif-quality" value="70"><span>低</span></label>
+      </div>
+    </div>
+    <div class="row">
+      <span class="label" id="l-f">最大フレームレート</span>
+      <div class="seg" role="radiogroup" aria-labelledby="l-f" aria-describedby="gif-note">
+        <label><input type="radio" name="gif-fps" value="30"><span>30 fps</span></label>
+        <label><input type="radio" name="gif-fps" value="25"><span>25 fps</span></label>
+        <label><input type="radio" name="gif-fps" value="20" checked><span>20 fps</span></label>
+        <label><input type="radio" name="gif-fps" value="15"><span>15 fps</span></label>
+      </div>
+    </div>
+    <div class="row">
+      <span class="label" id="l-s">出力サイズ</span>
+      <div class="seg" role="radiogroup" aria-labelledby="l-s" aria-describedby="gif-note">
+        <label><input type="radio" name="gif-scale" value="1" checked><span>100%</span></label>
+        <label><input type="radio" name="gif-scale" value="0.75"><span>75%</span></label>
+        <label><input type="radio" name="gif-scale" value="0.5"><span>50%</span></label>
+      </div>
+    </div>
+    </fieldset>
+  </section>
+
+  <button class="btn" type="submit" id="save">動画を保存</button>
+  </form>
+  <p id="status" role="status" aria-live="polite"></p>
+
+</main>
+<script src="core.js"></script>
+<script src="popup.js"></script>
+</body>
 </html>

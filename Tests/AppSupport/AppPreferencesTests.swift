@@ -33,7 +33,7 @@ final class AppPreferencesTests: XCTestCase {
         let store = GIFPreferences(defaults: defaults)
         let app = AppPreferences(defaults: defaults, loginItem: LoginItemStub(), gifPreferences: store)
         XCTAssertEqual(try app.gifOptions(), .defaults)
-        let options = try GIFConversionOptions(message: ["quality": 50, "maximumFrameRate": 25, "scale": 0.5])
+        let options = try GIFConversionOptions(message: ["quality": 70, "maximumFrameRate": 25, "scale": 0.5])
         try app.setGIFOptions(options)
         XCTAssertEqual(GIFPreferences(defaults: try XCTUnwrap(UserDefaults(suiteName: suite))).options, options)
         XCTAssertFalse(app.hidesDockIcon)

@@ -1,9 +1,14 @@
 "use strict";
 const activePosts = new Set();
+// Identifies this background lifetime; it is not an authentication token.
+const backgroundInstance = `${Date.now()}-${Math.random()}`;
 browser.runtime.onMessage.addListener((message, sender) => {
   const core = globalThis.XMediaCore;
   const popupURL = browser.runtime.getURL("popup.html");
   const allowed = sender.id === browser.runtime.id && (sender.url === popupURL || (sender.tab && core.isXPage(sender.url)));
+  if (allowed && message?.type === "checkConnection") {
+    return Promise.resolve({ ok: true, instance: backgroundInstance });
+  }
   if (sender.id === browser.runtime.id && sender.url === popupURL && message?.type === "getGIFOptions") {
     return core.withTimeout(() => browser.runtime.sendNativeMessage("com.jemielttf.XMediaAssist", { type: "ping" }),
       15000, "GIF基本設定を読み込めませんでした。")

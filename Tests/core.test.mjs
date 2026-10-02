@@ -112,6 +112,7 @@ test("message watchdog rejects a missing response and accepts a normal response"
   assert.equal(await c.withTimeout(() => Promise.resolve("done"), 100, "no response"), "done");
   await assert.rejects(c.withTimeout(() => { throw Error("disconnected"); }, 100, "no response"), /disconnected/);
   const result = await c.requestDownload(id, async message => {
+    if (message.type === "checkConnection") return { ok: true, instance: "background" };
     assert.deepEqual(message, { type: "downloadPost", postId: id, format: "auto" });
     return { ok: true, saved: ["saved.mp4"] };
   });
@@ -143,6 +144,10 @@ test("background verifies sender and suppresses duplicate in-flight requests", a
   assert.equal((await listener(message, { id: "evil", url: "https://x.com/home", tab: {} })).ok, false);
   assert.equal((await listener(message, { id: "self", url: "https://evil.test", tab: {} })).ok, false);
   const sender = { id: "self", url: "https://x.com/home", tab: {} };
+  const connection = await listener({ type: "checkConnection" }, sender);
+  assert.equal(connection.ok, true);
+  assert.equal(typeof connection.instance, "string");
+  assert.equal((await listener({ type: "checkConnection" }, { ...sender, id: "evil" })).ok, false);
   const pending = listener(message, sender);
   assert.equal((await listener(message, sender)).ok, false);
   resolve({ ok: true }); await pending;
@@ -175,8 +180,8 @@ test("MP4 override is passed explicitly without altering GIF classification", as
 });
 
 test("GIF defaults, base preferences and download overrides reach native without persistence", async () => {
-  const base = { quality: 75, maximumFrameRate: 25, scale: 0.75 };
-  const override = { quality: 50, maximumFrameRate: 15, scale: 0.5 };
+  const base = { quality: 85, maximumFrameRate: 25, scale: 0.75 };
+  const override = { quality: 70, maximumFrameRate: 15, scale: 0.5 };
   for (const [stored, supplied, expected] of [[undefined, undefined, c.GIF_DEFAULTS], [base, undefined, base], [base, override, override]]) {
     const sent = [];
     const result = await c.downloadPost(id, {
@@ -191,14 +196,54 @@ test("GIF defaults, base preferences and download overrides reach native without
     assert.equal(result.ok, true);
     assert.deepEqual(sent.map(request => request.type), ["ping", "download"]);
   }
-  assert.deepEqual(base, { quality: 75, maximumFrameRate: 25, scale: 0.75 });
+  assert.deepEqual(base, { quality: 85, maximumFrameRate: 25, scale: 0.75 });
   await c.requestDownload(id, async message => {
+    if (message.type === "checkConnection") return { ok: true, instance: "background" };
     assert.deepEqual(message.gifOptions, override);
     return { ok: true, saved: [] };
   }, "auto", override);
 });
 
+test("background connection watchdog detects missing and restarted backgrounds without retrying downloads", async () => {
+  let downloads = 0;
+  await assert.rejects(c.requestDownload(id, message => {
+    if (message.type === "downloadPost") downloads++;
+    return new Promise(() => {});
+  }, "auto", undefined, { connectionTimeout: 5, checkInterval: 5 }), /接続が切れ/);
+  assert.equal(downloads, 0);
+  for (const restarted of [false, true]) {
+    let checks = 0;
+    downloads = 0;
+    await assert.rejects(c.requestDownload(id, message => {
+      if (message.type === "checkConnection") {
+        if (++checks === 1) return Promise.resolve({ ok: true, instance: "first" });
+        return restarted ? Promise.resolve({ ok: true, instance: "second" }) : new Promise(() => {});
+      }
+      downloads++;
+      return new Promise(() => {});
+    }, "auto", undefined, { connectionTimeout: 5, checkInterval: 5 }), /ダウンロードフォルダ/);
+    assert.equal(downloads, 1);
+  }
+  let finish, checks = 0;
+  const result = await c.requestDownload(id, message => {
+    if (message.type === "checkConnection") {
+      if (++checks === 2) finish({ ok: true, saved: ["saved.gif"] });
+      return Promise.resolve({ ok: true, instance: "stable" });
+    }
+    return new Promise(resolve => { finish = resolve; });
+  }, "auto", undefined, { connectionTimeout: 10, checkInterval: 5 });
+  assert.equal(result.ok, true);
+  assert.equal(checks, 2);
+});
+
 test("GIF validation rejects unsupported types and values before a download", async () => {
+  assert.equal(c.GIF_DEFAULTS.quality, 95);
+  for (const quality of [95, 85, 70]) {
+    assert.equal(c.validateGIFOptions({ ...c.GIF_DEFAULTS, quality }).quality, quality);
+  }
+  for (const quality of [90, 75, 50]) {
+    assert.throws(() => c.validateGIFOptions({ ...c.GIF_DEFAULTS, quality }));
+  }
   for (const raw of [null, [], {}, { ...c.GIF_DEFAULTS, quality: 91 }, { ...c.GIF_DEFAULTS, maximumFrameRate: 50 }, { ...c.GIF_DEFAULTS, scale: true }, { ...c.GIF_DEFAULTS, scale: "1" }]) {
     assert.throws(() => c.validateGIFOptions(raw));
     const result = await c.downloadPost(id, {
@@ -221,7 +266,7 @@ test("version 2 native is rejected to prevent silently ignoring GIF options", as
 test("background exposes GIF defaults only to popup and forwards download overrides", async () => {
   let listener, received;
   const nativeCalls = [];
-  const base = { quality: 75, maximumFrameRate: 25, scale: 0.75 };
+  const base = { quality: 85, maximumFrameRate: 25, scale: 0.75 };
   const context = vm.createContext({
     XMediaCore: { ...c, downloadPost: async (_, options) => { received = options; return { ok: true }; } },
     browser: { runtime: { id: "self", getURL: path => `safari-web-extension://id/${path}`,

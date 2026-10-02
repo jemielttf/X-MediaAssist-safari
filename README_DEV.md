@@ -74,6 +74,8 @@ Bundle Identifierを変更した後は、Safariを通常終了して起動し直
 | `X Media Assist/` | macOS案内アプリ、Safari Web ExtensionのXcodeプロジェクト |
 | `Tests/` | JavaScript/Swiftの回帰テスト、ブラウザ用UI fixture |
 
+画面レイアウトの見本は `Docs/layout/main.html` と `Docs/layout/popup.html`、共通CSSの正本は `Docs/layout/style.css` です。`Extension/popup.css` とアプリの `Resources/Style.css` はこのCSSへの相対シンボリックリンクです。管理画面の `Resources/X-Media-Assist.svg` も `X-Media-Assist.icon/Assets/X-Media-Assist.svg` への相対リンクです。リンク先はリポジトリ内で完結し、Xcodeの Copy Bundle Resources がリンクを解決して通常ファイルとしてバンドルします。CSSはリンク先の正本を編集してください。Gitのチェックアウト時はシンボリックリンクを保持してください。
+
 SafariのnativeMessagingは同梱されたApp Extensionが受信し、そのプロセスがダウンロード・変換・保存を行います。GIF基本設定のみ、両ターゲットの App Group `$(DEVELOPMENT_TEAM).com.jemielttf.XMediaAssist.shared` の UserDefaults に共有します。別の常駐ヘルパーやデータベースは導入していません。案内アプリ自体にダウンロード処理を中継する構成ではありません。
 
 ## 保存境界と制約
@@ -90,7 +92,7 @@ SafariのnativeMessagingは同梱されたApp Extensionが受信し、そのプ�
 
 ## GIF変換
 
-- gifski **1.34.0** をソースからビルドし、品質90/75/50（既定90）、無限ループ、sRGBで出力します。上限fpsは30/25/20/15（既定20）、サイズは100%/75%/50%（既定100%）です。映像の向きとフレーム時刻を反映します。GIFの時間単位は1/100秒です。
+- gifski **1.34.0** をソースからビルドし、品質95/85/70（既定95）、無限ループ、sRGBで出力します。上限fpsは30/25/20/15（既定20）、サイズは100%/75%/50%（既定100%）です。映像の向きとフレーム時刻を反映します。GIFの時間単位は1/100秒です。
 - 変換対象の上限は30秒、選択後1,500フレーム、出力1フレーム2,073,600ピクセル（orientation・scale適用後）、入力/出力各100 MiB、変換120秒です。全フレームをメモリへ蓄積せず、順次エンコーダへ渡します。
 - 同時変換は1件です。別のGIFが変換中、上限超過、デコード・エンコード失敗などの場合はMP4を保存し、ファイル名と理由を表示します。複数メディアの残りの保存は継続します。
 - GIF保存に成功した場合は中間MP4を削除します。不完全なGIFは公開せず削除します。GIFアニメ以外の動画とMP4指定時は変換しません。

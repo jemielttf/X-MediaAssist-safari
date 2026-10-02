@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>X Media Assist</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="app">
+  <header>
+    <div class="icon" aria-hidden="true">
+      <svg width="34" height="34" viewBox="0 0 34 34" fill="none"><path d="M7 6h5.2l6 8.2L25.4 6H28l-8.9 10.4L28.6 28h-5.2l-6.4-8.7L9.6 28H7l9.3-10.9z" fill="#fff"/><path d="M17 21v7m0 0-3-3m3 3 3-3" stroke="#4C94FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div>
+      <h1>X Media Assist</h1>
+      <p class="lead">Xの動画とGIFアニメを保存します。</p>
+    </div>
+  </header>
+
+  <div class="status" role="status"><i></i>Safari拡張機能は有効です</div>
+
+  <section class="card">
+    <h2>使い方</h2>
+    <ol>
+      <li><b>1</b><span>Safariの「設定 → 拡張機能」で有効にします。</span></li>
+      <li><b>2</b><span>Xの投稿を開き、サイトへのアクセスを許可します。</span></li>
+      <li><b>3</b><span>「動画を保存」でダウンロードフォルダに保存します。</span></li>
+    </ol>
+    <button class="btn" type="button">Safariの拡張機能設定を開く</button>
+  </section>
+
+  <section class="card">
+    <div class="head"><h2>GIF設定</h2><span class="tag">基本設定</span></div>
+    <p class="hint">通常のGIF保存に使います。変更は自動保存されます。</p>
+
+    <div class="row">
+      <span class="label" id="l-q">画質</span>
+      <div class="seg" role="radiogroup" aria-labelledby="l-q" data-key="q">
+        <label><input type="radio" name="q" value="高" checked><span>高</span></label>
+        <label><input type="radio" name="q" value="中"><span>中</span></label>
+        <label><input type="radio" name="q" value="低"><span>低</span></label>
+      </div>
+    </div>
+    <div class="row">
+      <span class="label" id="l-f">最大フレームレート</span>
+      <div class="seg" role="radiogroup" aria-labelledby="l-f" data-key="f">
+        <label><input type="radio" name="f" value="30"><span>30 fps</span></label>
+        <label><input type="radio" name="f" value="25"><span>25 fps</span></label>
+        <label><input type="radio" name="f" value="20" checked><span>20 fps</span></label>
+        <label><input type="radio" name="f" value="15"><span>15 fps</span></label>
+      </div>
+    </div>
+    <div class="row">
+      <span class="label" id="l-s">出力サイズ</span>
+      <div class="seg" role="radiogroup" aria-labelledby="l-s" data-key="s">
+        <label><input type="radio" name="s" value="100" checked><span>100%</span></label>
+        <label><input type="radio" name="s" value="75"><span>75%</span></label>
+        <label><input type="radio" name="s" value="50"><span>50%</span></label>
+      </div>
+    </div>
+
+    <div class="summary" id="summary" aria-live="polite"></div>
+    <!-- <p class="note">元のタイミングを保ち、上限を目安に間引きます。元よりフレーム数を増やしません。サイズは縦横比を保って縮小します。</p> -->
+  </section>
+
+  <section class="card">
+    <h2>メモ</h2>
+    <ul class="facts">
+      <li>動画はMP4、GIFアニメはGIFで保存します。GIFに変換できなかった場合は、MP4で保存します。</li>
+      <li>投稿内にボタンがない場合は、Safariの拡張ボタンからURLを入力できます。</li>
+      <li>メニューバーのアイコンから、Dock表示とログイン時起動を設定できます。ウインドウを閉じても常駐を続けます。</li>
+    </ul>
+  </section>
+
+  <footer>
+    <span>AGPL-3.0-or-later / 無保証</span>
+    <button class="link" type="button">ライセンス・著作権表示</button>
+  </footer>
+</main>
+<script>
+(function(){
+  var el=document.getElementById('summary');
+  function v(n){var c=document.querySelector('input[name="'+n+'"]:checked');return c?c.value:''}
+  function render(){
+    var s=v('s');
+    el.innerHTML='<strong>'+v('q')+'画質</strong>、最大'+v('f')+'fpsで、'+(s==='100'?'元のサイズ':'元の'+s+'%のサイズ')+'のGIFを保存します。';
+  }
+  document.addEventListener('change',render);render();
+})();
+</script>
+</body>
+</html>

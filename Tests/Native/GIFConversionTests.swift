@@ -48,7 +48,7 @@ final class GIFConversionTests: XCTestCase {
         XCTAssertEqual(writer.status, .completed, "\(String(describing: writer.error))")
     }
 
-    func options(fps: Double = 20, scale: Double = 1, quality: Int = 90) throws -> GIFConversionOptions {
+    func options(fps: Double = 20, scale: Double = 1, quality: Int = 95) throws -> GIFConversionOptions {
         try GIFConversionOptions(message: ["quality": quality, "maximumFrameRate": fps, "scale": scale])
     }
 
@@ -146,7 +146,7 @@ final class GIFConversionTests: XCTestCase {
     func testSavePassesValidatedOptionsToConverter() async throws {
         let folder = try directory(), input = folder.appendingPathComponent("input.mp4")
         try Data("source".utf8).write(to: input)
-        let expected = try options(fps: 25, scale: 0.75, quality: 50)
+        let expected = try options(fps: 25, scale: 0.75, quality: 70)
         let request = try MediaDownloadRequest(message: ["type": "download", "url": "https://video.twimg.com/a.mp4", "postId": "123", "author": "example", "mediaIndex": 1, "mediaType": "animated_gif", "gifOptions": expected.message])
         let save = MediaSave(request: request, directory: folder) { _, output, options in
             XCTAssertEqual(options, expected)

@@ -5,16 +5,9 @@ const status = document.getElementById("status");
 const gifFields = document.getElementById("gif-options");
 let gifOptionsReady = false;
 let downloading = false;
-let gifOptionsFailed = false;
 function updateGIFControls() {
 	const mp4 = document.querySelector('input[name="format"]:checked').value === "mp4";
 	gifFields.disabled = !gifOptionsReady || downloading || mp4;
-	document.getElementById("gif-state").textContent = mp4
-		? "MP4で保存するため、GIF設定は使用しません。"
-		: downloading ? "保存処理中は設定を変更できません。"
-		: gifOptionsFailed ? "基本設定を表示できません。保存時に再取得します。"
-		: gifOptionsReady ? "ここでの変更は基本設定に保存されません。"
-		: "基本設定を読み込み中…";
 }
 document.querySelectorAll('input[name="format"]').forEach(control => control.addEventListener("change", updateGIFControls));
 const loadGIFOptions = browser.runtime.sendMessage({ type: "getGIFOptions" }).then(reply => {
@@ -25,7 +18,6 @@ const loadGIFOptions = browser.runtime.sendMessage({ type: "getGIFOptions" }).th
 	document.querySelector(`input[name="gif-scale"][value="${options.scale}"]`).checked = true;
 	gifOptionsReady = true;
 }).catch(error => {
-	gifOptionsFailed = true;
 	status.textContent = `${error.message} 保存時に基本設定を再取得します。`;
 }).finally(updateGIFControls);
 browser.tabs

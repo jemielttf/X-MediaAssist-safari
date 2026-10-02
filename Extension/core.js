@@ -1,10 +1,10 @@
 /* Shared by the isolated content script, background, popup, and Node tests. */
 (() => {
   "use strict";
-  const GIF_DEFAULTS = Object.freeze({ quality: 90, maximumFrameRate: 20, scale: 1 });
+  const GIF_DEFAULTS = Object.freeze({ quality: 95, maximumFrameRate: 20, scale: 1 });
   function validateGIFOptions(value) {
     if (!value || typeof value !== "object" || Array.isArray(value) ||
-        Object.keys(value).length !== 3 || ![90, 75, 50].includes(value.quality) ||
+        Object.keys(value).length !== 3 || ![95, 85, 70].includes(value.quality) ||
         ![30, 25, 20, 15].includes(value.maximumFrameRate) || ![1, 0.75, 0.5].includes(value.scale)) {
       throw new Error("GIF設定が正しくありません。");
     }
@@ -68,10 +68,33 @@
       ]);
     } finally { clearTimeout(timer); }
   }
-  function requestDownload(postId, sendMessage, format = "auto", gifOptions) {
-    // Four sequential native transfers (10 minutes each), plus IPC and metadata margins.
-    return withTimeout(() => sendMessage({ type: "downloadPost", postId, format, ...(gifOptions === undefined ? {} : { gifOptions: validateGIFOptions(gifOptions) }) }), 45 * 60 * 1000,
-      "拡張機能から保存結果が届きません。ダウンロードフォルダを確認し、Safariを終了して起動し直してください。");
+  async function requestDownload(postId, sendMessage, format = "auto", gifOptions,
+    { connectionTimeout = 15000, checkInterval = 15000 } = {}) {
+    const options = gifOptions === undefined ? {} : { gifOptions: validateGIFOptions(gifOptions) };
+    const connectionError = "拡張機能との接続が切れました。保存結果をダウンロードフォルダで確認し、ページを再読み込みしてください。改善しない場合はSafariを終了して起動し直してください。";
+    async function checkConnection() {
+      const reply = await withTimeout(() => sendMessage({ type: "checkConnection" }), connectionTimeout, connectionError);
+      if (reply?.ok !== true || typeof reply.instance !== "string") throw new Error(connectionError);
+      return reply.instance;
+    }
+    const instance = await checkConnection();
+    let timer, stopped = false;
+    const disconnected = new Promise((_, reject) => {
+      async function check() {
+        try {
+          if (await checkConnection() !== instance) throw new Error(connectionError);
+          if (!stopped) timer = setTimeout(check, checkInterval);
+        } catch { if (!stopped) reject(new Error(connectionError)); }
+      }
+      timer = setTimeout(check, checkInterval);
+    });
+    try {
+      // Keep the transfer budget, but detect a lost/restarted background separately.
+      // Checks never start another download or cancel native work.
+      return await withTimeout(() => Promise.race([disconnected,
+        Promise.resolve().then(() => sendMessage({ type: "downloadPost", postId, format, ...options }))]), 45 * 60 * 1000,
+        "拡張機能から保存結果が届きません。ダウンロードフォルダを確認し、Safariを終了して起動し直してください。");
+    } finally { stopped = true; clearTimeout(timer); }
   }
   async function downloadPost(postId, { fetchImpl = fetch, sendNative, connectionTimeout = 15000, downloadTimeout = 650000, format = "auto", gifOptions }) {
     const saved = [];

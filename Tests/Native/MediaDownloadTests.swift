@@ -49,8 +49,9 @@ final class MediaDownloadTests: XCTestCase {
     }
 
     func testGIFOptionsAllowlistAndDefaults() throws {
+        XCTAssertEqual(GIFConversionOptions.defaults.quality, 95)
         XCTAssertEqual(try MediaDownloadRequest(message: message()).gifOptions, .defaults)
-        for quality in [90, 75, 50] {
+        for quality in [95, 85, 70] {
             for fps in [15, 20, 25, 30] {
                 for scale in [1.0, 0.75, 0.5] {
                     var values = message()
@@ -62,7 +63,7 @@ final class MediaDownloadTests: XCTestCase {
                 }
             }
         }
-        for (key, invalid) in [("quality", [0, 91, 74, 50.5, "90", true, NSNull()] as [Any]),
+        for (key, invalid) in [("quality", [0, 90, 75, 50, 96, 70.5, "95", true, NSNull()] as [Any]),
                                ("maximumFrameRate", [0, 50, 20.5, "20", true, Double.nan, Double.infinity]),
                                ("scale", [0, 2, 0.8, "1", true, NSNull()])] {
             for value in invalid {
@@ -72,7 +73,7 @@ final class MediaDownloadTests: XCTestCase {
                 XCTAssertThrowsError(try MediaDownloadRequest(message: values), "\(key): \(value)")
             }
         }
-        for invalid: Any in [NSNull(), "options", [:] as [String: Any], ["quality": 90]] {
+        for invalid: Any in [NSNull(), "options", [:] as [String: Any], ["quality": 95]] {
             var values = message(); values["gifOptions"] = invalid
             XCTAssertThrowsError(try MediaDownloadRequest(message: values))
         }
@@ -85,7 +86,7 @@ final class MediaDownloadTests: XCTestCase {
         let host = GIFPreferences(defaults: defaults)
         let native = GIFPreferences(defaults: try XCTUnwrap(UserDefaults(suiteName: suite)))
         XCTAssertEqual(native.options, .defaults)
-        let base = try GIFConversionOptions(message: ["quality": 75, "maximumFrameRate": 15, "scale": 0.75])
+        let base = try GIFConversionOptions(message: ["quality": 85, "maximumFrameRate": 15, "scale": 0.75])
         host.options = base
         XCTAssertEqual(native.options, base)
         XCTAssertEqual(try MediaDownloadRequest(message: message(), defaultGIFOptions: native.options).gifOptions, base)
@@ -95,6 +96,19 @@ final class MediaDownloadTests: XCTestCase {
         XCTAssertEqual(native.options, base, "An override must not persist")
         defaults.set(["quality": 999], forKey: "gifConversionOptions")
         XCTAssertEqual(native.options, .defaults)
+    }
+
+    func testPreviousQualityPreferencesPreserveSelectedTier() throws {
+        let suite = "XMediaAssist.Tests.GIF.\(UUID())"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let preferences = GIFPreferences(defaults: defaults)
+        for (previous, current) in [(90, 95), (75, 85), (50, 70)] {
+            defaults.set(["quality": previous, "maximumFrameRate": 25, "scale": 0.75], forKey: "gifConversionOptions")
+            XCTAssertEqual(preferences.options, try GIFConversionOptions(message: [
+                "quality": current, "maximumFrameRate": 25, "scale": 0.75
+            ]))
+        }
     }
 
     func testRequestKeepsExactIDAndGIFType() throws {
