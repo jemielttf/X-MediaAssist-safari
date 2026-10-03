@@ -1,7 +1,7 @@
 {
 	"manifest_version": 3,
 	"name": "X Media Assist",
-	"version": "0.3.0",
+	"version": "0.3.2",
 	"description": "Xに投稿された動画をMP4に、GIFアニメをGIFとしてダウンロードフォルダへ保存します。",
 	"permissions": ["nativeMessaging", "activeTab"],
 	"host_permissions": ["https://cdn.syndication.twimg.com/*"],
