@@ -145,6 +145,99 @@ final class MediaDownloadTests: XCTestCase {
             XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: folder.path), [], scenario)
         }
     }
+    func testRemovesOnlyStaleTemporaryFiles() throws {
+        let folder = try directory()
+        let now = Date()
+        func file(_ name: String, age: TimeInterval) throws -> String {
+            let url = folder.appendingPathComponent(name)
+            try Data("partial".utf8).write(to: url)
+            try FileManager.default.setAttributes([.modificationDate: now.addingTimeInterval(-age)], ofItemAtPath: url.path)
+            return name
+        }
+        let staleMP4 = try file(".xma-\(UUID().uuidString).part.mp4", age: 7200)
+        let staleGIF = try file(".xma-\(UUID().uuidString).gif.part", age: 3600)
+        let active = try file(".xma-\(UUID().uuidString).part.mp4", age: 600)
+        let kept = [active,
+                    try file("example-719944021058060289-1.mp4", age: 7200),
+                    try file(".xma-notes.part.mp4", age: 7200),
+                    try file(".xma-\(UUID().uuidString).mp4", age: 7200)]
+        try FileManager.default.createDirectory(at: folder.appendingPathComponent(".xma-\(UUID().uuidString).gif.part"), withIntermediateDirectories: false)
+        MediaFile.removeStaleTemporaries(in: folder, now: now)
+        let remaining = Set(try FileManager.default.contentsOfDirectory(atPath: folder.path))
+        XCTAssertFalse(remaining.contains(staleMP4))
+        XCTAssertFalse(remaining.contains(staleGIF))
+        XCTAssertTrue(remaining.isSuperset(of: kept))
+        XCTAssertEqual(remaining.count, kept.count + 1, "A directory with a matching name is not removed")
+    }
+    func testPeriodicSweepRemovesLeftoverSkippedAsTooNew() throws {
+        let folder = try directory()
+        let start = Date()
+        var clock = start
+        let sweeper = StaleTemporarySweeper(directory: { folder }, now: { clock })
+        func leftover(modified: Date) throws -> URL {
+            let url = folder.appendingPathComponent(".xma-\(UUID().uuidString).part.mp4")
+            try Data("partial".utf8).write(to: url)
+            try FileManager.default.setAttributes([.modificationDate: modified], ofItemAtPath: url.path)
+            return url
+        }
+        func exists(_ url: URL) -> Bool { FileManager.default.fileExists(atPath: url.path) }
+
+        // Safari restarted one minute after a crash: the first ping keeps the new leftover.
+        let crashed = try leftover(modified: start.addingTimeInterval(-60))
+        sweeper.sweepIfDue()
+        XCTAssertTrue(exists(crashed))
+
+        // Within the interval, pings do not rescan, even for an already stale file.
+        clock = start.addingTimeInterval(StaleTemporarySweeper.interval - 1)
+        let stale = try leftover(modified: start.addingTimeInterval(-7200))
+        sweeper.sweepIfDue()
+        XCTAssertTrue(exists(stale))
+
+        // Hours later in the same process, a ping removes both leftovers.
+        clock = start.addingTimeInterval(7200)
+        sweeper.sweepIfDue()
+        XCTAssertFalse(exists(crashed))
+        XCTAssertFalse(exists(stale))
+
+        // A clock moved backwards does not suppress the next check.
+        clock = start.addingTimeInterval(3600)
+        let afterClockChange = try leftover(modified: start.addingTimeInterval(-7200))
+        sweeper.sweepIfDue()
+        XCTAssertFalse(exists(afterClockChange))
+    }
+    func testSweepDefersWhileSavingAfterClockAdvances() throws {
+        let folder = try directory()
+        let start = Date()
+        var clock = start
+        let sweeper = StaleTemporarySweeper(directory: { folder }, now: { clock })
+        sweeper.sweepIfDue()
+
+        let active = folder.appendingPathComponent(".xma-\(UUID().uuidString).part.mp4")
+        try mp4.write(to: active)
+        let handle = try FileHandle(forWritingTo: active)
+        defer { try? handle.close() }
+        let orphan = folder.appendingPathComponent(".xma-\(UUID().uuidString).gif.part")
+        try Data("orphan".utf8).write(to: orphan)
+        try FileManager.default.setAttributes([.modificationDate: start.addingTimeInterval(-7200)], ofItemAtPath: orphan.path)
+
+        clock = start.addingTimeInterval(7200)
+        sweeper.sweepIfDue(hasActiveRequests: true)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: active.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: orphan.path))
+
+        // The transfer can still finish and publish its file after the deferred sweep.
+        try handle.seekToEnd()
+        try handle.write(contentsOf: Data([1]))
+        try handle.close()
+        let saved = try MediaFile.publish(active, directory: folder, basename: "example-1-1")
+        try FileManager.default.removeItem(at: active)
+        XCTAssertEqual(try Data(contentsOf: saved), mp4 + Data([1]))
+
+        // Deferral must not advance lastSweep: the next idle ping at the same time cleans up.
+        sweeper.sweepIfDue(hasActiveRequests: false)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: orphan.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: saved.path))
+    }
     func testUnknownLengthBodyStillEnforcesSizeLimit() throws {
         let folder = try directory()
         XCTAssertThrowsError(try download("ok", into: folder, limit: 16).get())

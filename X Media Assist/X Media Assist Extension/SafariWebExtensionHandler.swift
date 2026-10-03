@@ -3,6 +3,10 @@ import SafariServices
 final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     private static let lock = NSLock()
     private static var activeRequests = Set<String>()
+    // Every save starts with a ping, so orphaned partial files are re-checked periodically.
+    private static let sweeper = StaleTemporarySweeper(directory: {
+        try? FileManager.default.url(for: .downloadsDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+    })
 
     func beginRequest(with context: NSExtensionContext) {
         func respond(_ payload: [String: Any]) {
@@ -16,6 +20,11 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
                 throw MediaDownloadError.invalidRequest
             }
             if message["type"] as? String == "ping" {
+                // Keep the same lock as save admission throughout the sweep so
+                // a new transfer cannot start between the idle check and deletion.
+                Self.lock.lock()
+                Self.sweeper.sweepIfDue(hasActiveRequests: !Self.activeRequests.isEmpty)
+                Self.lock.unlock()
                 respond(["ok": true, "protocolVersion": 3, "gifOptions": try GIFPreferences.appGroup().options.message])
                 return
             }

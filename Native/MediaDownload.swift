@@ -88,6 +88,53 @@ enum MediaFile {
         }
         throw MediaDownloadError.writeFailed
     }
+
+    // A killed extension process (e.g. Safari quit mid-transfer) leaves its hidden
+    // partial files behind. Only sweep while idle: wall-clock changes can make
+    // an active transfer's file appear old even though its timeout has not elapsed.
+    static let staleTemporaryAge: TimeInterval = 60 * 60
+    private static let temporaryName = "^\\.xma-[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}\\.(part\\.mp4|gif\\.part)$"
+
+    static func removeStaleTemporaries(in directory: URL, olderThan age: TimeInterval = staleTemporaryAge, now: Date = Date()) {
+        let keys: [URLResourceKey] = [.isRegularFileKey, .contentModificationDateKey]
+        guard let files = try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: keys) else { return }
+        for file in files where file.lastPathComponent.range(of: temporaryName, options: .regularExpression) != nil {
+            guard let values = try? file.resourceValues(forKeys: Set(keys)), values.isRegularFile == true,
+                  let modified = values.contentModificationDate, now.timeIntervalSince(modified) >= age else { continue }
+            try? FileManager.default.removeItem(at: file)
+        }
+    }
+}
+
+/// Re-checks for orphaned partial files at most once per interval. A file skipped as
+/// too new (Safari restarted right after a crash) is removed by a later check, even
+/// if this extension process lives for hours. The last check time is per process only:
+/// a new process always checks on its first ping.
+final class StaleTemporarySweeper: @unchecked Sendable {
+    static let interval: TimeInterval = 15 * 60
+    private let lock = NSLock()
+    private var lastSweep: Date?
+    private let directory: () -> URL?
+    private let now: () -> Date
+
+    // Wall-clock time, matching file modification dates; system uptime stops during sleep.
+    init(directory: @escaping () -> URL?, now: @escaping () -> Date = Date.init) {
+        self.directory = directory
+        self.now = now
+    }
+
+    // The caller must keep save admission excluded until this method returns.
+    func sweepIfDue(hasActiveRequests: Bool = false) {
+        guard !hasActiveRequests else { return }
+        let current = now()
+        lock.lock()
+        // A clock moved backwards also counts as due, so a sweep is never suppressed for long.
+        let due = lastSweep.map { current.timeIntervalSince($0) >= Self.interval || current < $0 } ?? true
+        if due { lastSweep = current }
+        lock.unlock()
+        guard due, let directory = directory() else { return }
+        MediaFile.removeStaleTemporaries(in: directory, now: current)
+    }
 }
 
 /// One instance per transfer. Mutable state stays on the serial URLSession delegate queue.
