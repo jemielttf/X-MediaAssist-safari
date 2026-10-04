@@ -1,86 +1,91 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-<meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>X Media Assist</title>
-<link rel="stylesheet" href="../Style.css">
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Security-Policy" content="default-src 'self'">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<title>X Media Assist</title>
+	<link rel="stylesheet" href="../Style.css">
 </head>
+
 <body>
-<main class="app">
-  <header>
-    <div class="icon" aria-hidden="true">
-      <img src="../X-Media-Assist.svg" width="60" height="60" alt="">
-    </div>
-    <div>
-      <h1>X Media Assist</h1>
-      <p class="lead">Xの動画とGIFアニメを保存します。</p>
-    </div>
-  </header>
+	<main class="app">
+		<header>
+			<div class="icon" aria-hidden="true">
+				<img src="../X-Media-Assist.svg" width="60" height="60" alt="">
+			</div>
+			<div>
+				<h1>X Media Assist</h1>
+				<p class="lead">Xの動画とGIFアニメを保存します。</p>
+			</div>
+		</header>
 
-  <div class="status" id="extension-status" role="status"><i aria-hidden="true"></i><span>Safariの設定で拡張機能を有効にしてください。</span></div>
+		<div class="status" id="extension-status" role="status"><i aria-hidden="true"></i><span>Safariの設定で拡張機能を有効にしてください。</span></div>
 
-  <section class="card">
-    <h2>使い方</h2>
-    <ol role="list">
-      <li><b aria-hidden="true">1</b><span>Safariの「設定 → 拡張機能」で有効にします。</span></li>
-      <li><b aria-hidden="true">2</b><span>Xの投稿を開き、サイトへのアクセスを許可します。</span></li>
-      <li><b aria-hidden="true">3</b><span>「動画を保存」でダウンロードフォルダに保存します。</span></li>
-    </ol>
-    <button class="btn open-preferences" type="button">Safariの拡張機能設定を開く</button>
-    <p id="error" role="status"></p>
-  </section>
+		<section class="card">
+			<h2>使い方</h2>
+			<ol role="list">
+				<li><b aria-hidden="true">1</b><span>Safariの「設定 → 拡張機能」で有効にします。</span></li>
+				<li><b aria-hidden="true">2</b><span>Xの投稿を開き、サイトへのアクセスを許可します。</span></li>
+				<li><b aria-hidden="true">3</b><span>「動画を保存」でダウンロードフォルダに保存します。</span></li>
+			</ol>
+			<button class="btn open-preferences" type="button">Safariの拡張機能設定を開く</button>
+			<p id="error" role="status"></p>
+		</section>
 
-  <section class="card">
-    <div class="head"><h2 id="gif-title">GIF設定</h2><span class="tag">基本設定</span></div>
-    <p id="gif-status" class="hint" role="status">基本設定を読み込み中…</p>
-    <fieldset id="gif-options" aria-labelledby="gif-title" aria-describedby="gif-status" disabled>
+		<section class="card">
+			<div class="head">
+				<h2 id="gif-title">GIF設定</h2><span class="tag">基本設定</span>
+			</div>
+			<p id="gif-status" class="hint" role="status">基本設定を読み込み中…</p>
+			<fieldset id="gif-options" aria-labelledby="gif-title" aria-describedby="gif-status" disabled>
 
-    <div class="row">
-      <span class="label" id="l-q">画質</span>
-      <div class="seg" role="radiogroup" aria-labelledby="l-q">
-        <label><input type="radio" name="gif-quality" value="95" checked><span>高</span></label>
-        <label><input type="radio" name="gif-quality" value="85"><span>中</span></label>
-        <label><input type="radio" name="gif-quality" value="70"><span>低</span></label>
-      </div>
-    </div>
-    <div class="row">
-      <span class="label" id="l-f">最大フレームレート</span>
-      <div class="seg" role="radiogroup" aria-labelledby="l-f" aria-describedby="gif-note">
-        <label><input type="radio" name="gif-fps" value="30"><span>30 fps</span></label>
-        <label><input type="radio" name="gif-fps" value="25"><span>25 fps</span></label>
-        <label><input type="radio" name="gif-fps" value="20" checked><span>20 fps</span></label>
-        <label><input type="radio" name="gif-fps" value="15"><span>15 fps</span></label>
-      </div>
-    </div>
-    <div class="row">
-      <span class="label" id="l-s">出力サイズ</span>
-      <div class="seg" role="radiogroup" aria-labelledby="l-s" aria-describedby="gif-note">
-        <label><input type="radio" name="gif-scale" value="1" checked><span>100%</span></label>
-        <label><input type="radio" name="gif-scale" value="0.75"><span>75%</span></label>
-        <label><input type="radio" name="gif-scale" value="0.5"><span>50%</span></label>
-      </div>
-    </div>
+				<div class="row">
+					<span class="label" id="l-q">画質</span>
+					<div class="seg" role="radiogroup" aria-labelledby="l-q">
+						<label><input type="radio" name="gif-quality" value="95" checked><span>高</span></label>
+						<label><input type="radio" name="gif-quality" value="85"><span>中</span></label>
+						<label><input type="radio" name="gif-quality" value="70"><span>低</span></label>
+					</div>
+				</div>
+				<div class="row">
+					<span class="label" id="l-f">最大フレームレート</span>
+					<div class="seg" role="radiogroup" aria-labelledby="l-f" aria-describedby="gif-note">
+						<label><input type="radio" name="gif-fps" value="30"><span>30 fps</span></label>
+						<label><input type="radio" name="gif-fps" value="25"><span>25 fps</span></label>
+						<label><input type="radio" name="gif-fps" value="20" checked><span>20 fps</span></label>
+						<label><input type="radio" name="gif-fps" value="15"><span>15 fps</span></label>
+					</div>
+				</div>
+				<div class="row">
+					<span class="label" id="l-s">出力サイズ</span>
+					<div class="seg" role="radiogroup" aria-labelledby="l-s" aria-describedby="gif-note">
+						<label><input type="radio" name="gif-scale" value="1" checked><span>100%</span></label>
+						<label><input type="radio" name="gif-scale" value="0.75"><span>75%</span></label>
+						<label><input type="radio" name="gif-scale" value="0.5"><span>50%</span></label>
+					</div>
+				</div>
 
-    </fieldset>
-    <div class="summary" id="summary" aria-live="polite" hidden></div>
-  </section>
+			</fieldset>
+			<div class="summary" id="summary" aria-live="polite" hidden></div>
+		</section>
 
-  <section class="card">
-    <h2>メモ</h2>
-    <ul class="facts">
-      <li>動画はMP4、GIFアニメはGIFで保存します。GIFに変換できなかった場合は、MP4で保存します。</li>
-      <li>投稿内にボタンがない場合は、Safariの拡張ボタンからURLを入力できます。</li>
-      <li>メニューバーのアイコンから、Dock表示とログイン時起動を設定できます。ウインドウを閉じても常駐を続けます。</li>
-    </ul>
-  </section>
+		<section class="card">
+			<h2>メモ</h2>
+			<ul class="facts">
+				<li>動画はMP4、GIFアニメはGIFで保存します。GIFに変換できなかった場合は、MP4で保存します。</li>
+				<li>投稿内にボタンがない場合は、Safariの拡張ボタンからURLを入力できます。</li>
+				<li>メニューバーのアイコンから、Dock表示とログイン時起動を設定できます。ウインドウを閉じても常駐を続けます。</li>
+			</ul>
+		</section>
 
-  <footer>
-    <span>AGPL-3.0-or-later / 無保証</span>
-    <button class="link open-licenses" type="button">ライセンス・著作権表示</button>
-  </footer>
-</main>
-<script src="../Script.js"></script>
+		<footer>
+			<span>AGPL-3.0-or-later / 無保証</span>
+			<button class="link open-licenses" type="button">ライセンス・著作権表示</button>
+		</footer>
+	</main>
+	<script src="../Script.js"></script>
 </body>
+
 </html>
