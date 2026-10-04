@@ -12,11 +12,11 @@ final class GIFConversionTests: XCTestCase {
         return url
     }
 
-    func makeVideo(_ url: URL, rotated: Bool = false, times: [Double] = [0, 0.1, 0.2, 0.3], duration: Double = 0.4) async throws {
+    func makeVideo(_ url: URL, rotated: Bool = false, width: Int = 64, height: Int = 32, times: [Double] = [0, 0.1, 0.2, 0.3], duration: Double = 0.4) async throws {
         let writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
-        let input = AVAssetWriterInput(mediaType: .video, outputSettings: [AVVideoCodecKey: AVVideoCodecType.h264, AVVideoWidthKey: 64, AVVideoHeightKey: 32])
-        if rotated { input.transform = CGAffineTransform(a: 0, b: 1, c: -1, d: 0, tx: 32, ty: 0) }
-        let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input, sourcePixelBufferAttributes: [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA, kCVPixelBufferWidthKey as String: 64, kCVPixelBufferHeightKey as String: 32])
+        let input = AVAssetWriterInput(mediaType: .video, outputSettings: [AVVideoCodecKey: AVVideoCodecType.h264, AVVideoWidthKey: width, AVVideoHeightKey: height])
+        if rotated { input.transform = CGAffineTransform(a: 0, b: 1, c: -1, d: 0, tx: CGFloat(height), ty: 0) }
+        let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input, sourcePixelBufferAttributes: [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA, kCVPixelBufferWidthKey as String: width, kCVPixelBufferHeightKey as String: height])
         writer.add(input)
         XCTAssertTrue(writer.startWriting())
         writer.startSession(atSourceTime: .zero)
@@ -30,7 +30,7 @@ final class GIFConversionTests: XCTestCase {
             CVPixelBufferLockBaseAddress(pixels, [])
             let bytes = CVPixelBufferGetBaseAddress(pixels)!.assumingMemoryBound(to: UInt8.self)
             let stride = CVPixelBufferGetBytesPerRow(pixels)
-            for y in 0..<32 { for x in 0..<64 {
+            for y in 0..<height { for x in 0..<width {
                 let n = y * stride + x * 4
                 bytes[n] = frame % 2 == 0 ? 0 : 255
                 bytes[n + 1] = UInt8((frame * 37) % 180)
@@ -114,6 +114,22 @@ final class GIFConversionTests: XCTestCase {
                 XCTAssertEqual(image.width, Int(Double(rotated ? 32 : 64) * scale))
                 XCTAssertEqual(image.height, Int(Double(rotated ? 64 : 32) * scale))
                 XCTAssertEqual(Double(image.width) / Double(image.height), rotated ? 0.5 : 2)
+            }
+        }
+    }
+
+    func testRealEncoderPreservesHDOutputSizesAndOrientations() async throws {
+        for rotated in [false, true] {
+            let folder = try directory(), input = folder.appendingPathComponent("input.mp4")
+            try await makeVideo(input, rotated: rotated, width: 1280, height: 720, times: [0, 0.1], duration: 0.2)
+            for scale in [1.0, 0.75, 0.5] {
+                let output = folder.appendingPathComponent("\(scale).gif")
+                try await GIFConverter.convert(input, to: output, options: options(scale: scale))
+                let source = try XCTUnwrap(CGImageSourceCreateWithURL(output as CFURL, nil))
+                let image = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil))
+                XCTAssertEqual(image.width, Int(Double(rotated ? 720 : 1280) * scale), "scale \(scale), rotated \(rotated)")
+                XCTAssertEqual(image.height, Int(Double(rotated ? 1280 : 720) * scale), "scale \(scale), rotated \(rotated)")
+                XCTAssertEqual(Double(image.width) / Double(image.height), rotated ? 9.0 / 16 : 16.0 / 9, accuracy: 0.000001)
             }
         }
     }

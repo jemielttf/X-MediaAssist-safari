@@ -173,27 +173,10 @@ struct GIFConverter {
         let selected = try selectedTimes(times, duration: duration, options: options, maximumFrames: limits.maximumFrames)
         // gifski uses a positive first PTS as the final frame delay and shifts all PTS by it.
         let finalDelay = max(minimumFrameDuration, duration - selected.last!)
-        var settings = GifskiSettings(width: 0, height: 0, quality: UInt8(options.quality), fast: false, repeat: 0)
-        guard let encoder = gifski_new(&settings) else { throw GIFConversionError.encoding }
+        var encoder: OpaquePointer?
         var finished = false
-        defer { if !finished { state.abort(GIFConversionError.encoding); _ = gifski_finish(encoder) } }
+        defer { if let encoder, !finished { state.abort(GIFConversionError.encoding); _ = gifski_finish(encoder) } }
         let context = Unmanaged.passUnretained(state).toOpaque()
-        try check(gifski_set_progress_callback(encoder, { raw in
-            guard let raw else { return 0 }
-            do { try Unmanaged<GIFOutput>.fromOpaque(raw).takeUnretainedValue().check(); return 1 }
-            catch { return 0 }
-        }, context))
-        try check(gifski_set_write_callback(encoder, { count, buffer, raw in
-            guard let raw else { return 1 }
-            let state = Unmanaged<GIFOutput>.fromOpaque(raw).takeUnretainedValue()
-            do {
-                if count > 0 {
-                    guard let buffer else { return 1 }
-                    try state.write(Data(bytes: buffer, count: count))
-                }
-                return 0
-            } catch { state.abort(error); return 1 }
-        }, context))
         let reader = try AVAssetReader(asset: asset)
         let frames = AVAssetReaderTrackOutput(track: track, outputSettings: [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA])
         frames.alwaysCopiesSampleData = false
@@ -228,13 +211,37 @@ struct GIFConverter {
                     .transformed(by: CGAffineTransform(scaleX: options.scale, y: options.scale))
                 let width = Int(rect.width), height = Int(rect.height)
                 guard width > 0, height > 0, width <= limits.maximumPixels / height else { throw GIFConversionError.limit }
+                if encoder == nil {
+                    // Zero dimensions enable gifski's automatic downscaling. Use the
+                    // actual oriented/scaled frame size so it preserves our output size.
+                    var settings = GifskiSettings(width: UInt32(width), height: UInt32(height), quality: UInt8(options.quality), fast: false, repeat: 0)
+                    guard let created = gifski_new(&settings) else { throw GIFConversionError.encoding }
+                    encoder = created
+                    try check(gifski_set_progress_callback(created, { raw in
+                        guard let raw else { return 0 }
+                        do { try Unmanaged<GIFOutput>.fromOpaque(raw).takeUnretainedValue().check(); return 1 }
+                        catch { return 0 }
+                    }, context))
+                    try check(gifski_set_write_callback(created, { count, buffer, raw in
+                        guard let raw else { return 1 }
+                        let state = Unmanaged<GIFOutput>.fromOpaque(raw).takeUnretainedValue()
+                        do {
+                            if count > 0 {
+                                guard let buffer else { return 1 }
+                                try state.write(Data(bytes: buffer, count: count))
+                            }
+                            return 0
+                        } catch { state.abort(error); return 1 }
+                    }, context))
+                }
+                guard let encoder else { throw GIFConversionError.encoding }
                 var rgba = [UInt8](repeating: 0, count: width * height * 4)
                 ci.render(image, toBitmap: &rgba, rowBytes: width * 4, bounds: rect, format: .RGBA8, colorSpace: color)
                 try check(gifski_add_frame_rgba(encoder, UInt32(index), UInt32(width), UInt32(height), &rgba, relativePTS + finalDelay))
             }
             index += 1
         }
-        guard reader.status == .completed, index == selected.count else { throw GIFConversionError.unsupported }
+        guard reader.status == .completed, index == selected.count, let encoder else { throw GIFConversionError.unsupported }
         let result = gifski_finish(encoder)
         finished = true
         try state.check()
