@@ -67,7 +67,6 @@
 				</div>
 			</div>
 
-			<div class="summary" id="summary" aria-live="polite"></div>
 			<!-- <p class="note">元のタイミングを保ち、上限を目安に間引きます。元よりフレーム数を増やしません。サイズは縦横比を保って縮小します。</p> -->
 		</section>
 
@@ -85,17 +84,6 @@
 			<button class="link" type="button">ライセンス・著作権表示</button>
 		</footer>
 	</main>
-	<script>
-		(function () {
-			var el = document.getElementById('summary');
-			function v(n) { var c = document.querySelector('input[name="' + n + '"]:checked'); return c ? c.value : '' }
-			function render() {
-				var s = v('s');
-				el.innerHTML = '<strong>' + v('q') + '画質</strong>、最大' + v('f') + 'fpsで、' + (s === '100' ? '元のサイズ' : '元の' + s + '%のサイズ') + 'のGIFを保存します。';
-			}
-			document.addEventListener('change', render); render();
-		})();
-	</script>
 </body>
 
 </html>

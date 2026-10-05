@@ -299,18 +299,6 @@ li span {
 	outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent)
 }
 
-.summary {
-	margin-top: 18px;
-	padding: 12px 20px;
-	border-radius: 26px;
-	background: var(--fill);
-	font-size: 12px
-}
-
-.summary strong {
-	color: var(--accent)
-}
-
 .note {
 	margin: 10px 2px 0;
 	color: var(--sub);
