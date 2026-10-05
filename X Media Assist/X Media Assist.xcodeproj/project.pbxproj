@@ -43,6 +43,10 @@
 		BFF2F30A3061180600D8D517 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3023061180600D8D517 /* manifest.json */; };
 		BFF2F30B3061180600D8D517 /* popup.css in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3033061180600D8D517 /* popup.css */; };
 		BFF2F30C3061180600D8D517 /* content.js in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3043061180600D8D517 /* content.js */; };
+		A50000000000000000000001 /* AppLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000002 /* AppLocalization.swift */; };
+		A50000000000000000000003 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000004 /* Localizable.xcstrings */; };
+		A50000000000000000000005 /* i18n.js in Resources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000006 /* i18n.js */; };
+		A50000000000000000000007 /* _locales in Resources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000008 /* _locales */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -103,6 +107,11 @@
 		BFF2F3023061180600D8D517 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../Extension/manifest.json; sourceTree = "<group>"; };
 		BFF2F3033061180600D8D517 /* popup.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; name = popup.css; path = ../../Extension/popup.css; sourceTree = "<group>"; };
 		BFF2F3043061180600D8D517 /* content.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = content.js; path = ../../Extension/content.js; sourceTree = "<group>"; };
+		A50000000000000000000002 /* AppLocalization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppLocalization.swift; path = AppLocalization.swift; sourceTree = "<group>"; };
+		A50000000000000000000004 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = Localizable.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		A50000000000000000000006 /* i18n.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = i18n.js; path = ../../Extension/i18n.js; sourceTree = "<group>"; };
+		A50000000000000000000008 /* _locales */ = {isa = PBXFileReference; lastKnownFileType = folder; name = _locales; path = ../../Extension/_locales; sourceTree = "<group>"; };
+		A50000000000000000000009 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Main.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -155,6 +164,7 @@
 			isa = PBXGroup;
 			children = (
 				BFF2F2D33061180500D8D517 /* AppDelegate.swift */,
+				A50000000000000000000002 /* AppLocalization.swift */,
 				A20000000000000000000002 /* AppPreferences.swift */,
 				A30000000000000000000003 /* GIFConversionOptions.swift */,
 				BFF2F2DF3061180500D8D517 /* ViewController.swift */,
@@ -174,6 +184,7 @@
 				BFF2F2DB3061180500D8D517 /* Style.css */,
 				A40000000000000000000002 /* X-Media-Assist.svg */,
 				BFF2F2DD3061180500D8D517 /* Script.js */,
+				A50000000000000000000004 /* Localizable.xcstrings */,
 				BF5954833061A1FA005860FA /* X-Media-Assist.icon */,
 				BF59548C3061B696005860FA /* X-Media-Assist-iOS-Default-128@1x.png */,
 			);
@@ -200,6 +211,8 @@
 				BFF2F2FD3061180600D8D517 /* popup.js */,
 				BFF2F2FE3061180600D8D517 /* content.css */,
 				BFF2F2FF3061180600D8D517 /* core.js */,
+				A50000000000000000000006 /* i18n.js */,
+				A50000000000000000000008 /* _locales */,
 				BFF2F3003061180600D8D517 /* background.js */,
 				BFF2F3013061180600D8D517 /* popup.html */,
 				BFF2F3023061180600D8D517 /* manifest.json */,
@@ -271,6 +284,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				ja,
 				Base,
 			);
 			mainGroup = BFF2F2C73061180500D8D517;
@@ -296,6 +310,7 @@
 				BFF2F2E33061180500D8D517 /* Main.storyboard in Resources */,
 				BF5954853061A1FA005860FA /* X-Media-Assist.icon in Resources */,
 				BFF2F2DE3061180500D8D517 /* Script.js in Resources */,
+				A50000000000000000000003 /* Localizable.xcstrings in Resources */,
 				BF59548D3061B696005860FA /* X-Media-Assist-iOS-Default-128@1x.png in Resources */,
 				BFF2F2D83061180500D8D517 /* Main.html in Resources */,
 				BFF2F2E53061180600D8D517 /* Assets.xcassets in Resources */,
@@ -316,6 +331,8 @@
 				BFF2F30B3061180600D8D517 /* popup.css in Resources */,
 				BFF2F3093061180600D8D517 /* popup.html in Resources */,
 				BFF2F3073061180600D8D517 /* core.js in Resources */,
+				A50000000000000000000005 /* i18n.js in Resources */,
+				A50000000000000000000007 /* _locales in Resources */,
 				BF595481306195A2005860FA /* X-Media-Assist.svg in Resources */,
 				BF595482306195A2005860FA /* X-Media-Assist_toolbar-icon.svg in Resources */,
 				BFF2F3053061180600D8D517 /* popup.js in Resources */,
@@ -348,6 +365,7 @@
 				A30000000000000000000001 /* GIFConversionOptions.swift in Sources */,
 				BFF2F2E03061180500D8D517 /* ViewController.swift in Sources */,
 				BFF2F2D43061180500D8D517 /* AppDelegate.swift in Sources */,
+				A50000000000000000000001 /* AppLocalization.swift in Sources */,
 			);
 		};
 		BFF2F2E73061180600D8D517 /* Sources */ = {
@@ -383,6 +401,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				BFF2F2E23061180500D8D517 /* Base */,
+				A50000000000000000000009 /* ja */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";

@@ -1,0 +1,188 @@
+{
+  "ui_language": {
+    "message": "ja"
+  },
+  "extension_description": {
+    "message": "Xに投稿された動画をMP4に、GIFアニメをGIFとしてダウンロードフォルダへ保存します。"
+  },
+  "post_url": {
+    "message": "投稿のURL"
+  },
+  "save_format": {
+    "message": "保存形式"
+  },
+  "gif_settings": {
+    "message": "GIF設定"
+  },
+  "this_download_only": {
+    "message": "今回のみ"
+  },
+  "quality": {
+    "message": "画質"
+  },
+  "quality_high": {
+    "message": "高"
+  },
+  "quality_medium": {
+    "message": "中"
+  },
+  "quality_low": {
+    "message": "低"
+  },
+  "max_frame_rate": {
+    "message": "最大フレームレート"
+  },
+  "output_size": {
+    "message": "出力サイズ"
+  },
+  "save_video": {
+    "message": "動画を保存"
+  },
+  "save_again": {
+    "message": "もう一度保存"
+  },
+  "retry": {
+    "message": "再試行"
+  },
+  "save_tooltip": {
+    "message": "この投稿の動画はMP4、GIFアニメはGIFで保存"
+  },
+  "downloading": {
+    "message": "取得・変換中…"
+  },
+  "keep_tab_open": {
+    "message": "完了までこのタブを開いておいてください。"
+  },
+  "keep_popup_open": {
+    "message": "取得・変換中です。完了までこの画面を開いておいてください。"
+  },
+  "invalid_post_url": {
+    "message": "https://x.com/ユーザー名/status/投稿ID のURLを入力してください。"
+  },
+  "gif_options_load_failed": {
+    "message": "GIF基本設定を読み込めませんでした。"
+  },
+  "gif_options_retry": {
+    "message": "$1 保存時に基本設定を再取得します。"
+  },
+  "invalid_gif_options": {
+    "message": "GIF設定が正しくありません。"
+  },
+  "invalid_post_id": {
+    "message": "投稿IDが正しくありません。"
+  },
+  "post_unavailable": {
+    "message": "投稿情報を取得できません。削除・非公開・閲覧制限、またはX側の変更が考えられます。"
+  },
+  "no_downloadable_media": {
+    "message": "この投稿から保存できる動画やGIFアニメが見つかりません。引用した投稿の動画は、引用元を開いて保存してください。"
+  },
+  "no_mp4_variant": {
+    "message": "メディア$1に直接保存できるMP4がありません（ライブ配信・HLSは対象外です）。"
+  },
+  "no_video": {
+    "message": "この投稿には動画またはGIFアニメがありません。"
+  },
+  "unsupported_media": {
+    "message": "未対応のメディア構成です。"
+  },
+  "extension_disconnected": {
+    "message": "拡張機能との接続が切れました。保存結果をダウンロードフォルダで確認し、ページを再読み込みしてください。改善しない場合はSafariを終了して起動し直してください。"
+  },
+  "extension_result_timeout": {
+    "message": "拡張機能から保存結果が届きません。ダウンロードフォルダを確認し、Safariを終了して起動し直してください。"
+  },
+  "native_unavailable": {
+    "message": "保存機能に接続できません。Safariを終了して起動し直し、X Media Assistが有効か確認してください。"
+  },
+  "post_network_failed": {
+    "message": "投稿情報に接続できません。通信状態とSafariの拡張機能のサイト権限を確認してください。"
+  },
+  "rate_limited": {
+    "message": "Xの取得回数制限に達しました。時間を置いて再試行してください。"
+  },
+  "post_http_failed": {
+    "message": "投稿情報を取得できませんでした（HTTP $1）。"
+  },
+  "post_response_invalid": {
+    "message": "Xからの応答を読み取れませんでした。"
+  },
+  "native_disconnected": {
+    "message": "保存アプリとの通信が切れました。保存結果をダウンロードフォルダで確認してから再試行してください。"
+  },
+  "result_missing": {
+    "message": "保存結果を確認できませんでした。"
+  },
+  "save_failed": {
+    "message": "保存に失敗しました。"
+  },
+  "result_unknown": {
+    "message": "保存結果を確認できません。ダウンロードフォルダを確認してから再試行してください。"
+  },
+  "saved_one": {
+    "message": "$1件をダウンロードフォルダへ保存しました。"
+  },
+  "saved_many": {
+    "message": "$1件をダウンロードフォルダへ保存しました。"
+  },
+  "saved_partial_one": {
+    "message": "$1件は保存済みです。"
+  },
+  "saved_partial_many": {
+    "message": "$1件は保存済みです。"
+  },
+  "restart_safari": {
+    "message": "Safariを終了して起動し直してください。"
+  },
+  "request_rejected": {
+    "message": "保存リクエストを受け付けられませんでした。"
+  },
+  "save_busy": {
+    "message": "保存処理中です。完了してから再試行してください。"
+  },
+  "popup_disconnected": {
+    "message": "拡張機能との接続が切れました。保存結果をダウンロードフォルダで確認してください。"
+  },
+  "content_disconnected": {
+    "message": "拡張機能との接続が切れました。保存先を確認し、ページを再読み込みしてください。"
+  },
+  "native_invalid_request": {
+    "message": "保存リクエストが正しくありません。"
+  },
+  "native_invalid_response": {
+    "message": "動画配信サーバーからの応答が正しくありません。"
+  },
+  "native_too_large": {
+    "message": "保存できるファイルサイズの上限を超えています。"
+  },
+  "native_invalid_mp4": {
+    "message": "取得したファイルはMP4として確認できませんでした。"
+  },
+  "native_write_failed": {
+    "message": "ファイルを保存できません。空き容量とダウンロードフォルダへのアクセスを確認してください。"
+  },
+  "native_http": {
+    "message": "動画を取得できませんでした（HTTP $1）。"
+  },
+  "native_network": {
+    "message": "動画の取得に失敗しました。通信状態を確認して再試行してください。"
+  },
+  "gif_unsupported": {
+    "message": "GIF変換に失敗したためMP4を保存しました。この映像をGIFへ変換できませんでした。"
+  },
+  "gif_limit": {
+    "message": "GIF変換に失敗したためMP4を保存しました。GIF変換の容量・長さ・解像度・フレーム数の上限を超えています。"
+  },
+  "gif_encoding": {
+    "message": "GIF変換に失敗したためMP4を保存しました。GIFの生成または書き込みに失敗しました。"
+  },
+  "gif_timeout": {
+    "message": "GIF変換に失敗したためMP4を保存しました。GIF変換の制限時間を超えました。"
+  },
+  "gif_busy": {
+    "message": "別のGIFを変換中のため、今回はMP4で保存しました。"
+  },
+  "gif_failed": {
+    "message": "GIF変換に失敗したためMP4を保存しました。GIFの生成または保存に失敗しました。"
+  }
+}

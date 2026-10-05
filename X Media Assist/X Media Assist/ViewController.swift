@@ -14,6 +14,11 @@ class ViewController: NSViewController, WKNavigationDelegate, WKScriptMessageHan
         webView.configuration.userContentController.add(self, name: "controller")
         guard let page = Bundle.main.url(forResource: "Main", withExtension: "html"),
               let resources = Bundle.main.resourceURL else { return }
+        if let data = try? JSONSerialization.data(withJSONObject: AppLocalization.webPayload),
+           let json = String(data: data, encoding: .utf8) {
+            webView.configuration.userContentController.addUserScript(WKUserScript(
+                source: "globalThis.XMAStrings = \(json);", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
         webView.loadFileURL(page, allowingReadAccessTo: resources)
     }
 
@@ -42,7 +47,7 @@ class ViewController: NSViewController, WKNavigationDelegate, WKScriptMessageHan
             return
         }
         if message.body as? String == "open-licenses" {
-            if let page = Bundle.main.resourceURL?.appendingPathComponent("Licenses/index.html") {
+            if let page = Bundle.main.resourceURL?.appendingPathComponent(AppLocalization.language == "ja" ? "Licenses/index.html" : "Licenses/index-en.html") {
                 NSWorkspace.shared.open(page)
             }
             return

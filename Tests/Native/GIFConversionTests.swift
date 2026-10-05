@@ -370,7 +370,12 @@ extension GIFConversionTests {
         try await makeVideo(fixture)
         GIFDownloadFixture.body = try Data(contentsOf: fixture)
         defer { GIFDownloadFixture.body = Data() }
-        for mode in ["success", "failure", "mp4"] {
+        let failures: [String: Error] = [
+            "unsupported": GIFConversionError.unsupported, "limit": GIFConversionError.limit,
+            "encoding": GIFConversionError.encoding, "timeout": GIFConversionError.timedOut,
+            "busy": GIFConversionError.busy, "failed": MediaDownloadError.writeFailed
+        ]
+        for mode in ["success", "mp4"] + failures.keys.sorted() {
             let folder = try directory()
             let done = expectation(description: mode)
             var response: Result<MediaSaveResult, Error>?
@@ -381,7 +386,7 @@ extension GIFConversionTests {
                 // must remain available throughout asynchronous conversion.
                 try await Task.sleep(nanoseconds: 20_000_000)
                 XCTAssertTrue(FileManager.default.fileExists(atPath: input.path))
-                if mode == "failure" { throw GIFConversionError.limit }
+                if let failure = failures[mode] { throw failure }
                 try await GIFConverter.convert(input, to: output, options: options)
             }
             MediaSave(request: try request(format: mode == "mp4" ? "mp4" : "auto"), directory: folder, convert: converter).start(configuration: config) {
@@ -391,7 +396,9 @@ extension GIFConversionTests {
             await fulfillment(of: [done], timeout: 10)
             let saved = try XCTUnwrap(response).get()
             XCTAssertEqual(saved.filename, "example-123-1." + (mode == "success" ? "gif" : "mp4"))
-            XCTAssertEqual(saved.warning != nil, mode == "failure", saved.warning ?? "")
+            XCTAssertEqual(saved.warning != nil, failures[mode] != nil, saved.warning ?? "")
+            XCTAssertEqual(saved.message["warning"] as? String, saved.warning)
+            XCTAssertEqual(saved.message["warningCode"] as? String, failures[mode] == nil ? nil : "gif_" + mode)
             XCTAssertEqual(saved.message["ok"] as? Bool, true)
             XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: folder.path), [saved.filename])
             if mode != "success" { XCTAssertEqual(try Data(contentsOf: folder.appendingPathComponent(saved.filename)), GIFDownloadFixture.body) }

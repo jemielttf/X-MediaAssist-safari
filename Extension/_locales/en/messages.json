@@ -1,0 +1,188 @@
+{
+  "ui_language": {
+    "message": "en"
+  },
+  "extension_description": {
+    "message": "Save videos from X as MP4 and animated GIFs as GIF to your Downloads folder."
+  },
+  "post_url": {
+    "message": "Post URL"
+  },
+  "save_format": {
+    "message": "Save Format"
+  },
+  "gif_settings": {
+    "message": "GIF Settings"
+  },
+  "this_download_only": {
+    "message": "This Download Only"
+  },
+  "quality": {
+    "message": "Quality"
+  },
+  "quality_high": {
+    "message": "High"
+  },
+  "quality_medium": {
+    "message": "Medium"
+  },
+  "quality_low": {
+    "message": "Low"
+  },
+  "max_frame_rate": {
+    "message": "Max Frame Rate"
+  },
+  "output_size": {
+    "message": "Output Size"
+  },
+  "save_video": {
+    "message": "Save Video"
+  },
+  "save_again": {
+    "message": "Save Again"
+  },
+  "retry": {
+    "message": "Retry"
+  },
+  "save_tooltip": {
+    "message": "Save videos in this post as MP4 and animated GIFs as GIF"
+  },
+  "downloading": {
+    "message": "Downloading and converting…"
+  },
+  "keep_tab_open": {
+    "message": "Keep this tab open until saving is complete."
+  },
+  "keep_popup_open": {
+    "message": "Downloading and converting. Keep this window open until saving is complete."
+  },
+  "invalid_post_url": {
+    "message": "Enter a post URL in the form https://x.com/username/status/postID."
+  },
+  "gif_options_load_failed": {
+    "message": "Could not load the default GIF settings."
+  },
+  "gif_options_retry": {
+    "message": "$1 The default settings will be loaded again when you save."
+  },
+  "invalid_gif_options": {
+    "message": "The GIF settings are invalid."
+  },
+  "invalid_post_id": {
+    "message": "The post ID is invalid."
+  },
+  "post_unavailable": {
+    "message": "Could not retrieve the post. It may be deleted, private, or restricted, or X may have changed its service."
+  },
+  "no_downloadable_media": {
+    "message": "No downloadable videos or animated GIFs were found. To save media in a quoted post, open the original post."
+  },
+  "no_mp4_variant": {
+    "message": "Media item $1 has no downloadable MP4. Live streams and HLS are not supported."
+  },
+  "no_video": {
+    "message": "This post has no videos or animated GIFs."
+  },
+  "unsupported_media": {
+    "message": "This media layout is not supported."
+  },
+  "extension_disconnected": {
+    "message": "The extension disconnected. Check Downloads for saved files, then reload the page. If the problem continues, quit and reopen Safari."
+  },
+  "extension_result_timeout": {
+    "message": "The extension has not returned a save result. Check Downloads, then quit and reopen Safari."
+  },
+  "native_unavailable": {
+    "message": "Could not connect to the saving service. Quit and reopen Safari, and make sure X Media Assist is enabled."
+  },
+  "post_network_failed": {
+    "message": "Could not connect to the post service. Check your connection and the extension’s website permissions in Safari."
+  },
+  "rate_limited": {
+    "message": "X’s request limit has been reached. Wait a while, then try again."
+  },
+  "post_http_failed": {
+    "message": "Could not retrieve the post (HTTP $1)."
+  },
+  "post_response_invalid": {
+    "message": "Could not read the response from X."
+  },
+  "native_disconnected": {
+    "message": "The saving service disconnected. Check Downloads for saved files before trying again."
+  },
+  "result_missing": {
+    "message": "Could not confirm the save result."
+  },
+  "save_failed": {
+    "message": "Could not save the file."
+  },
+  "result_unknown": {
+    "message": "Could not confirm the save result. Check Downloads before trying again."
+  },
+  "saved_one": {
+    "message": "Saved $1 file to Downloads."
+  },
+  "saved_many": {
+    "message": "Saved $1 files to Downloads."
+  },
+  "saved_partial_one": {
+    "message": "$1 file has already been saved."
+  },
+  "saved_partial_many": {
+    "message": "$1 files have already been saved."
+  },
+  "restart_safari": {
+    "message": "Quit and reopen Safari."
+  },
+  "request_rejected": {
+    "message": "The save request could not be accepted."
+  },
+  "save_busy": {
+    "message": "Saving is in progress. Wait for it to finish, then try again."
+  },
+  "popup_disconnected": {
+    "message": "The extension disconnected. Check Downloads for saved files."
+  },
+  "content_disconnected": {
+    "message": "The extension disconnected. Check Downloads, then reload the page."
+  },
+  "native_invalid_request": {
+    "message": "The save request is invalid."
+  },
+  "native_invalid_response": {
+    "message": "The video server returned an invalid response."
+  },
+  "native_too_large": {
+    "message": "The file exceeds the download size limit."
+  },
+  "native_invalid_mp4": {
+    "message": "The downloaded file could not be verified as MP4."
+  },
+  "native_write_failed": {
+    "message": "Could not save the file. Check free disk space and access to Downloads."
+  },
+  "native_http": {
+    "message": "Could not download the video (HTTP $1)."
+  },
+  "native_network": {
+    "message": "Could not download the video. Check your connection and try again."
+  },
+  "gif_unsupported": {
+    "message": "Saved as MP4 because this video could not be converted to GIF."
+  },
+  "gif_limit": {
+    "message": "Saved as MP4 because GIF conversion exceeded a file size, duration, resolution, or frame count limit."
+  },
+  "gif_encoding": {
+    "message": "Saved as MP4 because the GIF could not be created or written."
+  },
+  "gif_timeout": {
+    "message": "Saved as MP4 because GIF conversion exceeded the time limit."
+  },
+  "gif_busy": {
+    "message": "Saved as MP4 because another GIF conversion is in progress."
+  },
+  "gif_failed": {
+    "message": "Saved as MP4 because the GIF could not be created or saved."
+  }
+}

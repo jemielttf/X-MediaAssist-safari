@@ -1,5 +1,7 @@
 # X Media Assist for Safari
 
+日本語 | [English](README.en.md)
+
 Xに投稿された動画やGIFアニメを、Macのダウンロードフォルダへ保存するSafari拡張機能です。<br>動画はMP4、GIFアニメはGIFで保存します。
 
 > [!IMPORTANT]
@@ -45,6 +47,8 @@ brew upgrade --cask jemielttf/tap/x-media-assist
 3. 利用するSafariプロファイルで、`x.com` と `cdn.syndication.twimg.com` へのアクセスを許可します。
 
 これで準備は完了です。
+
+表示言語は日本語・英語に対応しています。拡張機能はSafariの言語、本体アプリはmacOSのアプリの言語設定に従います。対応言語に一致しない場合は英語で表示します。アプリ独自の言語切り替え設定はありません。
 
 ## 動画を保存する
 

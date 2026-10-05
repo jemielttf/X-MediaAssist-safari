@@ -1,12 +1,22 @@
+// Swift provides strings from the app's selected localization before this script loads.
+const localized = globalThis.XMAStrings;
+const t = key => localized?.messages[key] || key;
+if (localized) {
+    document.documentElement.lang = localized.language;
+    document.querySelectorAll("[data-i18n]").forEach(element => {
+        element.textContent = t(element.dataset.i18n);
+    });
+}
+
 function show(enabled) {
     const status = document.getElementById("extension-status");
     status.classList.toggle("is-enabled", enabled === true);
     status.querySelector("span").textContent = enabled === true
-        ? "Safari拡張機能は有効です"
-        : "Safari拡張機能は無効です。Safariの設定で有効にしてください。";
+        ? t("extension_enabled")
+        : t("extension_disabled");
 }
 function showError() {
-    document.getElementById("error").textContent = "Safariの設定を開けませんでした。Safariのメニューから「設定 → 拡張機能」を開いてください。";
+    document.getElementById("error").textContent = t("preferences_error");
 }
 document.querySelector(".open-preferences").addEventListener("click", () => {
     webkit.messageHandlers.controller.postMessage("open-preferences");
@@ -21,11 +31,11 @@ function showGIFOptions(options) {
     document.querySelector(`input[name="gif-fps"][value="${options.maximumFrameRate}"]`).checked = true;
     document.querySelector(`input[name="gif-scale"][value="${options.scale}"]`).checked = true;
     document.getElementById("gif-options").disabled = false;
-    document.getElementById("gif-status").textContent = "通常のGIF保存に使います。変更は自動保存されます。";
+    document.getElementById("gif-status").textContent = t("gif_ready");
 }
 function showGIFError() {
     document.getElementById("gif-options").disabled = true;
-    document.getElementById("gif-status").textContent = "GIF設定を読み込み・保存できませんでした。アプリを開き直してください。";
+    document.getElementById("gif-status").textContent = t("gif_error");
 }
 document.getElementById("gif-options").addEventListener("change", () => {
     webkit.messageHandlers.controller.postMessage({ type: "set-gif-options", gifOptions: {

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 
 <head>
 	<meta charset="utf-8">
@@ -17,40 +17,40 @@
 			</div>
 			<div>
 				<h1>X Media Assist</h1>
-				<p class="lead">Xの動画とGIFアニメを保存します。</p>
+				<p class="lead" data-i18n="app_tagline">Save videos and animated GIFs from X.</p>
 			</div>
 		</header>
 
-		<div class="status" id="extension-status" role="status"><i aria-hidden="true"></i><span>Safariの設定で拡張機能を有効にしてください。</span></div>
+		<div class="status" id="extension-status" role="status"><i aria-hidden="true"></i><span data-i18n="extension_enable_hint">Enable the extension in Safari Settings.</span></div>
 
 		<section class="card">
-			<h2>使い方</h2>
+			<h2 data-i18n="how_to_use">How to Use</h2>
 			<ol role="list">
-				<li><b aria-hidden="true">1</b><span>Safariの「設定 → 拡張機能」で有効にします。</span></li>
-				<li><b aria-hidden="true">2</b><span>Xの投稿を開き、サイトへのアクセスを許可します。</span></li>
-				<li><b aria-hidden="true">3</b><span>「動画を保存」でダウンロードフォルダに保存します。</span></li>
+				<li><b aria-hidden="true">1</b><span data-i18n="step_enable">Enable X Media Assist in Safari → Settings → Extensions.</span></li>
+				<li><b aria-hidden="true">2</b><span data-i18n="step_access">Open a post on X and allow access to the website.</span></li>
+				<li><b aria-hidden="true">3</b><span data-i18n="step_save">Click “Save Video” to save to Downloads.</span></li>
 			</ol>
-			<button class="btn open-preferences" type="button">Safariの拡張機能設定を開く</button>
+			<button class="btn open-preferences" type="button" data-i18n="open_preferences">Open Safari Extension Settings</button>
 			<p id="error" role="status"></p>
 		</section>
 
 		<section class="card">
 			<div class="head">
-				<h2 id="gif-title">GIF設定</h2><span class="tag">基本設定</span>
+				<h2 id="gif-title" data-i18n="gif_settings">GIF Settings</h2><span class="tag" data-i18n="default_settings">Default Settings</span>
 			</div>
-			<p id="gif-status" class="hint" role="status">基本設定を読み込み中…</p>
+			<p id="gif-status" class="hint" role="status" data-i18n="gif_loading">Loading default settings…</p>
 			<fieldset id="gif-options" aria-labelledby="gif-title" aria-describedby="gif-status" disabled>
 
 				<div class="row">
-					<span class="label" id="l-q">画質</span>
+					<span class="label" id="l-q" data-i18n="quality">Quality</span>
 					<div class="seg" role="radiogroup" aria-labelledby="l-q">
-						<label><input type="radio" name="gif-quality" value="95" checked><span>高</span></label>
-						<label><input type="radio" name="gif-quality" value="85"><span>中</span></label>
-						<label><input type="radio" name="gif-quality" value="70"><span>低</span></label>
+						<label><input type="radio" name="gif-quality" value="95" checked><span data-i18n="quality_high">High</span></label>
+						<label><input type="radio" name="gif-quality" value="85"><span data-i18n="quality_medium">Medium</span></label>
+						<label><input type="radio" name="gif-quality" value="70"><span data-i18n="quality_low">Low</span></label>
 					</div>
 				</div>
 				<div class="row">
-					<span class="label" id="l-f">最大フレームレート</span>
+					<span class="label" id="l-f" data-i18n="max_frame_rate">Max Frame Rate</span>
 					<div class="seg" role="radiogroup" aria-labelledby="l-f" aria-describedby="gif-note">
 						<label><input type="radio" name="gif-fps" value="30"><span>30 fps</span></label>
 						<label><input type="radio" name="gif-fps" value="25"><span>25 fps</span></label>
@@ -59,7 +59,7 @@
 					</div>
 				</div>
 				<div class="row">
-					<span class="label" id="l-s">出力サイズ</span>
+					<span class="label" id="l-s" data-i18n="output_size">Output Size</span>
 					<div class="seg" role="radiogroup" aria-labelledby="l-s" aria-describedby="gif-note">
 						<label><input type="radio" name="gif-scale" value="1" checked><span>100%</span></label>
 						<label><input type="radio" name="gif-scale" value="0.75"><span>75%</span></label>
@@ -71,17 +71,17 @@
 		</section>
 
 		<section class="card">
-			<h2>メモ</h2>
+			<h2 data-i18n="notes_title">Notes</h2>
 			<ul class="facts">
-				<li>動画はMP4、GIFアニメはGIFで保存します。GIFに変換できなかった場合は、MP4で保存します。</li>
-				<li>投稿内にボタンがない場合は、Safariの拡張ボタンからURLを入力できます。</li>
-				<li>メニューバーのアイコンから、Dock表示とログイン時起動を設定できます。ウインドウを閉じても常駐を続けます。</li>
+				<li data-i18n="note_formats">Videos are saved as MP4 and animated GIFs as GIF. If GIF conversion fails, the MP4 is saved instead.</li>
+				<li data-i18n="note_popup">If a post has no save button, enter its URL using the extension button in Safari.</li>
+				<li data-i18n="note_menu">Use the menu bar icon to manage Dock visibility and launching at login. The app keeps running when you close this window.</li>
 			</ul>
 		</section>
 
 		<footer>
-			<span>AGPL-3.0-or-later / 無保証</span>
-			<button class="link open-licenses" type="button">ライセンス・著作権表示</button>
+			<span data-i18n="no_warranty">AGPL-3.0-or-later / No warranty</span>
+			<button class="link open-licenses" type="button" data-i18n="open_licenses">Licenses and Copyright Notices</button>
 		</footer>
 	</main>
 	<script src="../Script.js"></script>

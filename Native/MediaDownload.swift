@@ -7,6 +7,31 @@ import Darwin
 enum MediaDownloadError: LocalizedError {
     case invalidRequest, invalidResponse, tooLarge, invalidMP4, busy, writeFailed
     case http(Int)
+    var messageCode: String {
+        switch self {
+        case .invalidRequest: return "invalid_request"
+        case .invalidResponse: return "invalid_response"
+        case .tooLarge: return "too_large"
+        case .invalidMP4: return "invalid_mp4"
+        case .busy: return "busy"
+        case .writeFailed: return "write_failed"
+        case .http: return "http"
+        }
+    }
+
+    // Additive protocol fields let the extension localize known failures. Keep
+    // the legacy text for an older extension and never expose raw system errors.
+    static func response(for error: Error) -> [String: Any] {
+        if (error as NSError).domain == NSURLErrorDomain {
+            return ["ok": false, "errorCode": "network",
+                    "error": "動画の取得に失敗しました。通信状態を確認して再試行してください。"]
+        }
+        let known = error as? MediaDownloadError ?? .writeFailed
+        var response: [String: Any] = ["ok": false, "errorCode": known.messageCode, "error": known.localizedDescription]
+        if case .http(let status) = known { response["httpStatus"] = status }
+        return response
+    }
+
     var errorDescription: String? {
         switch self {
         case .invalidRequest: return "保存リクエストが正しくありません。"

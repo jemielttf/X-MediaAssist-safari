@@ -7,9 +7,13 @@ import Foundation
 struct MediaSaveResult {
     let filename: String
     let warning: String?
+    var warningCode: String? = nil
     var message: [String: Any] {
         var value: [String: Any] = ["ok": true, "filename": filename]
-        if let warning { value["warning"] = warning }
+        if let warning {
+            value["warning"] = warning
+            if let warningCode { value["warningCode"] = warningCode }
+        }
         return value
     }
 }
@@ -20,6 +24,7 @@ final class MediaSave {
     private let directory: URL
     private let convert: (URL, URL, GIFConversionOptions) async throws -> Void
     private var warning: String?
+    private var warningCode: String?
 
     init(request: MediaDownloadRequest, directory: URL,
          convert: @escaping (URL, URL, GIFConversionOptions) async throws -> Void = { try await GIFConverter.convert($0, to: $1, options: $2) }) {
@@ -32,7 +37,7 @@ final class MediaSave {
         MediaDownload(request: request, directory: directory, finishFile: { temporary in
             try await self.finish(temporary)
         }) { result in
-            completion(result.map { MediaSaveResult(filename: $0, warning: self.warning) })
+            completion(result.map { MediaSaveResult(filename: $0, warning: self.warning, warningCode: self.warningCode) })
         }.start(configuration: configuration)
     }
 
@@ -46,6 +51,7 @@ final class MediaSave {
             } catch {
                 let reason = (error as? GIFConversionError)?.localizedDescription ?? "GIFの生成または保存に失敗しました。"
                 warning = "GIF変換に失敗したためMP4を保存しました。\(reason)"
+                warningCode = (error as? GIFConversionError)?.warningCode ?? "gif_failed"
             }
         }
         return try MediaFile.publish(temporary, directory: directory, basename: request.basename).lastPathComponent

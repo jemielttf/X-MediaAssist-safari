@@ -2,6 +2,7 @@
 <html lang="ja"><head><meta charset="utf-8"><title>X Media Assist UI fixture</title><link rel="stylesheet" href="../Extension/content.css">
 <style>body{font:16px/1.6 system-ui;max-width:620px;margin:40px auto;padding:20px}article{border:1px solid #aaa;border-radius:12px;padding:20px;margin:20px 0}video{display:block;width:100%;height:160px;background:#222}button{padding:8px}#requests{white-space:pre-wrap}</style></head><body>
 <h1>投稿UIの隔離テスト</h1><p>実通信・ファイル保存は行わず、拡張機能の返信を模擬します。</p>
+<p><a href="?lang=ja">日本語</a> | <a href="?lang=en">English</a></p>
 <button id="recycle">同じDOMを別ポストへ再利用</button> <button id="toggle">次の保存を失敗させる</button>
 <button id="reinject">スクリプトを再実行</button>
 <p id="check" role="status"></p>
@@ -14,6 +15,7 @@
 let fail = false;
 let count = 0;
 globalThis.browser = { runtime: { sendMessage: async message => {
+ if (message.type === 'checkConnection') return {ok:true,instance:'fixture'};
  document.querySelector('#requests').textContent = JSON.stringify({count: ++count, ...message});
  await new Promise(done => setTimeout(done, 250));
  return fail ? {ok:false,saved:[],error:'テスト用の通信失敗です。'} : {ok:true,saved:[`example-${message.postId}-1.mp4`]};
@@ -51,4 +53,9 @@ document.querySelector('#legacy').onclick = () => {
   old.remove();
  }, 3000);
 };
-</script><script src="../Extension/core.js"></script><script src="../Extension/content.js"></script></body></html>
+</script><script type="module">
+const lang = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'ja';
+const messages = await (await fetch(`../Extension/_locales/${lang}/messages.json`)).json();
+browser.i18n = {getMessage: (key, values = []) => messages[key]?.message.replace(/\$(\d+)/g, (_, n) => values[Number(n) - 1] ?? '') ?? ''};
+for (const name of ['i18n', 'core', 'content']) await import(`../Extension/${name}.js`);
+</script></body></html>

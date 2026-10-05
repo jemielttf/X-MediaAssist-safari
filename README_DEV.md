@@ -78,6 +78,15 @@ Bundle Identifierを変更した後は、Safariを通常終了して起動し直
 
 SafariのnativeMessagingは同梱されたApp Extensionが受信し、そのプロセスがダウンロード・変換・保存を行います。GIF基本設定のみ、両ターゲットの App Group `$(DEVELOPMENT_TEAM).com.jemielttf.XMediaAssist.shared` の UserDefaults に共有します。別の常駐ヘルパーやデータベースは導入していません。案内アプリ自体にダウンロード処理を中継する構成ではありません。
 
+## 多言語対応
+
+- 日本語と英語に対応し、対応する言語がない場合は英語へフォールバックします。独自の言語設定は保存しません。
+- 拡張は `Extension/_locales/{ja,en}/messages.json` と `browser.i18n.getMessage` を使います。`manifest.json` の `default_locale` は `en` です。`i18n.js` はcore/content/backgroundより前に読み込みます。画面への挿入は `textContent` を使用します。
+- 本体は `Resources/Localizable.xcstrings` を使い、`AppLocalization.swift` でメニュー文字列とWKWebView用の辞書を取得します。辞書はメインフレームのdocument開始時に渡し、単一の `Base.lproj/Main.html` に適用します。文言追加時は `webPayload` のキーも更新してください。標準メニューの日本語訳は `ja.lproj/Main.strings` です。
+- Native MessagingはprotocolVersion 3を維持し、失敗時に `errorCode`（HTTPエラーのみ `httpStatus`）、GIFフォールバック時に `warningCode` を追加します。従来の `error` / `warning` も残し、コードを知らない組み合わせではその文言を表示します。既知コードは拡張側の辞書で翻訳し、ファイル名やGIF設定値は変更しません。
+- 利用者向けREADMEは `README.md` / `README.en.md`、ライセンスの案内ページは `Licenses/index.html` / `Licenses/index-en.html` です。ライセンス本文・第三者著作権表示は原文を維持します。
+- `node --test Tests/*.test.mjs` は辞書のキー・置換引数、日英の保存結果・Nativeエラー・GIFフォールバック、旧応答との互換性を確認します。`Tests/localization-fixture.html` と `Tests/content-fixture.html` はローカルHTTPサーバーで開き、`?lang=ja` / `?lang=en` で実通信・保存なしの表示確認ができます。
+
 ## 保存境界と制約
 
 - メディア取得にはログイン情報・Cookie・APIキーを使用しません。公開Syndicationのみに依存します。

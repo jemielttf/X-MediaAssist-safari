@@ -2,10 +2,11 @@
 	"manifest_version": 3,
 	"name": "X Media Assist",
 	"version": "0.3.3",
-	"description": "Xに投稿された動画をMP4に、GIFアニメをGIFとしてダウンロードフォルダへ保存します。",
+	"default_locale": "en",
+	"description": "__MSG_extension_description__",
 	"permissions": ["nativeMessaging", "activeTab"],
 	"host_permissions": ["https://cdn.syndication.twimg.com/*"],
-	"background": { "scripts": ["core.js", "background.js"] },
+	"background": { "scripts": ["i18n.js", "core.js", "background.js"] },
 	"content_scripts": [
 		{
 			"matches": [
@@ -14,7 +15,7 @@
 				"https://www.x.com/*",
 				"https://www.twitter.com/*"
 			],
-			"js": ["core.js", "content.js"],
+			"js": ["i18n.js", "core.js", "content.js"],
 			"css": ["content.css"],
 			"run_at": "document_idle"
 		}

@@ -20,6 +20,16 @@ struct GIFConversionLimits {
 
 enum GIFConversionError: LocalizedError {
     case unsupported, limit, encoding, timedOut, busy
+    var warningCode: String {
+        switch self {
+        case .unsupported: return "gif_unsupported"
+        case .limit: return "gif_limit"
+        case .encoding: return "gif_encoding"
+        case .timedOut: return "gif_timeout"
+        case .busy: return "gif_busy"
+        }
+    }
+
     var errorDescription: String? {
         switch self {
         case .unsupported: return "この映像をGIFへ変換できませんでした。"

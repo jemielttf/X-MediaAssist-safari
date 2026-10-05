@@ -52,16 +52,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let menu = NSMenu()
         menu.autoenablesItems = false
         menu.delegate = self
-        menu.addItem(makeMenuItem("X Media Assistを開く", action: #selector(showMainWindow)))
+        menu.addItem(makeMenuItem(AppLocalization.string("menu_open"), action: #selector(showMainWindow)))
         menu.addItem(.separator())
-        dockMenuItem = makeMenuItem("Dockに表示しない", action: #selector(toggleDockVisibility))
+        dockMenuItem = makeMenuItem(AppLocalization.string("menu_hide_dock"), action: #selector(toggleDockVisibility))
         menu.addItem(dockMenuItem)
-        loginMenuItem = makeMenuItem("ログイン時に起動する", action: #selector(toggleLaunchAtLogin))
+        loginMenuItem = makeMenuItem(AppLocalization.string("menu_launch_at_login"), action: #selector(toggleLaunchAtLogin))
         menu.addItem(loginMenuItem)
-        approvalMenuItem = makeMenuItem("ログイン項目のシステム設定を開く…", action: #selector(openLoginSettings))
+        approvalMenuItem = makeMenuItem(AppLocalization.string("menu_login_settings"), action: #selector(openLoginSettings))
         menu.addItem(approvalMenuItem)
         menu.addItem(.separator())
-        menu.addItem(makeMenuItem("X Media Assistを終了", action: #selector(quitApplication)))
+        menu.addItem(makeMenuItem(AppLocalization.string("menu_quit"), action: #selector(quitApplication)))
         item.menu = menu
         statusItem = item
         updateMenu()
@@ -79,7 +79,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         dockMenuItem.state = NSApp.activationPolicy() == .accessory ? .on : .off
         let status = preferences.loginItemStatus
         loginMenuItem.state = status == .enabled ? .on : (status == .requiresApproval ? .mixed : .off)
-        loginMenuItem.title = status == .requiresApproval ? "ログイン時に起動する（承認待ち）" : "ログイン時に起動する"
+        loginMenuItem.title = status == .requiresApproval ? AppLocalization.string("menu_login_pending") : AppLocalization.string("menu_launch_at_login")
         approvalMenuItem.isHidden = status != .requiresApproval
     }
 
@@ -106,7 +106,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         if !applied {
             let alert = NSAlert()
-            alert.messageText = "Dockの表示設定を変更できませんでした。"
+            alert.messageText = AppLocalization.string("dock_error")
             alert.addButton(withTitle: "OK")
             NSApp.activate()
             alert.runModal()
@@ -120,7 +120,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             try preferences.setLaunchAtLogin(status != .enabled && status != .requiresApproval)
         } catch {
             let alert = NSAlert()
-            alert.messageText = "ログイン時起動の設定を変更できませんでした。"
+            alert.messageText = AppLocalization.string("login_error")
             alert.informativeText = error.localizedDescription
             alert.addButton(withTitle: "OK")
             NSApp.activate()

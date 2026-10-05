@@ -42,15 +42,11 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
                 switch result {
                 case .success(let saved): respond(saved.message)
                 case .failure(let error):
-                    let description: String
-                    if let known = error as? MediaDownloadError { description = known.localizedDescription }
-                    else if (error as NSError).domain == NSURLErrorDomain { description = "動画の取得に失敗しました。通信状態を確認して再試行してください。" }
-                    else { description = MediaDownloadError.writeFailed.localizedDescription }
-                    respond(["ok": false, "error": description])
+                    respond(MediaDownloadError.response(for: error))
                 }
             }
         } catch {
-            respond(["ok": false, "error": (error as? MediaDownloadError)?.localizedDescription ?? MediaDownloadError.writeFailed.localizedDescription])
+            respond(MediaDownloadError.response(for: error))
         }
     }
 }

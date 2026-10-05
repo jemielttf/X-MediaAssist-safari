@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>X Media Assist — Localization fixture</title>
+<style>
+body { font: 14px system-ui; margin: 20px; background: #ddd; color: #222; }
+.previews { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+iframe { border: 1px solid #aaa; background: white; height: 900px; }
+#popup { width: 380px; height: 610px; }
+#main { width: 570px; }
+</style>
+<h1>Localization fixture</h1>
+<p>Isolated previews of the actual HTML and scripts. No network downloads or preference writes.</p>
+<p><a href="?lang=ja">日本語</a> | <a href="?lang=en">English</a> | <a href="content-fixture.html?lang=en">Post button (English)</a></p>
+<p>Save Video returns a simulated GIF fallback. Choose MP4 to verify disabled GIF controls.</p>
+<div class="previews"><iframe id="popup" title="Toolbar popup"></iframe><iframe id="main" title="Companion app"></iframe></div>
+<script type="module">
+const language = new URLSearchParams(location.search).get('lang') === 'ja' ? 'ja' : 'en';
+document.documentElement.lang = language;
+const read = async path => (await fetch(path)).text();
+const [popup, main, catalog, strings] = await Promise.all([
+  read('../Extension/popup.html'), read('../X Media Assist/X Media Assist/Resources/Base.lproj/Main.html'),
+  read(`../Extension/_locales/${language}/messages.json`), read('../X Media Assist/X Media Assist/Resources/Localizable.xcstrings')
+]);
+const payload = { language, messages: Object.fromEntries(Object.entries(JSON.parse(strings).strings).map(([key, value]) => [key, value.localizations[language].stringUnit.value])) };
+const options = { quality: 95, maximumFrameRate: 20, scale: 1 };
+const popupBridge = `
+  const messages = ${catalog};
+  globalThis.browser = {
+    i18n: {getMessage: (key, values = []) => messages[key]?.message.replace(/\\$(\\d+)/g, (_, n) => values[Number(n) - 1] ?? '') ?? ''},
+    tabs: {query: async () => [{url:'https://x.com/example/status/123'}]},
+    runtime: {sendMessage: async request => {
+      if (request.type === 'getGIFOptions') return {ok:true,gifOptions:${JSON.stringify(options)}};
+      if (request.type === 'checkConnection') return {ok:true,instance:'fixture'};
+      await new Promise(done => setTimeout(done, 800));
+      return {ok:false,saved:['example-123-1.mp4'],warnings:['example-123-1.mp4: ' + messages.gif_limit.message]};
+    }}
+  };`;
+const mainBridge = `
+  globalThis.XMAStrings = ${JSON.stringify(payload)};
+  globalThis.webkit = {messageHandlers:{controller:{postMessage: message => {
+    if (message?.type === 'set-gif-options') showGIFOptions(message.gifOptions);
+  }}}};
+  addEventListener('DOMContentLoaded', () => {show(true);showGIFOptions(${JSON.stringify(options)});});`;
+function preview(frame, html, base, bridge) {
+  // Only this isolated srcdoc preview replaces CSP so it can inject the native/API
+  // stubs. Production HTML and its CSP are unchanged.
+  html = html.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/, '');
+  frame.srcdoc = html.replace('<head>', `<head><base href="${new URL(base, location.href)}"><script>${bridge}<\/script>`);
+}
+preview(document.querySelector('#popup'), popup, '../Extension/', popupBridge);
+preview(document.querySelector('#main'), main, '../X Media Assist/X Media Assist/Resources/Base.lproj/', mainBridge);
+</script>
+</html>

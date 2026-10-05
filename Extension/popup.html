@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 
 <head>
 	<meta charset="utf-8">
@@ -14,12 +14,12 @@
 
 		<form id="download-form">
 			<div class="field">
-				<label class="label" for="post-url">投稿のURL</label>
+				<label class="label" for="post-url" data-i18n="post_url">Post URL</label>
 				<input class="input" id="post-url" required type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://x.com/example/status/123">
 			</div>
 
 			<div class="field">
-				<span class="label" id="l-fmt">保存形式</span>
+				<span class="label" id="l-fmt" data-i18n="save_format">Save Format</span>
 				<div class="seg" role="radiogroup" aria-labelledby="l-fmt">
 					<label><input type="radio" name="format" value="auto" checked><span>Auto</span></label>
 					<label><input type="radio" name="format" value="mp4"><span>MP4</span></label>
@@ -28,20 +28,20 @@
 
 			<section class="card gif" id="gif">
 				<div class="head">
-					<h2 id="gif-title">GIF設定</h2><span class="tag">今回のみ</span>
+					<h2 id="gif-title" data-i18n="gif_settings">GIF Settings</h2><span class="tag" data-i18n="this_download_only">This Download Only</span>
 				</div>
 				<fieldset id="gif-options" aria-labelledby="gif-title" disabled>
 
 					<div class="row">
-						<span class="label" id="l-q">画質</span>
+						<span class="label" id="l-q" data-i18n="quality">Quality</span>
 						<div class="seg" role="radiogroup" aria-labelledby="l-q">
-							<label><input type="radio" name="gif-quality" value="95" checked><span>高</span></label>
-							<label><input type="radio" name="gif-quality" value="85"><span>中</span></label>
-							<label><input type="radio" name="gif-quality" value="70"><span>低</span></label>
+							<label><input type="radio" name="gif-quality" value="95" checked><span data-i18n="quality_high">High</span></label>
+							<label><input type="radio" name="gif-quality" value="85"><span data-i18n="quality_medium">Medium</span></label>
+							<label><input type="radio" name="gif-quality" value="70"><span data-i18n="quality_low">Low</span></label>
 						</div>
 					</div>
 					<div class="row">
-						<span class="label" id="l-f">最大フレームレート</span>
+						<span class="label" id="l-f" data-i18n="max_frame_rate">Max Frame Rate</span>
 						<div class="seg" role="radiogroup" aria-labelledby="l-f" aria-describedby="gif-note">
 							<label><input type="radio" name="gif-fps" value="30"><span>30 fps</span></label>
 							<label><input type="radio" name="gif-fps" value="25"><span>25 fps</span></label>
@@ -50,7 +50,7 @@
 						</div>
 					</div>
 					<div class="row">
-						<span class="label" id="l-s">出力サイズ</span>
+						<span class="label" id="l-s" data-i18n="output_size">Output Size</span>
 						<div class="seg" role="radiogroup" aria-labelledby="l-s" aria-describedby="gif-note">
 							<label><input type="radio" name="gif-scale" value="1" checked><span>100%</span></label>
 							<label><input type="radio" name="gif-scale" value="0.75"><span>75%</span></label>
@@ -60,11 +60,12 @@
 				</fieldset>
 			</section>
 
-			<button class="btn" type="submit" id="save">動画を保存</button>
+			<button class="btn" type="submit" id="save" data-i18n="save_video">Save Video</button>
 		</form>
 		<p id="status" role="status" aria-live="polite"></p>
 
 	</main>
+	<script src="i18n.js"></script>
 	<script src="core.js"></script>
 	<script src="popup.js"></script>
 </body>

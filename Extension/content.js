@@ -3,6 +3,7 @@
   // Safari may inject again when an extension is rebuilt or re-enabled.
   globalThis.__xmaContentCleanup?.();
   const core = globalThis.XMediaCore;
+  const t = core.t;
   function postID(article) {
     // Use the timestamp permalink, never arbitrary links in post text or quotes.
     for (const time of article.querySelectorAll("a[href] time")) {
@@ -30,14 +31,15 @@
       if (!id || !article.querySelector('video, [data-testid="videoPlayer"], [data-testid="playButton"]')) continue;
       const root = document.createElement("div");
       root.className = "xma-controls";
+      root.lang = globalThis.XMediaI18n.language();
       root.dataset.postId = id;
       const item = document.createElement("div");
       item.className = "xma-item";
       const button = document.createElement("button");
       button.type = "button";
       button.className = "xma-save";
-      button.textContent = "↓ 動画を保存";
-      button.title = "この投稿の動画はMP4、GIFアニメはGIFで保存";
+      button.textContent = `↓ ${t("save_video")}`;
+      button.title = t("save_tooltip");
       const status = document.createElement("span");
       status.className = "xma-status";
       status.setAttribute("role", "status");
@@ -49,15 +51,15 @@
         event.preventDefault();
         if (!event.isTrusted || button.disabled) return;
         button.disabled = true;
-        button.textContent = "取得・変換中…";
-        status.textContent = "完了までこのタブを開いておいてください。";
+        button.textContent = t("downloading");
+        status.textContent = t("keep_tab_open");
         try {
           const result = await core.requestDownload(id, message => browser.runtime.sendMessage(message));
           status.textContent = core.resultMessage(result);
-          button.textContent = result?.ok ? "↓ もう一度保存" : "↓ 再試行";
+          button.textContent = result?.ok ? `↓ ${t("save_again")}` : `↓ ${t("retry")}`;
         } catch (error) {
-          status.textContent = error.message || "拡張機能との接続が切れました。保存先を確認し、ページを再読み込みしてください。";
-          button.textContent = "↓ 再試行";
+          status.textContent = error.message || t("content_disconnected");
+          button.textContent = `↓ ${t("retry")}`;
         } finally { button.disabled = false; }
       });
       const actions = [...article.querySelectorAll('[role="group"]')].find(group => group.querySelector('[data-testid="reply"]'));

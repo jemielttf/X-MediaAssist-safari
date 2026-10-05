@@ -1,4 +1,6 @@
 "use strict";
+const t = globalThis.XMediaI18n.text;
+globalThis.XMediaI18n.localize(document);
 const input = document.getElementById("post-url");
 const button = document.getElementById("save");
 const status = document.getElementById("status");
@@ -11,14 +13,14 @@ function updateGIFControls() {
 }
 document.querySelectorAll('input[name="format"]').forEach(control => control.addEventListener("change", updateGIFControls));
 const loadGIFOptions = browser.runtime.sendMessage({ type: "getGIFOptions" }).then(reply => {
-	if (!reply?.ok) throw new Error(reply?.error || "GIF基本設定を読み込めませんでした。");
+	if (!reply?.ok) throw new Error(reply?.error || t("gif_options_load_failed"));
 	const options = XMediaCore.validateGIFOptions(reply.gifOptions);
 	document.querySelector(`input[name="gif-quality"][value="${options.quality}"]`).checked = true;
 	document.querySelector(`input[name="gif-fps"][value="${options.maximumFrameRate}"]`).checked = true;
 	document.querySelector(`input[name="gif-scale"][value="${options.scale}"]`).checked = true;
 	gifOptionsReady = true;
 }).catch(error => {
-	status.textContent = `${error.message} 保存時に基本設定を再取得します。`;
+	status.textContent = t("gif_options_retry", [error.message || t("gif_options_load_failed")]);
 }).finally(updateGIFControls);
 browser.tabs
 	.query({ active: true, currentWindow: true })
@@ -34,14 +36,14 @@ document
 		const postId = XMediaCore.parsePostURL(input.value.trim());
 		if (!postId) {
 			status.textContent =
-				"https://x.com/ユーザー名/status/投稿ID のURLを入力してください。";
+				t("invalid_post_url");
 			return;
 		}
 		button.disabled = true;
 		downloading = true;
 		updateGIFControls();
 		status.textContent =
-			"取得・変換中です。完了までこの画面を開いておいてください。";
+			t("keep_popup_open");
 		try {
 			await loadGIFOptions;
 			status.textContent = XMediaCore.resultMessage(
@@ -59,7 +61,7 @@ document
 		} catch (error) {
 			status.textContent =
 				error.message ||
-				"拡張機能との接続が切れました。保存結果をダウンロードフォルダで確認してください。";
+				t("popup_disconnected");
 		} finally {
 			button.disabled = false;
 			downloading = false;

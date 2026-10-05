@@ -26,6 +26,27 @@ private final class FixtureProtocol: URLProtocol {
 }
 
 final class MediaDownloadTests: XCTestCase {
+    func testLocalizedErrorCodesPreserveLegacyResponses() throws {
+        let cases: [(MediaDownloadError, String)] = [
+            (.invalidRequest, "invalid_request"), (.invalidResponse, "invalid_response"),
+            (.tooLarge, "too_large"), (.invalidMP4, "invalid_mp4"), (.busy, "busy"),
+            (.writeFailed, "write_failed"), (.http(403), "http")
+        ]
+        for (error, code) in cases {
+            let response = MediaDownloadError.response(for: error)
+            XCTAssertEqual(response["ok"] as? Bool, false)
+            XCTAssertEqual(response["errorCode"] as? String, code)
+            XCTAssertEqual(response["error"] as? String, error.localizedDescription)
+            XCTAssertTrue(JSONSerialization.isValidJSONObject(response))
+        }
+        XCTAssertEqual(MediaDownloadError.response(for: MediaDownloadError.http(403))["httpStatus"] as? Int, 403)
+        XCTAssertEqual(MediaDownloadError.response(for: URLError(.timedOut))["errorCode"] as? String, "network")
+        let unknown = NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "private filesystem path"])
+        let response = MediaDownloadError.response(for: unknown)
+        XCTAssertEqual(response["errorCode"] as? String, "write_failed")
+        XCTAssertEqual(response["error"] as? String, MediaDownloadError.writeFailed.localizedDescription)
+    }
+
     private func message(_ scenario: String = "ok") -> [String: Any] {
         ["type": "download", "url": "https://video.twimg.com/\(scenario).mp4", "postId": "719944021058060289", "author": "example", "mediaIndex": 1, "mediaType": "video"]
     }
