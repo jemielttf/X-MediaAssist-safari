@@ -131,9 +131,6 @@
   "saved_partial_many": {
     "message": "$1 files have already been saved."
   },
-  "restart_safari": {
-    "message": "Quit and reopen Safari."
-  },
   "request_rejected": {
     "message": "The save request could not be accepted."
   },

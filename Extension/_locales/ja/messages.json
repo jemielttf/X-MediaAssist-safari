@@ -131,9 +131,6 @@
   "saved_partial_many": {
     "message": "$1件は保存済みです。"
   },
-  "restart_safari": {
-    "message": "Safariを終了して起動し直してください。"
-  },
   "request_rejected": {
     "message": "保存リクエストを受け付けられませんでした。"
   },

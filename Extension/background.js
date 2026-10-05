@@ -11,12 +11,9 @@ browser.runtime.onMessage.addListener((message, sender) => {
     return Promise.resolve({ ok: true, instance: backgroundInstance });
   }
   if (sender.id === browser.runtime.id && sender.url === popupURL && message?.type === "getGIFOptions") {
-    return core.withTimeout(() => browser.runtime.sendNativeMessage("com.jemielttf.XMediaAssist", { type: "ping" }),
-      15000, t("gif_options_load_failed"))
-      .then(reply => {
-        if (reply?.ok !== true || reply.protocolVersion !== 3) throw new Error(t("restart_safari"));
-        return { ok: true, gifOptions: core.validateGIFOptions(reply.gifOptions ?? core.GIF_DEFAULTS) };
-      }).catch(error => ({ ok: false, error: error.message }));
+    return core.pingNative(payload => browser.runtime.sendNativeMessage(core.NATIVE_APP, payload), 15000, t("native_unavailable"))
+      .then(options => ({ ok: true, gifOptions: core.validateGIFOptions(options) }))
+      .catch(error => ({ ok: false, error: error.message }));
   }
   if (!allowed || message?.type !== "downloadPost" || !core.isPostId(message.postId) || !["auto", "mp4"].includes(message.format ?? "auto")) {
     return Promise.resolve({ ok: false, saved: [], error: t("request_rejected") });
@@ -32,6 +29,6 @@ browser.runtime.onMessage.addListener((message, sender) => {
   return core.downloadPost(message.postId, {
     format: message.format ?? "auto",
     gifOptions: message.gifOptions,
-    sendNative: payload => browser.runtime.sendNativeMessage("com.jemielttf.XMediaAssist", payload)
+    sendNative: payload => browser.runtime.sendNativeMessage(core.NATIVE_APP, payload)
   }).finally(() => activePosts.delete(message.postId));
 });

@@ -74,7 +74,7 @@ Bundle Identifierを変更した後は、Safariを通常終了して起動し直
 | `X Media Assist/` | macOS案内アプリ、Safari Web ExtensionのXcodeプロジェクト |
 | `Tests/` | JavaScript/Swiftの回帰テスト、ブラウザ用UI fixture |
 
-画面レイアウトの見本は `Docs/layout/main.html` と `Docs/layout/popup.html`、共通CSSの正本は `Docs/layout/style.css` です。`Extension/popup.css` とアプリの `Resources/Style.css` はこのCSSへの相対シンボリックリンクです。管理画面の `Resources/X-Media-Assist.svg` も `X-Media-Assist.icon/Assets/X-Media-Assist.svg` への相対リンクです。リンク先はリポジトリ内で完結し、Xcodeの Copy Bundle Resources がリンクを解決して通常ファイルとしてバンドルします。CSSはリンク先の正本を編集してください。Gitのチェックアウト時はシンボリックリンクを保持してください。
+共通CSSの正本は `Docs/layout/style.css` です。画面のレイアウトは `Tests/localization-fixture.html` で実際のHTMLとCSSを使って確認します。`Extension/popup.css` とアプリの `Resources/Style.css` はこのCSSへの相対シンボリックリンクです。管理画面の `Resources/X-Media-Assist.svg` も `X-Media-Assist.icon/Assets/X-Media-Assist.svg` への相対リンクです。リンク先はリポジトリ内で完結し、Xcodeの Copy Bundle Resources がリンクを解決して通常ファイルとしてバンドルします。CSSはリンク先の正本を編集してください。Gitのチェックアウト時はシンボリックリンクを保持してください。
 
 SafariのnativeMessagingは同梱されたApp Extensionが受信し、そのプロセスがダウンロード・変換・保存を行います。GIF基本設定のみ、両ターゲットの App Group `$(DEVELOPMENT_TEAM).com.jemielttf.XMediaAssist.shared` の UserDefaults に共有します。別の常駐ヘルパーやデータベースは導入していません。案内アプリ自体にダウンロード処理を中継する構成ではありません。
 

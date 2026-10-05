@@ -33,12 +33,11 @@ test("both WebExtension catalogs cover every UI key with matching substitutions"
 });
 
 test("app catalog covers AppKit and WKWebView keys in both languages", async () => {
+  // The WKWebView receives the whole compiled table, so catalog coverage is sufficient.
   const catalog = JSON.parse(await read("X Media Assist/X Media Assist/Resources/Localizable.xcstrings"));
-  const bridge = await read("X Media Assist/X Media Assist/AppLocalization.swift");
   for (const path of ["X Media Assist/X Media Assist/Resources/Base.lproj/Main.html", "X Media Assist/X Media Assist/Resources/Script.js", "X Media Assist/X Media Assist/AppDelegate.swift"]) {
     for (const match of (await read(path)).matchAll(/(?:\bt\("|data-i18n="|AppLocalization\.string\(")([a-z_]+)/g)) {
       for (const language of ["ja", "en"]) assert.ok(catalog.strings[match[1]]?.localizations[language].stringUnit.value, `${path}: ${match[1]} (${language})`);
-      if (!path.endsWith("AppDelegate.swift")) assert.ok(bridge.includes(`"${match[1]}"`), `Missing WKWebView bridge key: ${match[1]}`);
     }
   }
 });

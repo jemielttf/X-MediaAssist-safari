@@ -15,6 +15,9 @@
     }
     return typeof reply?.error === "string" && reply.error ? reply.error : t("result_missing");
   }
+  // Must match protocolVersion in SafariWebExtensionHandler.swift.
+  const NATIVE_PROTOCOL = 3;
+  const NATIVE_APP = "com.jemielttf.XMediaAssist";
   const GIF_DEFAULTS = Object.freeze({ quality: 95, maximumFrameRate: 20, scale: 1 });
   function validateGIFOptions(value) {
     if (!value || typeof value !== "object" || Array.isArray(value) ||
@@ -82,6 +85,14 @@
       ]);
     } finally { clearTimeout(timer); }
   }
+  // Returns the native base GIF options (unvalidated). Any failure throws `message`.
+  async function pingNative(sendNative, timeout, message) {
+    let reply;
+    try { reply = await withTimeout(() => sendNative({ type: "ping" }), timeout, message); }
+    catch { throw new Error(message); }
+    if (reply?.ok !== true || reply.protocolVersion !== NATIVE_PROTOCOL) throw new Error(message);
+    return reply.gifOptions ?? GIF_DEFAULTS;
+  }
   async function requestDownload(postId, sendMessage, format = "auto", gifOptions,
     { connectionTimeout = 15000, checkInterval = 15000 } = {}) {
     const options = gifOptions === undefined ? {} : { gifOptions: validateGIFOptions(gifOptions) };
@@ -115,12 +126,8 @@
     const warnings = [];
     try {
       // Check the native extension before fetching or starting any file writes.
-      const connectionError = t("native_unavailable");
-      let ready;
-      try { ready = await withTimeout(() => sendNative({ type: "ping" }), connectionTimeout, connectionError); }
-      catch { throw new Error(connectionError); }
-      if (ready?.ok !== true || ready?.protocolVersion !== 3) throw new Error(connectionError);
-      const resolvedGIFOptions = validateGIFOptions(gifOptions === undefined ? (ready.gifOptions ?? GIF_DEFAULTS) : gifOptions);
+      const baseGIFOptions = await pingNative(sendNative, connectionTimeout, t("native_unavailable"));
+      const resolvedGIFOptions = validateGIFOptions(gifOptions === undefined ? baseGIFOptions : gifOptions);
       let response;
       try {
         response = await fetchImpl(syndicationURL(postId), {
@@ -150,10 +157,10 @@
   }
   function resultMessage(result) {
     if (!result || typeof result.ok !== "boolean") return t("result_unknown");
-    const saved = Array.isArray(result?.saved) ? result.saved : [];
+    const saved = Array.isArray(result.saved) ? result.saved : [];
     const warning = Array.isArray(result.warnings) ? result.warnings.join("\n") : "";
-    if (result?.ok) return `${t(saved.length === 1 ? "saved_one" : "saved_many", [saved.length])}\n${saved.join("\n")}`;
-    return `${saved.length ? `${t(saved.length === 1 ? "saved_partial_one" : "saved_partial_many", [saved.length])}\n${saved.join("\n")}\n` : ""}${[warning, result?.error].filter(Boolean).join("\n") || t("save_failed")}`;
+    if (result.ok) return `${t(saved.length === 1 ? "saved_one" : "saved_many", [saved.length])}\n${saved.join("\n")}`;
+    return `${saved.length ? `${t(saved.length === 1 ? "saved_partial_one" : "saved_partial_many", [saved.length])}\n${saved.join("\n")}\n` : ""}${[warning, result.error].filter(Boolean).join("\n") || t("save_failed")}`;
   }
-  globalThis.XMediaCore = Object.freeze({ t, GIF_DEFAULTS, validateGIFOptions, isPostId, parsePostURL, isXPage, isMP4URL, syndicationURL, extractMedia, withTimeout, requestDownload, downloadPost, resultMessage });
+  globalThis.XMediaCore = Object.freeze({ t, NATIVE_APP, GIF_DEFAULTS, validateGIFOptions, isPostId, parsePostURL, isXPage, isMP4URL, syndicationURL, extractMedia, withTimeout, pingNative, requestDownload, downloadPost, resultMessage });
 })();

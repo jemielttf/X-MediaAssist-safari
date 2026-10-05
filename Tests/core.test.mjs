@@ -89,7 +89,7 @@ test("a lost response does not incorrectly assert that nothing was saved", () =>
   assert.match(c.resultMessage(null), /ダウンロードフォルダ/);
 });
 test("native connection failure or stale protocol stops before fetching or saving", async () => {
-  for (const sendNative of [() => new Promise(() => {}), async () => { throw Error("XPC invalidated"); }, async () => undefined, async () => ({ ok: true }), async () => ({ ok: true, protocolVersion: 1 })]) {
+  for (const sendNative of [() => new Promise(() => {}), async () => { throw Error("XPC invalidated"); }, async () => undefined, async () => ({ ok: true }), async () => ({ ok: true, protocolVersion: 1 }), async () => ({ ok: true, protocolVersion: 2 })]) {
     const result = await c.downloadPost(id, {
       sendNative, connectionTimeout: 5,
       fetchImpl: () => assert.fail("must not fetch before connection succeeds")
@@ -256,14 +256,6 @@ test("GIF validation rejects unsupported types and values before a download", as
     assert.equal(result.ok, false);
     assert.match(result.error, /GIF設定/);
   }
-});
-
-test("version 2 native is rejected to prevent silently ignoring GIF options", async () => {
-  const result = await c.downloadPost(id, {
-    sendNative: async () => ({ ok: true, protocolVersion: 2 }),
-    fetchImpl: () => assert.fail("must not fetch")
-  });
-  assert.equal(result.ok, false);
 });
 
 test("background exposes GIF defaults only to popup and forwards download overrides", async () => {

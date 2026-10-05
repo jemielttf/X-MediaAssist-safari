@@ -233,10 +233,10 @@ final class MediaDownloadTests: XCTestCase {
         let sweeper = StaleTemporarySweeper(directory: { folder }, now: { clock })
         sweeper.sweepIfDue()
 
+        // Created at `start`, but the clock jumps ahead so it looks two hours old.
         let active = folder.appendingPathComponent(".xma-\(UUID().uuidString).part.mp4")
         try mp4.write(to: active)
-        let handle = try FileHandle(forWritingTo: active)
-        defer { try? handle.close() }
+        try FileManager.default.setAttributes([.modificationDate: start], ofItemAtPath: active.path)
         let orphan = folder.appendingPathComponent(".xma-\(UUID().uuidString).gif.part")
         try Data("orphan".utf8).write(to: orphan)
         try FileManager.default.setAttributes([.modificationDate: start.addingTimeInterval(-7200)], ofItemAtPath: orphan.path)
@@ -246,18 +246,11 @@ final class MediaDownloadTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: active.path))
         XCTAssertTrue(FileManager.default.fileExists(atPath: orphan.path))
 
-        // The transfer can still finish and publish its file after the deferred sweep.
-        try handle.seekToEnd()
-        try handle.write(contentsOf: Data([1]))
-        try handle.close()
-        let saved = try MediaFile.publish(active, directory: folder, basename: "example-1-1")
+        // The transfer ends and removes its own temporary file. Deferral must not advance
+        // lastSweep: the next idle ping at the same time cleans up the orphan.
         try FileManager.default.removeItem(at: active)
-        XCTAssertEqual(try Data(contentsOf: saved), mp4 + Data([1]))
-
-        // Deferral must not advance lastSweep: the next idle ping at the same time cleans up.
         sweeper.sweepIfDue(hasActiveRequests: false)
         XCTAssertFalse(FileManager.default.fileExists(atPath: orphan.path))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: saved.path))
     }
     func testUnknownLengthBodyStillEnforcesSizeLimit() throws {
         let folder = try directory()

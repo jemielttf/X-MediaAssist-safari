@@ -10,16 +10,10 @@ enum AppLocalization {
         Bundle.main.localizedString(forKey: key, value: nil, table: "Localizable")
     }
 
+    // The whole compiled table for the selected language, so web keys need no Swift list.
     static var webPayload: [String: Any] {
-        let keys = [
-            "app_tagline", "extension_enable_hint", "extension_enabled", "extension_disabled",
-            "how_to_use", "step_enable", "step_access", "step_save",
-            "open_preferences", "preferences_error", "gif_settings", "default_settings",
-            "gif_loading", "gif_ready", "gif_error", "quality",
-            "quality_high", "quality_medium", "quality_low", "max_frame_rate",
-            "output_size", "notes_title", "note_formats", "note_popup",
-            "note_menu", "no_warranty", "open_licenses"
-        ]
-        return ["language": language, "messages": Dictionary(uniqueKeysWithValues: keys.map { ($0, string($0)) })]
+        let table = Bundle.main.url(forResource: "Localizable", withExtension: "strings", subdirectory: nil, localization: language)
+            .flatMap { NSDictionary(contentsOf: $0) as? [String: String] } ?? [:]
+        return ["language": language, "messages": table]
     }
 }

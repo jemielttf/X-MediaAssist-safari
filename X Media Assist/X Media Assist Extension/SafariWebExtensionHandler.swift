@@ -25,6 +25,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
                 Self.lock.lock()
                 Self.sweeper.sweepIfDue(hasActiveRequests: !Self.activeRequests.isEmpty)
                 Self.lock.unlock()
+                // Must match NATIVE_PROTOCOL in Extension/core.js.
                 respond(["ok": true, "protocolVersion": 3, "gifOptions": try GIFPreferences.appGroup().options.message])
                 return
             }

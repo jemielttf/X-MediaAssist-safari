@@ -120,12 +120,12 @@ enum MediaFile {
     static let staleTemporaryAge: TimeInterval = 60 * 60
     private static let temporaryName = "^\\.xma-[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}\\.(part\\.mp4|gif\\.part)$"
 
-    static func removeStaleTemporaries(in directory: URL, olderThan age: TimeInterval = staleTemporaryAge, now: Date = Date()) {
+    static func removeStaleTemporaries(in directory: URL, now: Date = Date()) {
         let keys: [URLResourceKey] = [.isRegularFileKey, .contentModificationDateKey]
         guard let files = try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: keys) else { return }
         for file in files where file.lastPathComponent.range(of: temporaryName, options: .regularExpression) != nil {
             guard let values = try? file.resourceValues(forKeys: Set(keys)), values.isRegularFile == true,
-                  let modified = values.contentModificationDate, now.timeIntervalSince(modified) >= age else { continue }
+                  let modified = values.contentModificationDate, now.timeIntervalSince(modified) >= staleTemporaryAge else { continue }
             try? FileManager.default.removeItem(at: file)
         }
     }

@@ -102,22 +102,6 @@ final class GIFConversionTests: XCTestCase {
         XCTAssertThrowsError(try GIFConverter.selectedTimes(long, duration: 30, options: options(), maximumFrames: 599))
     }
 
-    func testRealEncoderAllSizesAndOrientations() async throws {
-        for rotated in [false, true] {
-            let folder = try directory(), input = folder.appendingPathComponent("input.mp4")
-            try await makeVideo(input, rotated: rotated)
-            for scale in [1.0, 0.75, 0.5] {
-                let output = folder.appendingPathComponent("\(scale).gif")
-                try await GIFConverter.convert(input, to: output, options: options(scale: scale))
-                let source = try XCTUnwrap(CGImageSourceCreateWithURL(output as CFURL, nil))
-                let image = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil))
-                XCTAssertEqual(image.width, Int(Double(rotated ? 32 : 64) * scale))
-                XCTAssertEqual(image.height, Int(Double(rotated ? 64 : 32) * scale))
-                XCTAssertEqual(Double(image.width) / Double(image.height), rotated ? 0.5 : 2)
-            }
-        }
-    }
-
     func testRealEncoderPreservesHDOutputSizesAndOrientations() async throws {
         for rotated in [false, true] {
             let folder = try directory(), input = folder.appendingPathComponent("input.mp4")
@@ -209,7 +193,7 @@ final class GIFConversionTests: XCTestCase {
         limits = .init(); limits.maximumPixels = 10; cases.append(limits)
         limits = .init(); limits.maximumInputBytes = 10; cases.append(limits)
         limits = .init(); limits.maximumOutputBytes = 10; cases.append(limits)
-        limits = .init(); limits.maximumSeconds = 0; cases.append(limits)
+        // An expired budget is covered by testExpiredConversionBudgetLeavesNoFileAndReleasesSlot.
         for limits in cases {
             let output = folder.appendingPathComponent("failed.gif")
             do {
