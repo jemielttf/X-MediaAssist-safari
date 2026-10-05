@@ -1,7 +1,7 @@
 {
 	"manifest_version": 3,
 	"name": "X Media Assist",
-	"version": "0.3.3",
+	"version": "0.3.4",
 	"default_locale": "en",
 	"description": "__MSG_extension_description__",
 	"permissions": ["nativeMessaging", "activeTab"],
