@@ -12,7 +12,9 @@ function updateGIFControls() {
 	gifFields.disabled = !gifOptionsReady || downloading || mp4;
 }
 document.querySelectorAll('input[name="format"]').forEach(control => control.addEventListener("change", updateGIFControls));
-const loadGIFOptions = browser.runtime.sendMessage({ type: "getGIFOptions" }).then(reply => {
+const loadGIFOptions = XMediaCore.withTimeout(
+	() => browser.runtime.sendMessage({ type: "getGIFOptions" }), 15000, t("gif_options_load_failed")
+).then(reply => {
 	if (!reply?.ok) throw new Error(reply?.error || t("gif_options_load_failed"));
 	const options = XMediaCore.validateGIFOptions(reply.gifOptions);
 	document.querySelector(`input[name="gif-quality"][value="${options.quality}"]`).checked = true;
