@@ -17,6 +17,10 @@
 		A30000000000000000000001 /* GIFConversionOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000003 /* GIFConversionOptions.swift */; };
 		A30000000000000000000002 /* GIFConversionOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000003 /* GIFConversionOptions.swift */; };
 		A40000000000000000000001 /* X-Media-Assist.svg in Resources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000002 /* X-Media-Assist.svg */; };
+		A50000000000000000000001 /* AppLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000002 /* AppLocalization.swift */; };
+		A50000000000000000000003 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000004 /* Localizable.xcstrings */; };
+		A50000000000000000000005 /* i18n.js in Resources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000006 /* i18n.js */; };
+		A50000000000000000000007 /* _locales in Resources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000008 /* _locales */; };
 		BF595481306195A2005860FA /* X-Media-Assist.svg in Resources */ = {isa = PBXBuildFile; fileRef = BF595476306195A2005860FA /* X-Media-Assist.svg */; };
 		BF595482306195A2005860FA /* X-Media-Assist_toolbar-icon.svg in Resources */ = {isa = PBXBuildFile; fileRef = BF59547B306195A2005860FA /* X-Media-Assist_toolbar-icon.svg */; };
 		BF5954843061A1FA005860FA /* X-Media-Assist.icon in Resources */ = {isa = PBXBuildFile; fileRef = BF5954833061A1FA005860FA /* X-Media-Assist.icon */; };
@@ -43,10 +47,6 @@
 		BFF2F30A3061180600D8D517 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3023061180600D8D517 /* manifest.json */; };
 		BFF2F30B3061180600D8D517 /* popup.css in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3033061180600D8D517 /* popup.css */; };
 		BFF2F30C3061180600D8D517 /* content.js in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3043061180600D8D517 /* content.js */; };
-		A50000000000000000000001 /* AppLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000002 /* AppLocalization.swift */; };
-		A50000000000000000000003 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000004 /* Localizable.xcstrings */; };
-		A50000000000000000000005 /* i18n.js in Resources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000006 /* i18n.js */; };
-		A50000000000000000000007 /* _locales in Resources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000008 /* _locales */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -79,6 +79,11 @@
 		A20000000000000000000002 /* AppPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppPreferences.swift; path = ../../AppSupport/AppPreferences.swift; sourceTree = "<group>"; };
 		A30000000000000000000003 /* GIFConversionOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GIFConversionOptions.swift; path = ../../Shared/GIFConversionOptions.swift; sourceTree = "<group>"; };
 		A40000000000000000000002 /* X-Media-Assist.svg */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "X-Media-Assist.svg"; sourceTree = "<group>"; };
+		A50000000000000000000002 /* AppLocalization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLocalization.swift; sourceTree = "<group>"; };
+		A50000000000000000000004 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		A50000000000000000000006 /* i18n.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = i18n.js; path = ../../Extension/i18n.js; sourceTree = "<group>"; };
+		A50000000000000000000008 /* _locales */ = {isa = PBXFileReference; lastKnownFileType = folder; name = _locales; path = ../../Extension/_locales; sourceTree = "<group>"; };
+		A50000000000000000000009 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Main.strings; sourceTree = "<group>"; };
 		BF595476306195A2005860FA /* X-Media-Assist.svg */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "X-Media-Assist.svg"; sourceTree = "<group>"; };
 		BF59547B306195A2005860FA /* X-Media-Assist_toolbar-icon.svg */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "X-Media-Assist_toolbar-icon.svg"; sourceTree = "<group>"; };
 		BF5954833061A1FA005860FA /* X-Media-Assist.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "X-Media-Assist.icon"; sourceTree = "<group>"; };
@@ -107,11 +112,6 @@
 		BFF2F3023061180600D8D517 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../Extension/manifest.json; sourceTree = "<group>"; };
 		BFF2F3033061180600D8D517 /* popup.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; name = popup.css; path = ../../Extension/popup.css; sourceTree = "<group>"; };
 		BFF2F3043061180600D8D517 /* content.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = content.js; path = ../../Extension/content.js; sourceTree = "<group>"; };
-		A50000000000000000000002 /* AppLocalization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppLocalization.swift; path = AppLocalization.swift; sourceTree = "<group>"; };
-		A50000000000000000000004 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = Localizable.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
-		A50000000000000000000006 /* i18n.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = i18n.js; path = ../../Extension/i18n.js; sourceTree = "<group>"; };
-		A50000000000000000000008 /* _locales */ = {isa = PBXFileReference; lastKnownFileType = folder; name = _locales; path = ../../Extension/_locales; sourceTree = "<group>"; };
-		A50000000000000000000009 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Main.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -627,7 +627,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 21;
+				CURRENT_PROJECT_VERSION = 22;
 				DEVELOPMENT_TEAM = 2NA8B6X498;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -646,7 +646,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.3.4;
+				MARKETING_VERSION = 0.3.5;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -675,7 +675,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 21;
+				CURRENT_PROJECT_VERSION = 22;
 				DEVELOPMENT_TEAM = 2NA8B6X498;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -694,7 +694,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.3.4;
+				MARKETING_VERSION = 0.3.5;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
