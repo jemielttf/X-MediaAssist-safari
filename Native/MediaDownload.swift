@@ -4,9 +4,12 @@ import XMediaAssistPreferences
 import Foundation
 import Darwin
 
+/// Failures reported to the extension. `messageCode` is the stable protocol value;
+/// the extension maps it to a localized message (NATIVE_ERRORS in core.js).
 enum MediaDownloadError: LocalizedError {
     case invalidRequest, invalidResponse, tooLarge, invalidMP4, busy, writeFailed
     case http(Int)
+
     var messageCode: String {
         switch self {
         case .invalidRequest: return "invalid_request"
@@ -27,11 +30,14 @@ enum MediaDownloadError: LocalizedError {
                     "error": "動画の取得に失敗しました。通信状態を確認して再試行してください。"]
         }
         let known = error as? MediaDownloadError ?? .writeFailed
-        var response: [String: Any] = ["ok": false, "errorCode": known.messageCode, "error": known.localizedDescription]
+        var response: [String: Any] = [
+            "ok": false, "errorCode": known.messageCode, "error": known.localizedDescription
+        ]
         if case .http(let status) = known { response["httpStatus"] = status }
         return response
     }
 
+    // Legacy Japanese text, sent as the "error" fallback field.
     var errorDescription: String? {
         switch self {
         case .invalidRequest: return "保存リクエストが正しくありません。"
@@ -39,12 +45,15 @@ enum MediaDownloadError: LocalizedError {
         case .tooLarge: return "保存できるファイルサイズの上限を超えています。"
         case .invalidMP4: return "取得したファイルはMP4として確認できませんでした。"
         case .busy: return "保存処理中です。完了してから再試行してください。"
-        case .writeFailed: return "ファイルを保存できません。空き容量とダウンロードフォルダへのアクセスを確認してください。"
+        case .writeFailed:
+            return "ファイルを保存できません。空き容量とダウンロードフォルダへのアクセスを確認してください。"
         case .http(let code): return "動画を取得できませんでした（HTTP \(code)）。"
         }
     }
 }
 
+/// A validated "download" message from the extension. Every field that reaches the
+/// network or the file name is checked here, independently of the JavaScript side.
 struct MediaDownloadRequest {
     let url: URL
     let postId: String
@@ -53,7 +62,9 @@ struct MediaDownloadRequest {
     let mediaType: String
     let gifOptions: GIFConversionOptions
     let format: String
+    /// "mp4" format saves animated GIFs as MP4 without conversion.
     var convertsGIF: Bool { mediaType == "animated_gif" && format == "auto" }
+    /// File name without extension, e.g. "example-123-1".
     var basename: String { "\(author)-\(postId)-\(mediaIndex)" }
 
     init(message: [String: Any], defaultGIFOptions: GIFConversionOptions = .defaults) throws {
@@ -80,6 +91,7 @@ struct MediaDownloadRequest {
         } catch { throw MediaDownloadError.invalidRequest }
     }
 
+    /// Same boundary as isMP4URL in core.js; also applied to every redirect and response.
     static func isAllowedURL(_ url: URL) -> Bool {
         url.scheme == "https" && url.host == "video.twimg.com" &&
         (url.port == nil || url.port == 443) && url.user == nil && url.password == nil &&
@@ -87,7 +99,9 @@ struct MediaDownloadRequest {
     }
 }
 
+/// File-system steps shared by MP4 and GIF saves.
 enum MediaFile {
+    /// Cheap container check: an MP4 has "ftyp" at bytes 4..<8. Not a full decode.
     static func validate(_ file: URL, byteCount: Int64) throws {
         guard byteCount >= 12 else { throw MediaDownloadError.invalidMP4 }
         let handle = try FileHandle(forReadingFrom: file)
@@ -100,8 +114,10 @@ enum MediaFile {
 
     // link(2) publishes a complete file atomically, failing if the name exists.
     // Temporary and final files are in the same directory/filesystem.
-    static func publish(_ temporary: URL, directory: URL, basename: String, fileExtension: String = "mp4") throws -> URL {
+    static func publish(_ temporary: URL, directory: URL, basename: String,
+                        fileExtension: String = "mp4") throws -> URL {
         guard ["mp4", "gif"].contains(fileExtension) else { throw MediaDownloadError.invalidRequest }
+        // "name.mp4", then "name 2.mp4", "name 3.mp4", ... like Finder duplicates.
         for suffix in 1...1000 {
             let name = basename + (suffix == 1 ? "" : " \(suffix)") + "." + fileExtension
             let destination = directory.appendingPathComponent(name)
@@ -118,14 +134,18 @@ enum MediaFile {
     // partial files behind. Only sweep while idle: wall-clock changes can make
     // an active transfer's file appear old even though its timeout has not elapsed.
     static let staleTemporaryAge: TimeInterval = 60 * 60
-    private static let temporaryName = "^\\.xma-[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}\\.(part\\.mp4|gif\\.part)$"
+    /// Exactly the names created by MediaDownload (".part.mp4") and MediaSave (".gif.part").
+    private static let temporaryName =
+        "^\\.xma-[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}\\.(part\\.mp4|gif\\.part)$"
 
     static func removeStaleTemporaries(in directory: URL, now: Date = Date()) {
         let keys: [URLResourceKey] = [.isRegularFileKey, .contentModificationDateKey]
-        guard let files = try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: keys) else { return }
+        guard let files = try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: keys)
+        else { return }
         for file in files where file.lastPathComponent.range(of: temporaryName, options: .regularExpression) != nil {
             guard let values = try? file.resourceValues(forKeys: Set(keys)), values.isRegularFile == true,
-                  let modified = values.contentModificationDate, now.timeIntervalSince(modified) >= staleTemporaryAge else { continue }
+                  let modified = values.contentModificationDate,
+                  now.timeIntervalSince(modified) >= staleTemporaryAge else { continue }
             try? FileManager.default.removeItem(at: file)
         }
     }
@@ -162,6 +182,8 @@ final class StaleTemporarySweeper: @unchecked Sendable {
     }
 }
 
+/// Streams one MP4 into a hidden temporary file next to its destination, validates it,
+/// then either publishes it or hands it to `finishFile` (GIF conversion in MediaSave).
 /// One instance per transfer. Mutable state stays on the serial URLSession delegate queue.
 final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable {
     static let maximumBytes: Int64 = 1_073_741_824
@@ -187,11 +209,13 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
     }
 
     func start(configuration: URLSessionConfiguration = .ephemeral) {
+        // No cookies, credentials or cache: the CDN needs none, and nothing should persist.
         configuration.httpCookieStorage = nil
         configuration.httpShouldSetCookies = false
         configuration.urlCredentialStorage = nil
         configuration.urlCache = nil
         configuration.timeoutIntervalForRequest = 60
+        // A GIF also needs up to 120 s to convert; both stay under the extension's 650 s wait.
         configuration.timeoutIntervalForResource = request.convertsGIF ? 480 : 600
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 1
@@ -228,9 +252,9 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
             guard expectedBytes <= maximumBytes else { throw MediaDownloadError.tooLarge }
             // AVFoundation needs the container extension when opening a local file.
             let temporaryURL = directory.appendingPathComponent(".xma-\(UUID().uuidString).part.mp4")
-            guard FileManager.default.createFile(atPath: temporaryURL.path, contents: nil, attributes: [.posixPermissions: 0o600]) else {
-                throw MediaDownloadError.writeFailed
-            }
+            guard FileManager.default.createFile(atPath: temporaryURL.path, contents: nil,
+                                                 attributes: [.posixPermissions: 0o600])
+            else { throw MediaDownloadError.writeFailed }
             temporary = temporaryURL
             file = try FileHandle(forWritingTo: temporaryURL)
             completionHandler(.allow)
@@ -259,6 +283,7 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
             if let failure { throw failure }
             if let error { throw error }
             guard let temporary, let file else { throw MediaDownloadError.invalidResponse }
+            // -1 means the server sent no Content-Length; otherwise the body must be complete.
             guard expectedBytes < 0 || bytes == expectedBytes else { throw MediaDownloadError.invalidResponse }
             try file.synchronize()
             try file.close()
@@ -277,14 +302,13 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
                 }
                 return
             }
-            else {
-                let saved = try MediaFile.publish(temporary, directory: directory, basename: request.basename)
-                result = .success(saved.lastPathComponent)
-            }
+            let saved = try MediaFile.publish(temporary, directory: directory, basename: request.basename)
+            result = .success(saved.lastPathComponent)
         } catch { result = .failure(error) }
         complete(result, session: session)
     }
 
+    // Always removes the temporary file: a published file is a separate hard link.
     private func complete(_ result: Result<String, Error>, session: URLSession) {
         try? file?.close()
         if let temporary { try? FileManager.default.removeItem(at: temporary) }

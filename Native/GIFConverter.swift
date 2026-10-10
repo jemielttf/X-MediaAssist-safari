@@ -7,19 +7,24 @@ import CoreImage
 import ImageIO
 import CGifski
 
+/// Safety limits for one conversion. Exceeding any of them falls back to saving the MP4.
+/// Tests override individual values.
 struct GIFConversionLimits {
-    var maximumDuration = 30.0
-    var maximumFrames = 1500
-    var maximumPixels = 1920 * 1080
-    var maximumInputPixels = 3840 * 2160
-    var maximumInputSamples = 18_000
+    var maximumDuration = 30.0                      // seconds of video
+    var maximumFrames = 1500                        // selected GIF frames
+    var maximumPixels = 1920 * 1080                 // output frame size
+    var maximumInputPixels = 3840 * 2160            // decoded input frame size
+    var maximumInputSamples = 18_000                // samples scanned, including skipped ones
     var maximumInputBytes = 100 * 1024 * 1024
     var maximumOutputBytes = 100 * 1024 * 1024
-    var maximumSeconds = 120.0
+    var maximumSeconds = 120.0                      // wall-clock budget for the whole conversion
 }
 
+/// Why a GIF could not be produced. `warningCode` is the protocol value the extension
+/// localizes; `errorDescription` is the legacy Japanese fallback text.
 enum GIFConversionError: LocalizedError {
     case unsupported, limit, encoding, timedOut, busy
+
     var warningCode: String {
         switch self {
         case .unsupported: return "gif_unsupported"
@@ -41,7 +46,9 @@ enum GIFConversionError: LocalizedError {
     }
 }
 
-// C callbacks run on encoder threads. This state remains alive through finish().
+// Shared with gifski's C callbacks, which run on encoder threads: writes the output file,
+// enforces the size limit and deadline, and records the first failure so the encoder stops.
+// This state remains alive through gifski_finish().
 private final class GIFOutput {
     let file: FileHandle
     let deadline: TimeInterval
@@ -81,12 +88,18 @@ private struct GIFVideoSource: @unchecked Sendable {
     let transform: CGAffineTransform
 }
 
+/// Converts a local MP4 to an animated GIF with gifski.
+///
+/// Steps: load metadata (with a deadline), scan sample timestamps, pick at most one frame
+/// per 1/maximumFrameRate bucket, then decode, orient, scale and encode those frames.
+/// Only one conversion runs at a time; a second request fails fast with `.busy`.
 struct GIFConverter {
     private static let slot = DispatchSemaphore(value: 1)
     // gifski clamps delays to at least two centiseconds.
     private static let minimumFrameDuration = 0.02
 
-    private static let encodingQueue = DispatchQueue(label: "XMediaAssist.GIFEncoding", qos: .userInitiated)
+    private static let encodingQueue = DispatchQueue(label: "XMediaAssist.GIFEncoding",
+                                                     qos: .userInitiated)
 
     private static func reserveSlot() -> Bool {
         // Immediate try-acquire only: this never blocks a cooperative executor thread.
@@ -122,27 +135,42 @@ struct GIFConverter {
         return value
     }
 
-    static func convert(_ input: URL, to output: URL, options: GIFConversionOptions = .defaults, limits: GIFConversionLimits = .init()) async throws {
+    /// Writes a GIF to `output`. On any failure no partial `output` file is left behind.
+    static func convert(_ input: URL, to output: URL, options: GIFConversionOptions = .defaults,
+                        limits: GIFConversionLimits = .init()) async throws {
         guard reserveSlot() else { throw GIFConversionError.busy }
         defer { slot.signal() }
         let deadline = ProcessInfo.processInfo.systemUptime + limits.maximumSeconds
         let inputSize = try input.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
         guard inputSize <= limits.maximumInputBytes else { throw GIFConversionError.limit }
+
+        // 1. Metadata, bounded by the conversion deadline.
         let asset = AVURLAsset(url: input)
         let source = try await withMetadataDeadline(deadline, cancelLoading: { asset.cancelLoading() }) {
-            guard let track = try await asset.loadTracks(withMediaType: .video).first else { throw GIFConversionError.unsupported }
+            guard let track = try await asset.loadTracks(withMediaType: .video).first else {
+                throw GIFConversionError.unsupported
+            }
             let (timeRange, size, transform) = try await track.load(.timeRange, .naturalSize, .preferredTransform)
-            return GIFVideoSource(asset: asset, track: track, duration: timeRange.duration.seconds, size: size, transform: transform)
+            return GIFVideoSource(asset: asset, track: track, duration: timeRange.duration.seconds,
+                                  size: size, transform: transform)
         }
+
+        // 2. Reject unusable or oversized input before decoding any frame.
         let duration = source.duration, size = source.size
-        guard duration.isFinite, duration > 0, size.width.isFinite, size.height.isFinite, size.width > 0, size.height > 0 else { throw GIFConversionError.unsupported }
-        guard duration <= limits.maximumDuration, size.width * size.height <= Double(limits.maximumInputPixels) else { throw GIFConversionError.limit }
-        _ = try outputRect(CGRect(origin: .zero, size: size).applying(source.transform), options: options, limits: limits)
-        // The encoder has blocking C calls; keep them off Swift's cooperative executor.
+        guard duration.isFinite, duration > 0, size.width.isFinite, size.height.isFinite,
+              size.width > 0, size.height > 0 else { throw GIFConversionError.unsupported }
+        guard duration <= limits.maximumDuration,
+              size.width * size.height <= Double(limits.maximumInputPixels) else { throw GIFConversionError.limit }
+        let oriented = CGRect(origin: .zero, size: size).applying(source.transform)
+        _ = try outputRect(oriented, options: options, limits: limits)
+
+        // 3. Encode. The encoder has blocking C calls; keep them off Swift's cooperative executor.
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             encodingQueue.async {
                 do {
-                    try encode(asset: source.asset, track: source.track, duration: duration, transform: source.transform, to: output, options: options, limits: limits, deadline: deadline)
+                    try encode(asset: source.asset, track: source.track, duration: duration,
+                               transform: source.transform, to: output, options: options,
+                               limits: limits, deadline: deadline)
                     continuation.resume()
                 } catch { continuation.resume(throwing: error) }
             }
@@ -150,9 +178,12 @@ struct GIFConverter {
     }
 
     private static func encode(asset: AVAsset, track: AVAssetTrack, duration: Double,
-                               transform: CGAffineTransform, to output: URL, options: GIFConversionOptions, limits: GIFConversionLimits, deadline: TimeInterval) throws {
+                               transform: CGAffineTransform, to output: URL, options: GIFConversionOptions,
+                               limits: GIFConversionLimits, deadline: TimeInterval) throws {
         guard ProcessInfo.processInfo.systemUptime < deadline else { throw GIFConversionError.timedOut }
-        guard FileManager.default.createFile(atPath: output.path, contents: nil, attributes: [.posixPermissions: 0o600]) else { throw GIFConversionError.encoding }
+        guard FileManager.default.createFile(atPath: output.path, contents: nil,
+                                             attributes: [.posixPermissions: 0o600])
+        else { throw GIFConversionError.encoding }
         let file = try FileHandle(forWritingTo: output)
         let state = GIFOutput(file: file, limits: limits, deadline: deadline)
         var completed = false
@@ -180,15 +211,27 @@ struct GIFConverter {
         guard timingReader.status == .completed, !times.isEmpty else { throw GIFConversionError.unsupported }
         // Compressed samples may be in decode order (B frames); decoded output is presentation order.
         times.sort()
-        let selected = try selectedTimes(times, duration: duration, options: options, maximumFrames: limits.maximumFrames)
+        let selected = try selectedTimes(times, duration: duration, options: options,
+                                         maximumFrames: limits.maximumFrames)
         // gifski uses a positive first PTS as the final frame delay and shifts all PTS by it.
         let finalDelay = max(minimumFrameDuration, duration - selected.last!)
+
+        // Created lazily with the first frame's size. If encoding stops early, abort the
+        // output so gifski_finish() discards the rest instead of writing a partial GIF.
         var encoder: OpaquePointer?
         var finished = false
-        defer { if let encoder, !finished { state.abort(GIFConversionError.encoding); _ = gifski_finish(encoder) } }
+        defer {
+            if let encoder, !finished {
+                state.abort(GIFConversionError.encoding)
+                _ = gifski_finish(encoder)
+            }
+        }
         let context = Unmanaged.passUnretained(state).toOpaque()
+
+        // Decode frames in presentation order and encode only the selected ones.
         let reader = try AVAssetReader(asset: asset)
-        let frames = AVAssetReaderTrackOutput(track: track, outputSettings: [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA])
+        let frames = AVAssetReaderTrackOutput(
+            track: track, outputSettings: [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA])
         frames.alwaysCopiesSampleData = false
         reader.add(frames)
         guard reader.startReading() else { throw GIFConversionError.unsupported }
@@ -206,27 +249,35 @@ struct GIFConverter {
             let pts = CMSampleBufferGetPresentationTimeStamp(sample).seconds
             guard pts.isFinite else { throw GIFConversionError.unsupported }
             guard index < selected.count else { continue }
+            // Selected times are relative to the first frame; skip until the next one is reached.
             if decodedStart == nil { decodedStart = pts }
             let relativePTS = pts - decodedStart!
             if relativePTS < selected[index] - 0.000001 { continue }
             try autoreleasepool {
                 guard let pixels = CMSampleBufferGetImageBuffer(sample) else { throw GIFConversionError.unsupported }
                 let inputWidth = CVPixelBufferGetWidth(pixels), inputHeight = CVPixelBufferGetHeight(pixels)
-                guard inputHeight > 0, inputWidth <= limits.maximumInputPixels / inputHeight else { throw GIFConversionError.limit }
+                guard inputHeight > 0, inputWidth <= limits.maximumInputPixels / inputHeight else {
+                    throw GIFConversionError.limit
+                }
                 let oriented = CIImage(cvPixelBuffer: pixels).transformed(by: transform)
                 let rect = try outputRect(oriented.extent, options: options, limits: limits)
                 // Normalize after orientation, then scale uniformly. Render from (0, 0),
                 // avoiding translation-dependent rounding or a blank edge.
-                let image = oriented.transformed(by: CGAffineTransform(translationX: -oriented.extent.minX, y: -oriented.extent.minY))
+                let origin = CGAffineTransform(translationX: -oriented.extent.minX, y: -oriented.extent.minY)
+                let image = oriented.transformed(by: origin)
                     .transformed(by: CGAffineTransform(scaleX: options.scale, y: options.scale))
                 let width = Int(rect.width), height = Int(rect.height)
-                guard width > 0, height > 0, width <= limits.maximumPixels / height else { throw GIFConversionError.limit }
+                guard width > 0, height > 0, width <= limits.maximumPixels / height else {
+                    throw GIFConversionError.limit
+                }
                 if encoder == nil {
                     // Zero dimensions enable gifski's automatic downscaling. Use the
                     // actual oriented/scaled frame size so it preserves our output size.
-                    var settings = GifskiSettings(width: UInt32(width), height: UInt32(height), quality: UInt8(options.quality), fast: false, repeat: 0)
+                    var settings = GifskiSettings(width: UInt32(width), height: UInt32(height),
+                                                  quality: UInt8(options.quality), fast: false, repeat: 0)
                     guard let created = gifski_new(&settings) else { throw GIFConversionError.encoding }
                     encoder = created
+                    // Progress returning 0 cancels encoding; write returning non-zero fails it.
                     try check(gifski_set_progress_callback(created, { raw in
                         guard let raw else { return 0 }
                         do { try Unmanaged<GIFOutput>.fromOpaque(raw).takeUnretainedValue().check(); return 1 }
@@ -247,11 +298,16 @@ struct GIFConverter {
                 guard let encoder else { throw GIFConversionError.encoding }
                 var rgba = [UInt8](repeating: 0, count: width * height * 4)
                 ci.render(image, toBitmap: &rgba, rowBytes: width * 4, bounds: rect, format: .RGBA8, colorSpace: color)
-                try check(gifski_add_frame_rgba(encoder, UInt32(index), UInt32(width), UInt32(height), &rgba, relativePTS + finalDelay))
+                try check(gifski_add_frame_rgba(encoder, UInt32(index), UInt32(width), UInt32(height),
+                                                &rgba, relativePTS + finalDelay))
             }
             index += 1
         }
-        guard reader.status == .completed, index == selected.count, let encoder else { throw GIFConversionError.unsupported }
+        guard reader.status == .completed, index == selected.count, let encoder else {
+            throw GIFConversionError.unsupported
+        }
+
+        // Finish, then confirm ImageIO can read the result before keeping the file.
         let result = gifski_finish(encoder)
         finished = true
         try state.check()
@@ -266,7 +322,8 @@ struct GIFConverter {
 
     /// Select at most one frame per fixed time bucket, retaining the original PTS.
     /// Input timestamps are sorted; empty buckets are never filled with duplicates.
-    static func selectedTimes(_ times: [Double], duration: Double, options: GIFConversionOptions, maximumFrames: Int) throws -> [Double] {
+    static func selectedTimes(_ times: [Double], duration: Double, options: GIFConversionOptions,
+                              maximumFrames: Int) throws -> [Double] {
         guard let start = times.first, times.allSatisfy({ $0.isFinite }),
               duration.isFinite, duration > 0 else { throw GIFConversionError.unsupported }
         var selected = [Double]()
@@ -292,7 +349,9 @@ struct GIFConverter {
         return selected
     }
 
-    static func outputRect(_ oriented: CGRect, options: GIFConversionOptions, limits: GIFConversionLimits) throws -> CGRect {
+    /// Output frame size at (0, 0) for an oriented input rectangle.
+    static func outputRect(_ oriented: CGRect, options: GIFConversionOptions,
+                           limits: GIFConversionLimits) throws -> CGRect {
         guard !oriented.isNull, !oriented.isInfinite,
               oriented.origin.x.isFinite, oriented.origin.y.isFinite,
               oriented.width.isFinite, oriented.height.isFinite,

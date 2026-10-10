@@ -1,9 +1,11 @@
+/* Adds a "Save video" button to each X post that shows a video or animated GIF. */
 (() => {
   "use strict";
   // Safari may inject again when an extension is rebuilt or re-enabled.
   globalThis.__xmaContentCleanup?.();
   const core = globalThis.XMediaCore;
   const t = core.t;
+
   function postID(article) {
     // Use the timestamp permalink, never arbitrary links in post text or quotes.
     for (const time of article.querySelectorAll("a[href] time")) {
@@ -13,6 +15,8 @@
     }
     return null;
   }
+
+  // Ensures each video post has exactly one control for its current post ID.
   function refresh() {
     for (const article of document.querySelectorAll('article[data-testid="tweet"]')) {
       const id = postID(article);
@@ -28,7 +32,9 @@
       }
       if (existing) continue;
       // X can render only a thumbnail + playButton until playback starts.
-      if (!id || !article.querySelector('video, [data-testid="videoPlayer"], [data-testid="playButton"]')) continue;
+      const hasVideo = article.querySelector('video, [data-testid="videoPlayer"], [data-testid="playButton"]');
+      if (!id || !hasVideo) continue;
+
       const root = document.createElement("div");
       root.className = "xma-controls";
       root.lang = globalThis.XMediaI18n.language();
@@ -46,9 +52,11 @@
       status.setAttribute("aria-live", "polite");
       item.append(button, status);
       root.append(item);
+      // Keep clicks from opening the post underneath.
       root.addEventListener("click", event => { event.stopPropagation(); });
       button.addEventListener("click", async event => {
         event.preventDefault();
+        // Ignore synthetic clicks from page scripts and double clicks while saving.
         if (!event.isTrusted || button.disabled) return;
         button.disabled = true;
         button.textContent = t("downloading");
@@ -62,13 +70,18 @@
           button.textContent = `↓ ${t("retry")}`;
         } finally { button.disabled = false; }
       });
-      const actions = [...article.querySelectorAll('[role="group"]')].find(group => group.querySelector('[data-testid="reply"]'));
+      // Place the controls just below the reply/repost/like bar when it exists.
+      const actions = [...article.querySelectorAll('[role="group"]')]
+        .find(group => group.querySelector('[data-testid="reply"]'));
       (actions?.parentElement ?? article).append(root);
     }
   }
+
+  // X renders posts lazily and reuses articles; refresh at most once per 150 ms.
   let scheduled = false;
   let refreshTimer;
   const observer = new MutationObserver(records => {
+    // Changes inside our own controls (status text, button label) need no refresh.
     if (records.every(record => record.target.closest?.(".xma-controls"))) return;
     if (scheduled) return;
     scheduled = true;
@@ -78,6 +91,7 @@
     observer.disconnect();
     clearTimeout(refreshTimer);
   };
+  // href changes catch an article reused for a different post.
   observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["href"] });
   refresh();
 })();

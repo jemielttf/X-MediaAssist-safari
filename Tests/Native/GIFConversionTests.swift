@@ -12,11 +12,18 @@ final class GIFConversionTests: XCTestCase {
         return url
     }
 
-    func makeVideo(_ url: URL, rotated: Bool = false, width: Int = 64, height: Int = 32, times: [Double] = [0, 0.1, 0.2, 0.3], duration: Double = 0.4) async throws {
+    /// Writes an H.264 test video. Even frames are red, odd frames blue.
+    func makeVideo(_ url: URL, rotated: Bool = false, width: Int = 64, height: Int = 32,
+                   times: [Double] = [0, 0.1, 0.2, 0.3], duration: Double = 0.4) async throws {
         let writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
-        let input = AVAssetWriterInput(mediaType: .video, outputSettings: [AVVideoCodecKey: AVVideoCodecType.h264, AVVideoWidthKey: width, AVVideoHeightKey: height])
+        let input = AVAssetWriterInput(mediaType: .video, outputSettings: [
+            AVVideoCodecKey: AVVideoCodecType.h264, AVVideoWidthKey: width, AVVideoHeightKey: height
+        ])
         if rotated { input.transform = CGAffineTransform(a: 0, b: 1, c: -1, d: 0, tx: CGFloat(height), ty: 0) }
-        let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input, sourcePixelBufferAttributes: [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA, kCVPixelBufferWidthKey as String: width, kCVPixelBufferHeightKey as String: height])
+        let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input, sourcePixelBufferAttributes: [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+            kCVPixelBufferWidthKey as String: width, kCVPixelBufferHeightKey as String: height
+        ])
         writer.add(input)
         XCTAssertTrue(writer.startWriting())
         writer.startSession(atSourceTime: .zero)
@@ -147,7 +154,10 @@ final class GIFConversionTests: XCTestCase {
         let folder = try directory(), input = folder.appendingPathComponent("input.mp4")
         try Data("source".utf8).write(to: input)
         let expected = try options(fps: 25, scale: 0.75, quality: 70)
-        let request = try MediaDownloadRequest(message: ["type": "download", "url": "https://video.twimg.com/a.mp4", "postId": "123", "author": "example", "mediaIndex": 1, "mediaType": "animated_gif", "gifOptions": expected.message])
+        let request = try MediaDownloadRequest(message: [
+            "type": "download", "url": "https://video.twimg.com/a.mp4", "postId": "123", "author": "example",
+            "mediaIndex": 1, "mediaType": "animated_gif", "gifOptions": expected.message
+        ])
         let save = MediaSave(request: request, directory: folder) { _, output, options in
             XCTAssertEqual(options, expected)
             try Data("complete".utf8).write(to: output)
@@ -177,7 +187,10 @@ final class GIFConversionTests: XCTestCase {
             let gif = try XCTUnwrap(properties[kCGImagePropertyGIFDictionary as String] as? [String: Any])
             XCTAssertEqual(gif[kCGImagePropertyGIFLoopCount as String] as? Int, 0)
             var pixel = [UInt8](repeating: 0, count: 4)
-            let context = CGContext(data: &pixel, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4, space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+            // Downsample the first frame to one pixel: it must be the red frame.
+            let context = CGContext(data: &pixel, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+                                    space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
             context.draw(image, in: CGRect(x: 0, y: 0, width: 1, height: 1))
             XCTAssertGreaterThan(pixel[0], 200)
             XCTAssertLessThan(pixel[2], 40)
@@ -246,7 +259,10 @@ final class GIFConversionTests: XCTestCase {
     }
 
     func request(type: String = "animated_gif", format: String = "auto") throws -> MediaDownloadRequest {
-        try MediaDownloadRequest(message: ["type": "download", "url": "https://video.twimg.com/a.mp4", "postId": "123", "author": "example", "mediaIndex": 1, "mediaType": type, "format": format])
+        try MediaDownloadRequest(message: [
+            "type": "download", "url": "https://video.twimg.com/a.mp4", "postId": "123", "author": "example",
+            "mediaIndex": 1, "mediaType": type, "format": format
+        ])
     }
 
     func testGIFSuccessAndDuplicateName() async throws {

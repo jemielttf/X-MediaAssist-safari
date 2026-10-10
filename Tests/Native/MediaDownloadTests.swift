@@ -48,7 +48,9 @@ final class MediaDownloadTests: XCTestCase {
     }
 
     private func message(_ scenario: String = "ok") -> [String: Any] {
-        ["type": "download", "url": "https://video.twimg.com/\(scenario).mp4", "postId": "719944021058060289", "author": "example", "mediaIndex": 1, "mediaType": "video"]
+        // The URL's file name selects the FixtureProtocol scenario.
+        ["type": "download", "url": "https://video.twimg.com/\(scenario).mp4", "postId": "719944021058060289",
+         "author": "example", "mediaIndex": 1, "mediaType": "video"]
     }
     private func directory() throws -> URL {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("xma-test-\(UUID())")
@@ -127,7 +129,9 @@ final class MediaDownloadTests: XCTestCase {
         XCTAssertEqual(request.mediaType, "animated_gif")
     }
     func testRejectsUntrustedURLsAndFileNames() {
-        for url in ["file:///tmp/test.mp4", "http://video.twimg.com/a.mp4", "https://video.twimg.com.evil/a.mp4", "https://user@video.twimg.com/a.mp4", "https://video.twimg.com:8443/a.mp4", "https://video.twimg.com/a.m3u8", "https://127.0.0.1/a.mp4"] {
+        for url in ["file:///tmp/test.mp4", "http://video.twimg.com/a.mp4", "https://video.twimg.com.evil/a.mp4",
+                    "https://user@video.twimg.com/a.mp4", "https://video.twimg.com:8443/a.mp4",
+                    "https://video.twimg.com/a.m3u8", "https://127.0.0.1/a.mp4"] {
             var values = message(); values["url"] = url
             XCTAssertThrowsError(try MediaDownloadRequest(message: values), url)
         }
@@ -272,6 +276,9 @@ final class MediaDownloadTests: XCTestCase {
                 XCTAssertEqual(request != nil, index <= 3)
             }
         }
-        downloader.urlSession(session, task: task, willPerformHTTPRedirection: response, newRequest: URLRequest(url: URL(string: "https://evil.test/a.mp4")!)) { XCTAssertNil($0) }
+        let offHost = URLRequest(url: URL(string: "https://evil.test/a.mp4")!)
+        downloader.urlSession(session, task: task, willPerformHTTPRedirection: response, newRequest: offHost) {
+            XCTAssertNil($0)
+        }
     }
 }

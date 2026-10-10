@@ -8,6 +8,7 @@ if (localized) {
     });
 }
 
+// show, showError, showGIFOptions and showGIFError are called from ViewController.swift.
 function show(enabled) {
     const status = document.getElementById("extension-status");
     status.classList.toggle("is-enabled", enabled === true);
@@ -37,6 +38,7 @@ function showGIFError() {
     document.getElementById("gif-options").disabled = true;
     document.getElementById("gif-status").textContent = t("gif_error");
 }
+// Every change is saved immediately; Swift validates the values again before storing them.
 document.getElementById("gif-options").addEventListener("change", () => {
     webkit.messageHandlers.controller.postMessage({ type: "set-gif-options", gifOptions: {
         quality: Number(document.querySelector('input[name="gif-quality"]:checked').value),

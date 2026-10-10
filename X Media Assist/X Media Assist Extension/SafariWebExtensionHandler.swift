@@ -1,12 +1,20 @@
 import SafariServices
 
+/// Receives `browser.runtime.sendNativeMessage` calls from background.js.
+///
+/// - "ping": reports the protocol version and the base GIF settings.
+/// - "download": saves one media item to ~/Downloads and replies when it is published.
 final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
+    /// Guards `activeRequests` and keeps sweeping and save admission mutually exclusive.
     private static let lock = NSLock()
+    /// Basenames being saved by this process; at most 3, one per file name.
     private static var activeRequests = Set<String>()
     // Every save starts with a ping, so orphaned partial files are re-checked periodically.
-    private static let sweeper = StaleTemporarySweeper(directory: {
-        try? FileManager.default.url(for: .downloadsDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-    })
+    private static let sweeper = StaleTemporarySweeper(directory: { try? downloadsDirectory(create: false) })
+
+    private static func downloadsDirectory(create: Bool) throws -> URL {
+        try FileManager.default.url(for: .downloadsDirectory, in: .userDomainMask, appropriateFor: nil, create: create)
+    }
 
     func beginRequest(with context: NSExtensionContext) {
         func respond(_ payload: [String: Any]) {
@@ -19,6 +27,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
                   let message = item.userInfo?[SFExtensionMessageKey] as? [String: Any] else {
                 throw MediaDownloadError.invalidRequest
             }
+
             if message["type"] as? String == "ping" {
                 // Keep the same lock as save admission throughout the sweep so
                 // a new transfer cannot start between the idle check and deletion.
@@ -29,21 +38,24 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
                 respond(["ok": true, "protocolVersion": 3, "gifOptions": try GIFPreferences.appGroup().options.message])
                 return
             }
-            let request = try MediaDownloadRequest(message: message, defaultGIFOptions: try GIFPreferences.appGroup().options)
-            let directory = try FileManager.default.url(for: .downloadsDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+
+            let request = try MediaDownloadRequest(message: message,
+                                                   defaultGIFOptions: try GIFPreferences.appGroup().options)
+            let directory = try Self.downloadsDirectory(create: true)
+
             Self.lock.lock()
             let accepted = Self.activeRequests.count < 3 && !Self.activeRequests.contains(request.basename)
             if accepted { Self.activeRequests.insert(request.basename) }
             Self.lock.unlock()
             guard accepted else { throw MediaDownloadError.busy }
+
             MediaSave(request: request, directory: directory).start { result in
                 Self.lock.lock()
                 Self.activeRequests.remove(request.basename)
                 Self.lock.unlock()
                 switch result {
                 case .success(let saved): respond(saved.message)
-                case .failure(let error):
-                    respond(MediaDownloadError.response(for: error))
+                case .failure(let error): respond(MediaDownloadError.response(for: error))
                 }
             }
         } catch {

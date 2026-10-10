@@ -22,10 +22,18 @@ test("post IDs remain strings, including values beyond JS safe integers", () => 
   }
 });
 test("rejects unrelated URLs, credentials, bad IDs and paths", () => {
-  for (const value of ["1", `http://x.com/a/status/${id}`, `https://x.com.evil/a/status/${id}`, `https://x.com@evil/a/status/${id}`, "https://x.com/a/status/1e10", "https://x.com/a/status/001", `https://x.com/a/status/${id}/foo`, `https://user@x.com/a/status/${id}`]) assert.equal(c.parsePostURL(value), null, value);
+  for (const value of [
+    "1", `http://x.com/a/status/${id}`, `https://x.com.evil/a/status/${id}`, `https://x.com@evil/a/status/${id}`,
+    "https://x.com/a/status/1e10", "https://x.com/a/status/001", `https://x.com/a/status/${id}/foo`,
+    `https://user@x.com/a/status/${id}`
+  ]) assert.equal(c.parsePostURL(value), null, value);
 });
 test("media URL boundary rejects local, credentials, HLS, and lookalike hosts", () => {
-  for (const value of ["file:///tmp/a.mp4", "http://video.twimg.com/a.mp4", "https://video.twimg.com.evil/a.mp4", "https://user@video.twimg.com/a.mp4", "https://video.twimg.com/a.m3u8", "https://127.0.0.1/a.mp4", "https://video.twimg.com:8443/a.mp4"]) assert.equal(c.isMP4URL(value), false, value);
+  for (const value of [
+    "file:///tmp/a.mp4", "http://video.twimg.com/a.mp4", "https://video.twimg.com.evil/a.mp4",
+    "https://user@video.twimg.com/a.mp4", "https://video.twimg.com/a.m3u8", "https://127.0.0.1/a.mp4",
+    "https://video.twimg.com:8443/a.mp4"
+  ]) assert.equal(c.isMP4URL(value), false, value);
   assert.equal(c.isMP4URL(url + "?tag=12"), true);
 });
 test("syndication token matches public embed algorithm", () => {
@@ -36,7 +44,12 @@ test("syndication token matches public embed algorithm", () => {
 });
 test("selects highest bitrate MP4, ignoring HLS and hostile URLs", () => {
   const best = url + "?best";
-  const result = c.extractMedia(post([media("video", [variant(256, url + "?low"), { content_type: "application/x-mpegURL", url: "https://video.twimg.com/a.m3u8", bitrate: 99999 }, variant(99999, "https://evil.test/a.mp4"), variant(4000, best)])]), id);
+  const result = c.extractMedia(post([media("video", [
+    variant(256, url + "?low"),
+    { content_type: "application/x-mpegURL", url: "https://video.twimg.com/a.m3u8", bitrate: 99999 },
+    variant(99999, "https://evil.test/a.mp4"),
+    variant(4000, best)
+  ])]), id);
   assert.equal(result[0].url, best);
 });
 test("uses resolution to rank variants without bitrate", () => {
@@ -72,12 +85,20 @@ test("download succeeds sequentially with credential-free fetch", async () => {
 });
 test("partial failure reports saved files and stops remaining downloads", async () => {
   let count = 0;
-  const result = await c.downloadPost(id, { fetchImpl: fetchPost(post([media(), media(), media()])), sendNative: connected(async () => ++count === 1 ? { ok: true, filename: "saved.mp4" } : { ok: false, error: "disk full" }) });
+  const result = await c.downloadPost(id, {
+    fetchImpl: fetchPost(post([media(), media(), media()])),
+    sendNative: connected(async () => ++count === 1 ? { ok: true, filename: "saved.mp4" } : { ok: false, error: "disk full" })
+  });
   assert.equal(count, 2); assert.equal(result.ok, false); assert.deepEqual(result.saved, ["saved.mp4"]);
   assert.match(c.resultMessage(result), /saved.mp4/);
 });
 test("network, rate limit, invalid JSON and native disconnect are visible failures", async () => {
-  for (const fetchImpl of [async () => { throw Error("offline"); }, async () => ({ ok: false, status: 429 }), async () => ({ ok: false, status: 403 }), async () => ({ ok: true, json: async () => { throw Error("bad json"); } })]) {
+  for (const fetchImpl of [
+    async () => { throw Error("offline"); },
+    async () => ({ ok: false, status: 429 }),
+    async () => ({ ok: false, status: 403 }),
+    async () => ({ ok: true, json: async () => { throw Error("bad json"); } })
+  ]) {
     const result = await c.downloadPost(id, { fetchImpl, sendNative: connected(() => assert.fail("must not download")) });
     assert.equal(result.ok, false); assert.ok(result.error);
   }
@@ -89,7 +110,14 @@ test("a lost response does not incorrectly assert that nothing was saved", () =>
   assert.match(c.resultMessage(null), /ダウンロードフォルダ/);
 });
 test("native connection failure or stale protocol stops before fetching or saving", async () => {
-  for (const sendNative of [() => new Promise(() => {}), async () => { throw Error("XPC invalidated"); }, async () => undefined, async () => ({ ok: true }), async () => ({ ok: true, protocolVersion: 1 }), async () => ({ ok: true, protocolVersion: 2 })]) {
+  for (const sendNative of [
+    () => new Promise(() => {}),
+    async () => { throw Error("XPC invalidated"); },
+    async () => undefined,
+    async () => ({ ok: true }),
+    async () => ({ ok: true, protocolVersion: 1 }),
+    async () => ({ ok: true, protocolVersion: 2 })
+  ]) {
     const result = await c.downloadPost(id, {
       sendNative, connectionTimeout: 5,
       fetchImpl: () => assert.fail("must not fetch before connection succeeds")
@@ -247,7 +275,10 @@ test("GIF validation rejects unsupported types and values before a download", as
   for (const quality of [90, 75, 50]) {
     assert.throws(() => c.validateGIFOptions({ ...c.GIF_DEFAULTS, quality }));
   }
-  for (const raw of [null, [], {}, { ...c.GIF_DEFAULTS, quality: 91 }, { ...c.GIF_DEFAULTS, maximumFrameRate: 50 }, { ...c.GIF_DEFAULTS, scale: true }, { ...c.GIF_DEFAULTS, scale: "1" }]) {
+  for (const raw of [
+    null, [], {}, { ...c.GIF_DEFAULTS, quality: 91 }, { ...c.GIF_DEFAULTS, maximumFrameRate: 50 },
+    { ...c.GIF_DEFAULTS, scale: true }, { ...c.GIF_DEFAULTS, scale: "1" }
+  ]) {
     assert.throws(() => c.validateGIFOptions(raw));
     const result = await c.downloadPost(id, {
       gifOptions: raw, sendNative: connected(() => assert.fail("must not download")),
