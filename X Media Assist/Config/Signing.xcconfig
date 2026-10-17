@@ -1,0 +1,11 @@
+// Shared version and signing settings for the app and Safari extension.
+// Set your Team ID in the Git-ignored Signing.local.xcconfig.
+// Edit that file instead of choosing a Team in Signing & Capabilities,
+// which writes the Team ID back into project.pbxproj.
+
+MARKETING_VERSION = 0.3.5
+CURRENT_PROJECT_VERSION = 22
+
+DEVELOPMENT_TEAM =
+
+#include? "Signing.local.xcconfig"

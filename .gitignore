@@ -10,6 +10,9 @@ output/
 Docs/*
 !Docs/layout/
 
+# Signing Team ID stays local (see X Media Assist/Config/Signing.xcconfig)
+/X Media Assist/Config/Signing.local.xcconfig
+
 # Secrets / signing material
 .env
 .env.*

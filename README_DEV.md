@@ -20,6 +20,16 @@ macOS 14以降のApple Silicon搭載Mac（arm64）のみ対応しています。
 
 Rust 1.98.1（rustup）が必要です。Xcodeのビルドフェーズとスクリプトの両方で、同じ固定版gifskiの静的ライブラリを生成します。初回はCargo依存のダウンロードが必要です。FFmpegや外部Gifski.appは不要です。
 
+署名のTeam IDはローカル設定で管理します。初回はリポジトリのルートで次を実行し、作成した `Signing.local.xcconfig` の `YOUR_TEAM_ID` を自分のTeam IDへ置き換えてください。
+
+```bash
+cp "X Media Assist/Config/Signing.local.xcconfig.example" "X Media Assist/Config/Signing.local.xcconfig"
+```
+
+共有の `Signing.xcconfig` がこのファイルを任意読み込みし、本体・ExtensionのDebug/Releaseへ同じTeam IDを適用します。`Signing.local.xcconfig` はGit管理対象外です。ファイルがない場合はTeam IDが空になるため、署名付きビルドにはローカル設定またはビルド時の `DEVELOPMENT_TEAM` 指定が必要です。Team IDの変更はこのファイルで行ってください。XcodeのSigning & CapabilitiesでTeamを選び直すと、`project.pbxproj` に値が書き戻されます。
+
+バージョン番号（`MARKETING_VERSION`）とbuild番号（`CURRENT_PROJECT_VERSION`）は共有の `Signing.xcconfig` で管理し、本体・ExtensionのDebug/Releaseへ共通で適用します。`Signing.local.xcconfig` にはTeam IDだけを記述してください。バージョン番号を変更するときは、`Extension/manifest.json` の `version` も同じ値へ更新します。
+
 gifskiは固定コミットを参照するGit submoduleです。新規取得時は `git clone --recurse-submodules https://github.com/jemielttf/X-MediaAssist-safari.git` を使用するか、既存のcloneで以下の初期化コマンドを実行してください。
 
 ```bash
@@ -32,7 +42,7 @@ rustup target add --toolchain 1.98.1 aarch64-apple-darwin
 
 CodexのRunボタンも同じコマンドを実行します。アプリは `build/DerivedData/Build/Products/Debug/X Media Assist.app` に生成されます。
 
-1. XcodeのSigning & Capabilitiesで、本体とExtensionの両ターゲットに同じTeamと開発用証明書を設定します。スクリプトもプロジェクトの署名設定を使用し、アドホック署名への上書きは行いません。本体のBundle Identifierは `com.jemielttf.XMediaAssist`、Extensionは `com.jemielttf.XMediaAssist.Extension` です。
+1. 上記のローカル設定でTeam IDを指定し、そのTeamの開発用証明書をXcodeで利用できる状態にします。本体とExtensionの両ターゲットは同じTeamと自動署名設定を使用し、スクリプトもアドホック署名への上書きは行いません。本体のBundle Identifierは `com.jemielttf.XMediaAssist`、Extensionは `com.jemielttf.XMediaAssist.Extension` です。
 2. 案内アプリのボタンからSafariの拡張機能設定を開き、**X Media Assist** を有効にします。見つからない場合はアプリを起動し直し、Safariの設定を開き直してください。
 3. 使用するSafariプロファイルで有効にし、Xと `cdn.syndication.twimg.com` へのアクセスを許可してください。
 4. 投稿を開き直し、投稿内の「動画を保存」、またはツールバーの拡張ボタンから保存します。
@@ -133,7 +143,7 @@ git switch --detach <配布ページに記載されたリリースタグ>
 git submodule update --init --recursive
 ```
 
-その後、上記「起動」の手順に従ってRustツールチェーンとXcodeを用意し、両ターゲットのTeam・署名を自分の設定に変更してビルドします。配布者の秘密鍵や証明書はリポジトリに含めません。
+その後、上記「起動」の手順に従ってRustツールチェーンとXcodeを用意し、`Signing.local.xcconfig` に自分のTeam IDを設定してビルドします。配布者の秘密鍵や証明書はリポジトリに含めません。
 
 親リポジトリのタグがgifskiのコミットを固定し、gifski内の `Cargo.lock` がRust依存を固定します。ビルドには `cargo build --locked` を使用し、Rust自体は `rust-toolchain.toml` で固定します。初回は依存ソースを取得するネットワーク接続が必要です。GitHubが自動生成する「Source code」ZIP/tar.gzにはsubmoduleの実ソースが含まれないため、上記のclone手順を使用してください。
 

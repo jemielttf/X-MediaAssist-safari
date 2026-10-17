@@ -1,0 +1,2 @@
+// Copy to Signing.local.xcconfig (Git-ignored) and replace the placeholder with your Team ID.
+DEVELOPMENT_TEAM = YOUR_TEAM_ID
