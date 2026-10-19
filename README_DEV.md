@@ -57,6 +57,7 @@ Bundle Identifierを変更した後は、Safariを通常終了して起動し直
 ./script/build_and_run.sh --verify      # ビルド・起動・プロセス確認
 ./script/build_and_run.sh --logs        # 起動してネイティブログを表示
 ./script/test.sh                        # Node + Swiftの隔離テスト
+node script/check_syndication.mjs       # Syndicationの疎通確認（実通信あり）
 ```
 
 ## メニューバーと起動設定
@@ -108,6 +109,7 @@ SafariのnativeMessagingは同梱されたApp Extensionが受信し、そのプ�
 - 一時ファイルを保存先と同じフォルダに作り、完了後に `link(2)` で公開することで既存ファイルの上書きを防ぎます。通常の成功・失敗時は一時ファイルを削除します。プロセスの強制終了で残った `.xma-*` は、最終更新から1時間以上経過したものを接続確認（ping）時に15分以上の間隔で掃除します。保存処理中は掃除を延期し、掃除と新規保存の受付は同じロックで排他制御します。
 - 一部保存後に失敗した投稿を再試行すると、保存済みメディアも別名で再保存されます。
 - Syndicationは公開仕様の保証がないため、X側の変更で取得できなくなる可能性があります。認証付きAPIへの自動フォールバックは行いません。
+- 応答形式の変化を早く検知するため、GitHub Actionsの `Syndication Canary`（`.github/workflows/syndication-canary.yml`）が毎日 `node script/check_syndication.mjs` を実行します。既知の公開投稿（動画1件・GIFアニメ1件）を拡張と同じ `core.js` で解析し、選ばれたMP4にHEADリクエストを送ります。メディア本体はダウンロードしません。失敗時は1回だけ再試行し、それでも失敗すればワークフローを失敗させます。手元でも同じコマンドで確認できます。GitHubの仕様により、リポジトリに60日間動きがないと定期実行は停止します。
 
 ## GIF変換
 
