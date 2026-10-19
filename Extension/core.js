@@ -13,7 +13,7 @@
   const NATIVE_ERRORS = Object.freeze({
     invalid_request: "native_invalid_request", invalid_response: "native_invalid_response",
     too_large: "native_too_large", invalid_mp4: "native_invalid_mp4", busy: "save_busy",
-    write_failed: "native_write_failed", network: "native_network"
+    write_failed: "native_write_failed", network: "native_network", not_found: "native_not_found"
   });
   // Native GIF fallback codes (GIFConversionError.warningCode); each is also a message key.
   const GIF_WARNINGS = new Set([
@@ -80,6 +80,10 @@
     } catch { return false; }
   }
 
+  // Same names as MediaFile.savedFiles on the native side: "author-postID-index[ N].mp4|gif".
+  const SAVED_FILENAME = /^[A-Za-z0-9_]{1,15}-[1-9][0-9]{0,19}-[1-4]( [1-9][0-9]{0,3})?\.(mp4|gif)$/;
+  function isSavedFilename(value) { return typeof value === "string" && SAVED_FILENAME.test(value); }
+
   // --- Post metadata -------------------------------------------------------
 
   function syndicationURL(id) {
@@ -141,8 +145,9 @@
 
   // --- Page/popup side: ask the background to save a post -----------------
 
+  // `onProgress` receives the background's progress (or null) about once per `progressInterval`.
   async function requestDownload(postId, sendMessage, format = "auto", gifOptions,
-    { connectionTimeout = 15000, checkInterval = 15000 } = {}) {
+    { connectionTimeout = 15000, checkInterval = 15000, onProgress, progressInterval = 1000 } = {}) {
     const options = gifOptions === undefined ? {} : { gifOptions: validateGIFOptions(gifOptions) };
     const connectionError = t("extension_disconnected");
 
@@ -167,6 +172,19 @@
       timer = setTimeout(check, checkInterval);
     });
 
+    // Progress is best effort: a failed or late poll is skipped. Only the connection
+    // check above decides that the background was lost.
+    let progressTimer;
+    async function pollProgress() {
+      try {
+        const reply = await withTimeout(() => sendMessage({ type: "getProgress", postId }),
+          connectionTimeout, connectionError);
+        if (!stopped && reply?.ok === true) onProgress(reply.progress ?? null);
+      } catch { /* skipped */ }
+      if (!stopped) progressTimer = setTimeout(pollProgress, progressInterval);
+    }
+    if (onProgress) progressTimer = setTimeout(pollProgress, progressInterval);
+
     try {
       // Keep the transfer budget, but detect a lost/restarted background separately.
       // Checks never start another download or cancel native work.
@@ -175,15 +193,40 @@
         Promise.resolve().then(() => sendMessage({ type: "downloadPost", postId, format, ...options }))
       ]);
       return await withTimeout(download, 45 * 60 * 1000, t("extension_result_timeout"));
-    } finally { stopped = true; clearTimeout(timer); }
+    } finally { stopped = true; clearTimeout(timer); clearTimeout(progressTimer); }
+  }
+
+  // Status text while saving, from getProgress. Missing or malformed fields fall back
+  // to a less specific text rather than showing wrong numbers.
+  function progressMessage(progress) {
+    const number = key => Number.isSafeInteger(progress?.[key]) && progress[key] >= 0 ? progress[key] : -1;
+    const index = number("index"), count = number("count");
+    if (index < 1) return t("progress_fetching");
+    const prefix = count > 1 && index <= count ? `(${index}/${count}) ` : "";
+    const megabytes = bytes => (bytes / 1e6).toFixed(1);
+    const percent = (done, total) => String(Math.min(100, Math.floor(done / total * 100)));
+    if (progress.phase === "converting") {
+      const encoded = number("encodedFrames"), total = number("totalFrames");
+      return prefix + (encoded >= 0 && total > 0
+        ? t("progress_converting_percent", [percent(encoded, total)]) : t("progress_converting"));
+    }
+    if (progress.phase === "downloading") {
+      const received = number("receivedBytes"), expected = number("expectedBytes");
+      if (received < 0) return prefix + t("progress_downloading");
+      return prefix + (expected > 0
+        ? t("progress_downloading_total", [megabytes(received), megabytes(expected), percent(received, expected)])
+        : t("progress_downloading_bytes", [megabytes(received)]));
+    }
+    return prefix + t("progress_preparing");
   }
 
   // --- Background side: fetch metadata and save each media item natively ----
 
   // Never throws: returns { ok, saved, warnings, error? } so partial saves stay visible.
+  // `onItem` is told which media item ({ index, count, basename }) is being saved.
   async function downloadPost(postId, {
     fetchImpl = fetch, sendNative, connectionTimeout = 15000, downloadTimeout = 650000,
-    format = "auto", gifOptions
+    format = "auto", gifOptions, onItem
   }) {
     const saved = [];
     const warnings = [];
@@ -205,7 +248,10 @@
       try { data = await response.json(); } catch { throw new Error(t("post_response_invalid")); }
 
       // Save sequentially; stop at the first failure and keep what was already saved.
-      for (const item of extractMedia(data, postId)) {
+      const media = extractMedia(data, postId);
+      for (const [position, item] of media.entries()) {
+        // Same as MediaDownloadRequest.basename, the key of native progress.
+        onItem?.({ index: position + 1, count: media.length, basename: `${item.author}-${postId}-${item.mediaIndex}` });
         let reply;
         try {
           const request = { type: "download", ...item, format, gifOptions: resolvedGIFOptions };
@@ -240,8 +286,22 @@
     return savedPart + problems;
   }
 
+  // Notification for a finished save. A GIF that fell back to MP4 still counts as saved;
+  // the reason is in the body. The body stays within SaveNotification's 2,000 characters.
+  // Saved files add a "Show in Finder" button (filenames + revealTitle).
+  function notificationContent(result) {
+    const saved = Array.isArray(result?.saved) ? result.saved : [];
+    const failed = result?.ok !== true && (typeof result?.error === "string" || !saved.length);
+    const title = t(!failed ? "notify_saved" : saved.length ? "notify_partial" : "notify_failed");
+    const body = result?.ok === true ? saved.join("\n") : resultMessage(result);
+    const content = { title, body: body.slice(0, 2000) };
+    const filenames = saved.filter(isSavedFilename);
+    return filenames.length ? { ...content, filenames, revealTitle: t("show_in_finder") } : content;
+  }
+
   globalThis.XMediaCore = Object.freeze({
     t, NATIVE_APP, GIF_DEFAULTS, validateGIFOptions, isPostId, parsePostURL, isXPage, isMP4URL,
-    syndicationURL, extractMedia, withTimeout, pingNative, requestDownload, downloadPost, resultMessage
+    isSavedFilename, syndicationURL, extractMedia, withTimeout, pingNative, requestDownload, downloadPost,
+    nativeError, progressMessage, resultMessage, notificationContent
   });
 })();

@@ -6,9 +6,13 @@ globalThis.XMediaI18n.localize(document);
 const input = document.getElementById("post-url");
 const button = document.getElementById("save");
 const status = document.getElementById("status");
+const reveal = document.getElementById("reveal");
 const gifFields = document.getElementById("gif-options");
 let gifOptionsReady = false;
 let downloading = false;
+// Files of the last save, for "Show in Finder", and the result text shown with them.
+let saved = [];
+let resultText = "";
 
 const checkedValue = name => document.querySelector(`input[name="${name}"]:checked`).value;
 const check = (name, value) => { document.querySelector(`input[name="${name}"][value="${value}"]`).checked = true; };
@@ -52,8 +56,12 @@ document.getElementById("download-form").addEventListener("submit", async event 
 
   button.disabled = true;
   downloading = true;
+  reveal.hidden = true;
   updateGIFControls();
-  status.textContent = t("keep_popup_open");
+  const showProgress = progress => {
+    status.textContent = `${XMediaCore.progressMessage(progress)}\n${t("keep_popup_open")}`;
+  };
+  showProgress(null);
   try {
     await loadGIFOptions;
     const gifOptions = gifOptionsReady ? {
@@ -62,13 +70,29 @@ document.getElementById("download-form").addEventListener("submit", async event 
       scale: Number(checkedValue("gif-scale"))
     } : undefined;
     const result = await XMediaCore.requestDownload(
-      postId, message => browser.runtime.sendMessage(message), checkedValue("format"), gifOptions);
-    status.textContent = XMediaCore.resultMessage(result);
+      postId, message => browser.runtime.sendMessage(message), checkedValue("format"), gifOptions,
+      { onProgress: showProgress });
+    resultText = XMediaCore.resultMessage(result);
+    saved = Array.isArray(result?.saved) ? result.saved.filter(XMediaCore.isSavedFilename) : [];
   } catch (error) {
-    status.textContent = error.message || t("popup_disconnected");
+    resultText = error.message || t("popup_disconnected");
+    saved = [];
   } finally {
+    status.textContent = resultText;
+    reveal.hidden = saved.length === 0;
     button.disabled = false;
     downloading = false;
     updateGIFControls();
   }
+});
+
+reveal.addEventListener("click", async () => {
+  if (reveal.disabled) return;
+  reveal.disabled = true;
+  try {
+    const reply = await browser.runtime.sendMessage({ type: "revealFiles", filenames: saved });
+    status.textContent = reply?.ok ? resultText : `${resultText}\n${reply?.error || t("reveal_failed")}`;
+  } catch {
+    status.textContent = `${resultText}\n${t("reveal_failed")}`;
+  } finally { reveal.disabled = false; }
 });

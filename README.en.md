@@ -52,7 +52,8 @@ The interface supports Japanese and English. The extension follows Safari’s la
 
 1. Open a post on X containing a video or animated GIF in Safari.
 2. Click **↓ Save Video** in the post.
-3. Keep the tab open until the save result appears.
+3. Keep the tab open until the save result appears. While saving, it shows which item is being saved, how much has downloaded, and how far GIF conversion has progressed.
+4. After saving, click **Show in Finder** to see the saved files in the Finder.
 
 ### From a post URL
 
@@ -61,7 +62,7 @@ If no save button appears in the post, use its URL:
 1. Click **X Media Assist** in Safari’s toolbar.
 2. Enter a post URL, such as `https://x.com/username/status/postID`. If the current tab is a post on X, its URL is filled in automatically.
 3. Choose a save format, then click **Save Video**.
-4. Keep the popup open until the save result appears.
+4. Keep the popup open until the save result appears. After saving, click **Show in Finder** to see the files.
 
 | Save Format | Saved files |
 | --- | --- |
@@ -75,6 +76,10 @@ The save button in a post always uses Auto.
 Files are saved to your Mac’s Downloads folder. Existing files are never overwritten; a different filename is used if the name is already taken.
 
 Each saved file records the original post’s URL. You can see it under “Where from” in the Finder’s Get Info window.
+
+When saving finishes, a macOS notification also shows the result. The first save asks whether to allow notifications. You can turn them off in System Settings > Notifications > X Media Assist.
+
+Click **Show in Finder** on the notification (it appears when you hold the pointer over the notification) to see the saved files in the Finder. Clicking the notification itself opens the X Media Assist window. If you haven’t saved anything for a while, the Finder may take some time to open after you click the button; in that case, use **Show in Finder** in the post or the popup.
 
 | Content | Support |
 | --- | --- |

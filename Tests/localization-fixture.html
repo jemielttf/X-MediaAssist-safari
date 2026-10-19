@@ -6,7 +6,7 @@
 body { font: 14px system-ui; margin: 20px; background: #ddd; color: #222; }
 .previews { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
 iframe { border: 1px solid #aaa; background: white; height: 900px; }
-#popup { width: 380px; height: 610px; }
+#popup { width: 380px; height: 740px; }
 #main { width: 570px; }
 </style>
 <h1>Localization fixture</h1>
@@ -32,7 +32,15 @@ const popupBridge = `
     runtime: {sendMessage: async request => {
       if (request.type === 'getGIFOptions') return {ok:true,gifOptions:${JSON.stringify(options)}};
       if (request.type === 'checkConnection') return {ok:true,instance:'fixture'};
-      await new Promise(done => setTimeout(done, 800));
+      if (request.type === 'getProgress') {
+        const elapsed = Date.now() - globalThis.started;
+        return {ok:true,progress: elapsed < 1500
+          ? {index:1,count:1,phase:'downloading',receivedBytes:Math.round(elapsed / 1500 * 5e6),expectedBytes:5e6}
+          : {index:1,count:1,phase:'converting',encodedFrames:Math.round((elapsed - 1500) / 1500 * 80),totalFrames:80}};
+      }
+      if (request.type === 'revealFiles') return {ok:true};
+      globalThis.started = Date.now();
+      await new Promise(done => setTimeout(done, 3000));
       return {ok:false,saved:['example-123-1.mp4'],warnings:['example-123-1.mp4: ' + messages.gif_limit.message]};
     }}
   };`;

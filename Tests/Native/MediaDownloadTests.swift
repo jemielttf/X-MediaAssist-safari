@@ -166,6 +166,82 @@ final class MediaDownloadTests: XCTestCase {
             "https://video.twimg.com/ok.mp4", "https://x.com/example/status/719944021058060289"
         ])
     }
+    func testRevealAcceptsOnlyExistingSavedFiles() throws {
+        let folder = try directory()
+        for name in ["example-719944021058060289-1.mp4", "example-719944021058060289-2 12.gif", "other.mp4"] {
+            try mp4.write(to: folder.appendingPathComponent(name))
+        }
+        try FileManager.default.createSymbolicLink(at: folder.appendingPathComponent("example-1-3.mp4"),
+                                                   withDestinationURL: folder.appendingPathComponent("other.mp4"))
+        let found = try MediaFile.savedFiles(["example-719944021058060289-1.mp4", "example-719944021058060289-2 12.gif",
+                                              "example-719944021058060289-4.mp4"], in: folder)
+        XCTAssertEqual(found.map(\.lastPathComponent),
+                       ["example-719944021058060289-1.mp4", "example-719944021058060289-2 12.gif"])
+        // Missing files and symbolic links are not revealed.
+        for names in [["example-719944021058060289-4.mp4"], ["example-1-3.mp4"]] {
+            XCTAssertThrowsError(try MediaFile.savedFiles(names, in: folder)) {
+                XCTAssertEqual(($0 as? MediaDownloadError)?.messageCode, "not_found")
+            }
+        }
+        // Anything that is not a list of 1...4 names this app publishes is rejected.
+        let invalid: [Any?] = [nil, "example-1-1.mp4", [String](), Array(repeating: "example-1-1.mp4", count: 5),
+                               ["other.mp4"], ["../example-1-1.mp4"], ["example-1-1.mov"], ["example-1-5.mp4"],
+                               ["example-1-1 0.mp4"], ["/tmp/example-1-1.mp4"], [1]]
+        for value in invalid {
+            XCTAssertThrowsError(try MediaFile.savedFiles(value, in: folder), "\(String(describing: value))") {
+                XCTAssertEqual(($0 as? MediaDownloadError)?.messageCode, "invalid_request")
+            }
+        }
+    }
+    func testProgressTracksBytesOnlyForOpenEntries() throws {
+        let progress = SaveProgress()
+        progress.update("example-1-1") { $0.receivedBytes = 10 }
+        XCTAssertNil(progress.snapshot("example-1-1"))
+        progress.begin("example-719944021058060289-1")
+        let done = expectation(description: "download completes")
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [FixtureProtocol.self]
+        MediaDownload(request: try MediaDownloadRequest(message: message()), directory: try directory(),
+                      progress: progress) { _ in done.fulfill() }.start(configuration: configuration)
+        wait(for: [done], timeout: 5)
+        let snapshot = try XCTUnwrap(progress.snapshot("example-719944021058060289-1"))
+        XCTAssertEqual(snapshot.phase, .downloading)
+        XCTAssertEqual(snapshot.receivedBytes, Int64(mp4.count))
+        XCTAssertEqual(snapshot.message["receivedBytes"] as? Int64, Int64(mp4.count))
+        progress.end("example-719944021058060289-1")
+        XCTAssertNil(progress.snapshot("example-719944021058060289-1"))
+    }
+    func testNotificationMessageRequiresBoundedText() throws {
+        let notification = try SaveNotification(message: ["type": "notify", "title": "保存しました", "body": "a.mp4"])
+        XCTAssertEqual(notification.title, "保存しました")
+        XCTAssertEqual(notification.body, "a.mp4")
+        XCTAssertEqual(notification.filenames, [])
+        XCTAssertNil(notification.revealTitle)
+        XCTAssertEqual(try SaveNotification(message: ["title": "t", "body": ""]).body, "")
+        let reveal = try SaveNotification(message: ["title": "t", "body": "", "revealTitle": "Finderで表示",
+                                                    "filenames": ["example-1-1.mp4", "example-1-2 2.gif"]])
+        XCTAssertEqual(reveal.filenames, ["example-1-1.mp4", "example-1-2 2.gif"])
+        XCTAssertEqual(reveal.revealTitle, "Finderで表示")
+        for message: [String: Any] in [[:], ["title": "", "body": "b"], ["title": "t"], ["title": 1, "body": "b"],
+                                       ["title": String(repeating: "t", count: 201), "body": "b"],
+                                       ["title": "t", "body": String(repeating: "b", count: 2001)],
+                                       // The Finder button needs saved names and a short title.
+                                       ["title": "t", "body": "", "filenames": ["example-1-1.mp4"]],
+                                       ["title": "t", "body": "", "filenames": ["../x.mp4"], "revealTitle": "F"],
+                                       ["title": "t", "body": "", "filenames": [String](), "revealTitle": "F"],
+                                       ["title": "t", "body": "", "filenames": ["example-1-1.mp4"],
+                                        "revealTitle": String(repeating: "F", count: 51)]] {
+            XCTAssertThrowsError(try SaveNotification(message: message))
+        }
+    }
+    func testProgressMessageAcceptsOnlyBasenames() {
+        XCTAssertEqual(try SaveProgress.basename(of: ["basename": "example-719944021058060289-1"]),
+                       "example-719944021058060289-1")
+        for value in ["example-1-1.mp4", "../example-1-1", "example-1-5", "", "example-01-1"] {
+            XCTAssertThrowsError(try SaveProgress.basename(of: ["basename": value]), value)
+        }
+        XCTAssertThrowsError(try SaveProgress.basename(of: [:]))
+    }
     func testDuplicateSavePreservesExistingFile() throws {
         let folder = try directory()
         let existing = folder.appendingPathComponent("example-719944021058060289-1.mp4")

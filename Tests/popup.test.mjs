@@ -11,7 +11,8 @@ const settle = () => new Promise(resolve => setImmediate(resolve));
 function popup(sendMessage) {
   const element = value => ({ value, disabled: false, textContent: "", listeners: {},
     addEventListener(type, listener) { this.listeners[type] = listener; } });
-  const elements = Object.fromEntries(["post-url", "save", "status", "gif-options", "download-form"].map(id => [id, element("")]));
+  const elements = Object.fromEntries(["post-url", "save", "status", "reveal", "gif-options", "download-form"].map(id => [id, element("")]));
+  elements.reveal.hidden = true;
   elements["post-url"].value = "https://x.com/example/status/123";
   const groups = Object.fromEntries(Object.entries({ format: ["auto", "mp4"], "gif-quality": ["95", "85", "70"],
     "gif-fps": ["20", "30", "25", "15"], "gif-scale": ["1", "0.75", "0.5"] }).map(([name, values]) => {
@@ -111,4 +112,38 @@ test("lost GIF settings and connection replies release the popup without startin
   assert.equal(ui.groups["gif-quality"].find(control => control.checked).value, "95");
   assert.equal(ui.elements["gif-options"].disabled, true);
   assert.deepEqual(messages.map(message => message.type), ["getGIFOptions", "checkConnection"]);
+});
+
+test("popup shows progress while saving and reveals only saved files in Finder", async () => {
+  const messages = [];
+  let finish, revealReply = { ok: true };
+  const ui = popup(async message => {
+    messages.push(message);
+    if (message.type === "getGIFOptions") return { ok: true, gifOptions: { quality: 95, maximumFrameRate: 20, scale: 1 } };
+    if (message.type === "checkConnection") return { ok: true, instance: "background" };
+    if (message.type === "getProgress") return { ok: true, progress: { index: 1, count: 1, phase: "converting", encodedFrames: 1, totalFrames: 4 } };
+    if (message.type === "revealFiles") return revealReply;
+    return new Promise(resolve => { finish = resolve; });
+  });
+  await settle();
+  const saving = ui.submit();
+  await settle();
+  assert.equal(ui.elements.reveal.hidden, true);
+  assert.match(ui.elements.status.textContent, /投稿情報を取得中…\n完了までこの画面/);
+  // Fire the 1-second progress poll.
+  const [timer, poll] = [...ui.timers.entries()].find(([, entry]) => entry.milliseconds === 1000);
+  ui.timers.delete(timer); poll.callback();
+  await settle();
+  assert.match(ui.elements.status.textContent, /GIFに変換中（25%）/);
+  finish({ ok: true, saved: ["example-123-1.gif", "../not-ours.gif"] });
+  await saving;
+  assert.equal(ui.elements.reveal.hidden, false);
+  const result = ui.elements.status.textContent;
+  await ui.elements.reveal.listeners.click();
+  assert.equal(JSON.stringify(messages.at(-1)), JSON.stringify({ type: "revealFiles", filenames: ["example-123-1.gif"] }));
+  assert.equal(ui.elements.status.textContent, result);
+  revealReply = { ok: false, error: "見つかりません" };
+  await ui.elements.reveal.listeners.click();
+  assert.equal(ui.elements.status.textContent, `${result}\n見つかりません`);
+  assert.equal(ui.elements.reveal.disabled, false);
 });

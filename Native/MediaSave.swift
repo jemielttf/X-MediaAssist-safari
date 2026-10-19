@@ -22,24 +22,26 @@ struct MediaSaveResult {
 
 /// One save per transfer. Conversion completes before publication and the response.
 final class MediaSave {
-    typealias Converter = (URL, URL, GIFConversionOptions) async throws -> Void
+    typealias Converter = (URL, URL, GIFConversionOptions, @escaping GIFConverter.FrameProgress) async throws -> Void
 
     private let request: MediaDownloadRequest
     private let directory: URL
     private let convert: Converter
+    private let progress: SaveProgress?
     private var warning: String?
     private var warningCode: String?
 
-    init(request: MediaDownloadRequest, directory: URL,
-         convert: @escaping Converter = { try await GIFConverter.convert($0, to: $1, options: $2) }) {
+    init(request: MediaDownloadRequest, directory: URL, progress: SaveProgress? = nil,
+         convert: @escaping Converter = { try await GIFConverter.convert($0, to: $1, options: $2, progress: $3) }) {
         self.request = request
         self.directory = directory
         self.convert = convert
+        self.progress = progress
     }
 
     func start(configuration: URLSessionConfiguration = .ephemeral,
                completion: @escaping (Result<MediaSaveResult, Error>) -> Void) {
-        MediaDownload(request: request, directory: directory, finishFile: { temporary in
+        MediaDownload(request: request, directory: directory, progress: progress, finishFile: { temporary in
             try await self.finish(temporary)
         }) { result in
             completion(result.map {
@@ -54,8 +56,12 @@ final class MediaSave {
         if request.convertsGIF {
             let gif = directory.appendingPathComponent(".xma-\(UUID().uuidString).gif.part")
             defer { try? FileManager.default.removeItem(at: gif) }
+            let basename = request.basename
+            progress?.update(basename) { $0.phase = .converting }
             do {
-                try await convert(temporary, gif, request.gifOptions)
+                try await convert(temporary, gif, request.gifOptions) { [progress] encoded, total in
+                    progress?.update(basename) { $0.encodedFrames = encoded; $0.totalFrames = total }
+                }
                 return try MediaFile.publish(gif, directory: directory, basename: request.basename,
                                              fileExtension: "gif", whereFroms: request.whereFroms).lastPathComponent
             } catch {

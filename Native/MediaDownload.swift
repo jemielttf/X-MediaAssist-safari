@@ -7,7 +7,7 @@ import Darwin
 /// Failures reported to the extension. `messageCode` is the stable protocol value;
 /// the extension maps it to a localized message (NATIVE_ERRORS in core.js).
 enum MediaDownloadError: LocalizedError {
-    case invalidRequest, invalidResponse, tooLarge, invalidMP4, busy, writeFailed
+    case invalidRequest, invalidResponse, tooLarge, invalidMP4, busy, writeFailed, notFound
     case http(Int)
 
     var messageCode: String {
@@ -18,6 +18,7 @@ enum MediaDownloadError: LocalizedError {
         case .invalidMP4: return "invalid_mp4"
         case .busy: return "busy"
         case .writeFailed: return "write_failed"
+        case .notFound: return "not_found"
         case .http: return "http"
         }
     }
@@ -47,6 +48,7 @@ enum MediaDownloadError: LocalizedError {
         case .busy: return "保存処理中です。完了してから再試行してください。"
         case .writeFailed:
             return "ファイルを保存できません。空き容量とダウンロードフォルダへのアクセスを確認してください。"
+        case .notFound: return "保存したファイルが見つかりません。移動または削除された可能性があります。"
         case .http(let code): return "動画を取得できませんでした（HTTP \(code)）。"
         }
     }
@@ -146,6 +148,27 @@ enum MediaFile {
         throw MediaDownloadError.writeFailed
     }
 
+    /// Exactly the names `publish` creates: "author-postID-index.ext" or "author-postID-index N.ext".
+    private static let savedName = "^[A-Za-z0-9_]{1,15}-[1-9][0-9]{0,19}-[1-4]( [1-9][0-9]{0,3})?\\.(mp4|gif)$"
+
+    static func isSavedName(_ name: String) -> Bool {
+        name.range(of: savedName, options: .regularExpression) != nil
+    }
+
+    /// Validates a "reveal" request: 1...4 saved file names. Returns those still present in
+    /// `directory`. Paths, other names and symbolic links are rejected, so the extension
+    /// cannot point Finder anywhere else.
+    static func savedFiles(_ value: Any?, in directory: URL) throws -> [URL] {
+        guard let names = value as? [String], (1...4).contains(names.count), names.allSatisfy(isSavedName)
+        else { throw MediaDownloadError.invalidRequest }
+        let files = names.map { directory.appendingPathComponent($0) }.filter { file in
+            let values = try? file.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+            return values?.isRegularFile == true && values?.isSymbolicLink == false
+        }
+        guard !files.isEmpty else { throw MediaDownloadError.notFound }
+        return files
+    }
+
     // A killed extension process (e.g. Safari quit mid-transfer) leaves its hidden
     // partial files behind. Only sweep while idle: wall-clock changes can make
     // an active transfer's file appear old even though its timeout has not elapsed.
@@ -198,6 +221,87 @@ final class StaleTemporarySweeper: @unchecked Sendable {
     }
 }
 
+/// A validated "notify" message: the save result of one post, already localized by the
+/// extension. When files were saved, it carries their names and the title of a
+/// "Show in Finder" button; otherwise it has no button.
+struct SaveNotification: Equatable {
+    let title: String
+    let body: String
+    /// Saved file names (empty: no button). Checked again against Downloads on click.
+    let filenames: [String]
+    let revealTitle: String?
+
+    init(message: [String: Any]) throws {
+        guard let title = message["title"] as? String, (1...200).contains(title.count),
+              let body = message["body"] as? String, body.count <= 2000
+        else { throw MediaDownloadError.invalidRequest }
+        self.title = title
+        self.body = body
+        if message["filenames"] == nil {
+            filenames = []
+            revealTitle = nil
+            return
+        }
+        guard let filenames = message["filenames"] as? [String], (1...4).contains(filenames.count),
+              filenames.allSatisfy(MediaFile.isSavedName),
+              let revealTitle = message["revealTitle"] as? String, (1...50).contains(revealTitle.count)
+        else { throw MediaDownloadError.invalidRequest }
+        self.filenames = filenames
+        self.revealTitle = revealTitle
+    }
+}
+
+/// Progress of the saves in this extension process, keyed by basename, for the "progress"
+/// message. Only entries opened with `begin` are updated, so a late callback after `end`
+/// cannot leave a stale entry behind.
+final class SaveProgress: @unchecked Sendable {
+    static let shared = SaveProgress()
+
+    struct Snapshot: Equatable {
+        enum Phase: String { case downloading, converting }
+        var phase = Phase.downloading
+        var receivedBytes: Int64 = 0
+        /// -1 until the server sends a Content-Length.
+        var expectedBytes: Int64 = -1
+        var encodedFrames = 0
+        /// 0 until the GIF frames to encode are selected.
+        var totalFrames = 0
+
+        var message: [String: Any] {
+            ["phase": phase.rawValue, "receivedBytes": receivedBytes, "expectedBytes": expectedBytes,
+             "encodedFrames": encodedFrames, "totalFrames": totalFrames]
+        }
+    }
+
+    private let lock = NSLock()
+    private var entries = [String: Snapshot]()
+
+    /// The basename of a "progress" message, in the same form as MediaDownloadRequest.basename.
+    static func basename(of message: [String: Any]) throws -> String {
+        guard let basename = message["basename"] as? String,
+              basename.range(of: "^[A-Za-z0-9_]{1,15}-[1-9][0-9]{0,19}-[1-4]$", options: .regularExpression) != nil
+        else { throw MediaDownloadError.invalidRequest }
+        return basename
+    }
+
+    func begin(_ basename: String) {
+        lock.lock(); entries[basename] = Snapshot(); lock.unlock()
+    }
+    func end(_ basename: String) {
+        lock.lock(); entries[basename] = nil; lock.unlock()
+    }
+    func update(_ basename: String, _ change: (inout Snapshot) -> Void) {
+        lock.lock(); defer { lock.unlock() }
+        guard var snapshot = entries[basename] else { return }
+        change(&snapshot)
+        entries[basename] = snapshot
+    }
+    func snapshot(_ basename: String) -> Snapshot? {
+        lock.lock(); defer { lock.unlock() }
+        return entries[basename]
+    }
+}
+
 /// Streams one MP4 into a hidden temporary file next to its destination, validates it,
 /// then either publishes it or hands it to `finishFile` (GIF conversion in MediaSave).
 /// One instance per transfer. Mutable state stays on the serial URLSession delegate queue.
@@ -208,6 +312,7 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
     private let maximumBytes: Int64
     private let completion: (Result<String, Error>) -> Void
     private let finishFile: ((URL) async throws -> String)?
+    private let progress: SaveProgress?
     private var temporary: URL?
     private var file: FileHandle?
     private var bytes: Int64 = 0
@@ -216,12 +321,14 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
     private var redirects = 0
 
     init(request: MediaDownloadRequest, directory: URL, maximumBytes: Int64 = MediaDownload.maximumBytes,
-         finishFile: ((URL) async throws -> String)? = nil, completion: @escaping (Result<String, Error>) -> Void) {
+         progress: SaveProgress? = nil, finishFile: ((URL) async throws -> String)? = nil,
+         completion: @escaping (Result<String, Error>) -> Void) {
         self.request = request
         self.directory = directory
         self.maximumBytes = maximumBytes
         self.completion = completion
         self.finishFile = finishFile
+        self.progress = progress
     }
 
     func start(configuration: URLSessionConfiguration = .ephemeral) {
@@ -266,6 +373,7 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
             }
             expectedBytes = http.expectedContentLength
             guard expectedBytes <= maximumBytes else { throw MediaDownloadError.tooLarge }
+            progress?.update(request.basename) { [expectedBytes] in $0.expectedBytes = expectedBytes }
             // AVFoundation needs the container extension when opening a local file.
             let temporaryURL = directory.appendingPathComponent(".xma-\(UUID().uuidString).part.mp4")
             guard FileManager.default.createFile(atPath: temporaryURL.path, contents: nil,
@@ -287,6 +395,7 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
             guard bytes <= maximumBytes else { throw MediaDownloadError.tooLarge }
             guard let file else { throw MediaDownloadError.writeFailed }
             try file.write(contentsOf: data)
+            progress?.update(request.basename) { [bytes] in $0.receivedBytes = bytes }
         } catch {
             failure = error
             dataTask.cancel()

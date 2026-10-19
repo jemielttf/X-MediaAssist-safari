@@ -9,6 +9,9 @@
 }
 
 .xma-item { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; max-width: 100%; }
+.xma-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+/* X's own styles must not unhide the Finder button. */
+.xma-reveal[hidden] { display: none; }
 /* Keep legacy roots connected so their old observers do not reinsert them. */
 article[data-testid="tweet"] .xma-controls:not([data-post-id]) { display: none; }
 

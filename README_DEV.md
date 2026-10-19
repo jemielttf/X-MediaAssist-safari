@@ -11,6 +11,8 @@ Xに投稿された動画はMP4、GIFアニメはgifskiでGIFへ変換してMac�
 - 複数メディアは順次保存。静止画を除き、元のメディア番号を保持します。
 - 保存先は `~/Downloads/投稿者-投稿ID-メディア番号.mp4` または `.gif`。同名ファイルは上書きせず、拡張子の前に半角スペースと数字を付け、`投稿者-投稿ID-メディア番号 2.mp4`、`投稿者-投稿ID-メディア番号 3.mp4` のように保存します。
 - 通信と保存の失敗を画面表示。途中まで保存できた場合は、そのファイル名を表示します。
+- 保存中は約1秒ごとに進捗を表示します（何件目か、受信バイト数と全体量、GIF変換のフレーム割合）。保存後は「Finderで表示」で保存したファイルをFinderで選択します。
+- 投稿の保存が終わると、backgroundが結果（保存・一部保存・失敗）の文言を作り、ネイティブの `notify` でmacOSの通知を1件出します。初回の通知で許可を求め、許可されなければ何もしません。保存できたファイルがあれば、通知に「Finderで表示」ボタン（`UNNotificationAction`、`.foreground` なし）を付け、App Extensionのdelegateが「reveal」と同じ検証をしてFinderで選択します。通知本体のクリックは処理しません。macOSがクリックを通知を出したApp Extensionへ渡したうえで本体アプリを前面に出すため、本体アプリ側では受け取れず、前面化も止められません。待機中のApp Extensionは停止されていて、ボタンの処理が次の起動まで遅れることがあります（いずれも2026-10-20にログで確認）。
 - 保存したファイルには、拡張属性 `com.apple.metadata:kMDItemWhereFroms` に `[メディアURL, https://x.com/投稿者/status/投稿ID]` を記録します（Safari標準のダウンロードと同じ順序）。`link(2)` で公開する前の一時ファイルに設定するため、属性のないファイルが公開されることはありません。設定に失敗しても保存は続行します。
 
 非公開・削除済み・閲覧制限のある投稿、Syndicationで公開されないメディア、ライブ配信/HLS、引用先の自動ダウンロード、静止画は対象外です。引用動画は引用元の投稿を開いてください。MP4の画質選択・保存先変更・履歴・再開機能も今回の対象外です。
@@ -95,7 +97,7 @@ SafariのnativeMessagingは同梱されたApp Extensionが受信し、そのプ�
 - 日本語と英語に対応し、対応する言語がない場合は英語へフォールバックします。独自の言語設定は保存しません。
 - 拡張は `Extension/_locales/{ja,en}/messages.json` と `browser.i18n.getMessage` を使います。`manifest.json` の `default_locale` は `en` です。`i18n.js` はcore/content/backgroundより前に読み込みます。画面への挿入は `textContent` を使用します。
 - 本体は `Resources/Localizable.xcstrings` を使い、`AppLocalization.swift` でメニュー文字列とWKWebView用の辞書を取得します。選択言語の翻訳テーブル全体をメインフレームのdocument開始時に渡し、単一の `Base.lproj/Main.html` に適用します。文言追加時は `Localizable.xcstrings` に日英の翻訳を追加してください。`webPayload` の個別キー更新は不要です。標準メニューの日本語訳は `ja.lproj/Main.strings` です。
-- Native MessagingはprotocolVersion 3を維持し、失敗時に `errorCode`（HTTPエラーのみ `httpStatus`）、GIFフォールバック時に `warningCode` を追加します。従来の `error` / `warning` も残し、コードを知らない組み合わせではその文言を表示します。既知コードは拡張側の辞書で翻訳し、ファイル名やGIF設定値は変更しません。
+- Native MessagingはprotocolVersion 3を維持し、失敗時に `errorCode`（HTTPエラーのみ `httpStatus`）、GIFフォールバック時に `warningCode` を追加します。`progress`・`reveal`・`notify` のメッセージ、`not_found` のエラーコードも追加分で、古いネイティブ側では `invalid_request` になります（進捗は件数だけの表示に戻ります）。従来の `error` / `warning` も残し、コードを知らない組み合わせではその文言を表示します。既知コードは拡張側の辞書で翻訳し、ファイル名やGIF設定値は変更しません。
 - 利用者向けREADMEは `README.md` / `README.en.md`、ライセンスの案内ページは `Licenses/index.html` / `Licenses/index-en.html` です。ライセンス本文・第三者著作権表示は原文を維持します。
 - `node --test Tests/*.test.mjs` は辞書のキー・置換引数、日英の保存結果・Nativeエラー・GIFフォールバック、旧応答との互換性を確認します。`Tests/localization-fixture.html` と `Tests/content-fixture.html` はローカルHTTPサーバーで開き、`?lang=ja` / `?lang=en` で実通信・保存なしの表示確認ができます。
 
@@ -109,6 +111,8 @@ SafariのnativeMessagingは同梱されたApp Extensionが受信し、そのプ�
 - ネイティブ保存結果の応答待ちは1ファイル650秒まで、画面側の応答待ちは最大4ファイルの順次保存を含め45分までです。これとは別に、保存開始前と保存中の15秒間隔でバックグラウンドへの接続を確認します。確認への応答待ちは15秒で、応答喪失やバックグラウンドの再起動を検出した場合は画面の待機を終了します。接続確認は保存を開始せず、自動再試行もしません。保存先の確認を案内し、待ち時間切れはネイティブ処理のキャンセルを意味しません。
 - 一時ファイルを保存先と同じフォルダに作り、完了後に `link(2)` で公開することで既存ファイルの上書きを防ぎます。通常の成功・失敗時は一時ファイルを削除します。プロセスの強制終了で残った `.xma-*` は、最終更新から1時間以上経過したものを接続確認（ping）時に15分以上の間隔で掃除します。保存処理中は掃除を延期し、掃除と新規保存の受付は同じロックで排他制御します。
 - 一部保存後に失敗した投稿を再試行すると、保存済みメディアも別名で再保存されます。
+- 「Finderで表示」は、保存時と同じ形式のファイル名（最大4件）だけを拡張側とネイティブ側の両方で受け付けます。ネイティブ側はダウンロードフォルダ直下の通常ファイル（シンボリックリンクを除く）に限って `NSWorkspace.activateFileViewerSelecting` へ渡します。
+- 進捗はApp Extensionのプロセス内にbasenameごとに保持し、保存完了時に破棄します。画面側は約1秒ごとにbackgroundへ `getProgress` を問い合わせ、backgroundが現在のメディア番号と、ネイティブへの `progress` の結果を返します。進捗の問い合わせが失敗しても、保存や接続確認には影響しません。
 - Syndicationは公開仕様の保証がないため、X側の変更で取得できなくなる可能性があります。認証付きAPIへの自動フォールバックは行いません。
 - 応答形式の変化を早く検知するため、GitHub Actionsの `Syndication Canary`（`.github/workflows/syndication-canary.yml`）が毎日 `node script/check_syndication.mjs` を実行します。既知の公開投稿（動画1件・GIFアニメ1件）を拡張と同じ `core.js` で解析し、選ばれたMP4にHEADリクエストを送ります。メディア本体はダウンロードしません。失敗時は1回だけ再試行し、それでも失敗すればワークフローを失敗させます。手元でも同じコマンドで確認できます。GitHubの仕様により、リポジトリに60日間動きがないと定期実行は停止します。
 
@@ -126,7 +130,7 @@ SafariのnativeMessagingは同梱されたApp Extensionが受信し、そのプ�
 - UIの「画質」は高95・中85・低70に対応します。
 - Native MessagingのprotocolVersionは3です。pingは基本設定も返し、ダウンロードには `gifOptions` をまとめて渡します。個別設定→基本設定→組み込み既定値の順で解決し、Nativeでも全項目の許可値を再検証します。ポップアップには永続設定の書き込み経路はありません。
 - 両ターゲットを同じTeamで署名してください。App GroupはmacOSのTeam ID付き形式を使います。拡張のsandbox・ネットワーク・Downloads権限は維持します。
-- 数値の進捗、手動キャンセル、GIFとMP4の両方保存は次段階です。
+- 手動キャンセル、GIFとMP4の両方保存は次段階です。
 
 ## ライセンスとソース配布
 

@@ -158,7 +158,7 @@ final class GIFConversionTests: XCTestCase {
             "type": "download", "url": "https://video.twimg.com/a.mp4", "postId": "123", "author": "example",
             "mediaIndex": 1, "mediaType": "animated_gif", "gifOptions": expected.message
         ])
-        let save = MediaSave(request: request, directory: folder) { _, output, options in
+        let save = MediaSave(request: request, directory: folder) { _, output, options, _ in
             XCTAssertEqual(options, expected)
             try Data("complete".utf8).write(to: output)
         }
@@ -286,7 +286,7 @@ final class GIFConversionTests: XCTestCase {
         let data = Data("test source preserved".utf8)
         try data.write(to: input)
         var called = 0
-        let convert: (URL, URL, GIFConversionOptions) async throws -> Void = { _, output, _ in
+        let convert: MediaSave.Converter = { _, output, _, _ in
             called += 1
             try Data("partial GIF".utf8).write(to: output)
             throw GIFConversionError.encoding
@@ -385,15 +385,18 @@ extension GIFConversionTests {
             var response: Result<MediaSaveResult, Error>?
             let config = URLSessionConfiguration.ephemeral
             config.protocolClasses = [GIFDownloadFixture.self]
-            let converter: (URL, URL, GIFConversionOptions) async throws -> Void = { input, output, options in
+            let converter: MediaSave.Converter = { input, output, options, progress in
                 // Yield after the URLSession completion callback returns. The input
                 // must remain available throughout asynchronous conversion.
                 try await Task.sleep(nanoseconds: 20_000_000)
                 XCTAssertTrue(FileManager.default.fileExists(atPath: input.path))
                 if let failure = failures[mode] { throw failure }
-                try await GIFConverter.convert(input, to: output, options: options)
+                try await GIFConverter.convert(input, to: output, options: options, progress: progress)
             }
-            MediaSave(request: try request(format: mode == "mp4" ? "mp4" : "auto"), directory: folder, convert: converter).start(configuration: config) {
+            let progress = SaveProgress()
+            progress.begin("example-123-1")
+            MediaSave(request: try request(format: mode == "mp4" ? "mp4" : "auto"), directory: folder,
+                      progress: progress, convert: converter).start(configuration: config) {
                 response = $0
                 done.fulfill()
             }
@@ -406,6 +409,14 @@ extension GIFConversionTests {
             XCTAssertEqual(saved.message["ok"] as? Bool, true)
             XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: folder.path), [saved.filename])
             if mode != "success" { XCTAssertEqual(try Data(contentsOf: folder.appendingPathComponent(saved.filename)), GIFDownloadFixture.body) }
+            // Progress covers the transfer, then (except in MP4 mode) the conversion.
+            let snapshot = try XCTUnwrap(progress.snapshot("example-123-1"), mode)
+            XCTAssertEqual(snapshot.receivedBytes, Int64(GIFDownloadFixture.body.count), mode)
+            XCTAssertEqual(snapshot.phase, mode == "mp4" ? .downloading : .converting, mode)
+            if mode == "success" {
+                XCTAssertGreaterThan(snapshot.totalFrames, 0)
+                XCTAssertEqual(snapshot.encodedFrames, snapshot.totalFrames)
+            }
         }
     }
 }

@@ -41,34 +41,67 @@
       root.dataset.postId = id;
       const item = document.createElement("div");
       item.className = "xma-item";
+      const buttons = document.createElement("div");
+      buttons.className = "xma-actions";
       const button = document.createElement("button");
       button.type = "button";
       button.className = "xma-save";
       button.textContent = `↓ ${t("save_video")}`;
       button.title = t("save_tooltip");
+      // Shown once something was saved; selects those files in Finder.
+      const reveal = document.createElement("button");
+      reveal.type = "button";
+      reveal.className = "xma-save xma-reveal";
+      reveal.textContent = t("show_in_finder");
+      reveal.hidden = true;
       const status = document.createElement("span");
       status.className = "xma-status";
       status.setAttribute("role", "status");
       status.setAttribute("aria-live", "polite");
-      item.append(button, status);
+      buttons.append(button, reveal);
+      item.append(buttons, status);
       root.append(item);
       // Keep clicks from opening the post underneath.
       root.addEventListener("click", event => { event.stopPropagation(); });
+      const sendMessage = message => browser.runtime.sendMessage(message);
+      let saved = [];
+      let resultText = "";
       button.addEventListener("click", async event => {
         event.preventDefault();
         // Ignore synthetic clicks from page scripts and double clicks while saving.
         if (!event.isTrusted || button.disabled) return;
         button.disabled = true;
+        reveal.hidden = true;
         button.textContent = t("downloading");
-        status.textContent = t("keep_tab_open");
+        const showProgress = progress => {
+          status.textContent = `${core.progressMessage(progress)}\n${t("keep_tab_open")}`;
+        };
+        showProgress(null);
         try {
-          const result = await core.requestDownload(id, message => browser.runtime.sendMessage(message));
-          status.textContent = core.resultMessage(result);
+          const result = await core.requestDownload(id, sendMessage, "auto", undefined, { onProgress: showProgress });
+          resultText = core.resultMessage(result);
+          saved = Array.isArray(result?.saved) ? result.saved.filter(core.isSavedFilename) : [];
           button.textContent = result?.ok ? `↓ ${t("save_again")}` : `↓ ${t("retry")}`;
         } catch (error) {
-          status.textContent = error.message || t("content_disconnected");
+          resultText = error.message || t("content_disconnected");
+          saved = [];
           button.textContent = `↓ ${t("retry")}`;
-        } finally { button.disabled = false; }
+        } finally {
+          status.textContent = resultText;
+          reveal.hidden = saved.length === 0;
+          button.disabled = false;
+        }
+      });
+      reveal.addEventListener("click", async event => {
+        event.preventDefault();
+        if (!event.isTrusted || reveal.disabled) return;
+        reveal.disabled = true;
+        try {
+          const reply = await sendMessage({ type: "revealFiles", filenames: saved });
+          status.textContent = reply?.ok ? resultText : `${resultText}\n${reply?.error || t("reveal_failed")}`;
+        } catch {
+          status.textContent = `${resultText}\n${t("reveal_failed")}`;
+        } finally { reveal.disabled = false; }
       });
       // Place the controls just below the reply/repost/like bar when it exists.
       const actions = [...article.querySelectorAll('[role="group"]')]

@@ -154,7 +154,8 @@ test("background releases its in-flight lock after a native connection timeout",
   const context = vm.createContext({
     XMediaCore: { ...c, downloadPost: (postId, options) => c.downloadPost(postId, { ...options, connectionTimeout: 5 }) },
     browser: { runtime: { id: "self", getURL: path => `safari-web-extension://id/${path}`,
-      sendNativeMessage: () => { calls++; return new Promise(() => {}); },
+      // A finished save also sends one "notify", which this test does not count.
+      sendNativeMessage: (_, message) => { if (message.type !== "notify") calls++; return new Promise(() => {}); },
       onMessage: { addListener: fn => { listener = fn; } } } }
   });
   vm.runInContext(await readFile(new URL("../Extension/background.js", import.meta.url), "utf8"), context);
@@ -306,5 +307,179 @@ test("background exposes GIF defaults only to popup and forwards download overri
   assert.equal((await listener({ type: "setGIFOptions", gifOptions: base }, popup)).ok, false);
   await listener({ type: "downloadPost", postId: id, gifOptions: base }, popup);
   assert.deepEqual(received.gifOptions, base);
-  assert.deepEqual(nativeCalls, ["ping"]);
+  // getGIFOptions pings; the finished download sends its notification.
+  assert.deepEqual(nativeCalls, ["ping", "notify"]);
+});
+
+test("saved file names match only what the native side publishes", () => {
+  for (const name of ["example-123-1.mp4", "a_b-719944021058060289-4.gif", "example-123-2 2.mp4", "example-123-1 1000.gif"]) {
+    assert.equal(c.isSavedFilename(name), true, name);
+  }
+  for (const name of ["other.mp4", "../example-123-1.mp4", "example-123-1.mov", "example-123-5.mp4", "example-123-1 0.mp4",
+    "example-0123-1.mp4", "/tmp/example-123-1.mp4", "example-123-1.mp4/", 1, null]) {
+    assert.equal(c.isSavedFilename(name), false, String(name));
+  }
+});
+
+test("progress text covers fetching, transfer, conversion and malformed values", () => {
+  assert.equal(c.progressMessage(null), "投稿情報を取得中…");
+  assert.equal(c.progressMessage({ index: 0, count: 0 }), "投稿情報を取得中…");
+  assert.equal(c.progressMessage({ index: 1, count: 1 }), "準備中…");
+  assert.equal(c.progressMessage({ index: 1, count: 1, phase: "downloading", receivedBytes: 12_345_678, expectedBytes: 40_000_000 }),
+    "ダウンロード中 12.3 / 40.0 MB（30%）");
+  assert.equal(c.progressMessage({ index: 2, count: 3, phase: "downloading", receivedBytes: 1_500_000, expectedBytes: -1 }),
+    "(2/3) ダウンロード中 1.5 MB");
+  assert.equal(c.progressMessage({ index: 1, count: 2, phase: "converting", encodedFrames: 45, totalFrames: 100 }),
+    "(1/2) GIFに変換中（45%）");
+  assert.equal(c.progressMessage({ index: 1, count: 1, phase: "converting", encodedFrames: 0, totalFrames: 0 }), "GIFに変換中…");
+  // Never more than 100%, and never numbers from malformed fields.
+  assert.equal(c.progressMessage({ index: 1, count: 1, phase: "downloading", receivedBytes: 50, expectedBytes: 40 }),
+    "ダウンロード中 0.0 / 0.0 MB（100%）");
+  assert.equal(c.progressMessage({ index: 1, count: 1, phase: "downloading", receivedBytes: "5" }), "ダウンロード中…");
+  assert.equal(c.progressMessage({ index: 1, count: 1, phase: "converting", encodedFrames: NaN, totalFrames: 10 }), "GIFに変換中…");
+  assert.equal(c.progressMessage({ index: 5, count: 2, phase: "other" }), "準備中…");
+  assert.equal(c.progressMessage({ index: -1, count: 2 }), "投稿情報を取得中…");
+});
+
+test("download reports each item's position and native progress key", async () => {
+  const items = [];
+  const result = await c.downloadPost(id, {
+    fetchImpl: fetchPost(post([{ type: "photo" }, media("animated_gif"), media()])),
+    sendNative: connected(async request => ({ ok: true, filename: `example-${id}-${request.mediaIndex}.mp4` })),
+    onItem: item => items.push(item)
+  });
+  assert.equal(result.ok, true);
+  assert.deepEqual(items, [
+    { index: 1, count: 2, basename: `example-${id}-2` },
+    { index: 2, count: 2, basename: `example-${id}-3` }
+  ]);
+});
+
+test("progress polling reports replies, skips failures and stops with the save", async () => {
+  const seen = [];
+  let finish, polls = 0;
+  const saving = c.requestDownload(id, message => {
+    if (message.type === "checkConnection") return Promise.resolve({ ok: true, instance: "stable" });
+    if (message.type === "getProgress") {
+      assert.equal(message.postId, id);
+      if (++polls === 2) return Promise.reject(new Error("lost"));
+      if (polls === 3) finish({ ok: true, saved: [] });
+      return Promise.resolve({ ok: true, progress: { index: 1, count: 1, polls } });
+    }
+    return new Promise(resolve => { finish = resolve; });
+  }, "auto", undefined, { onProgress: progress => seen.push(progress), progressInterval: 2 });
+  assert.equal((await saving).ok, true);
+  const after = polls;
+  await new Promise(resolve => setTimeout(resolve, 20));
+  assert.equal(polls, after, "no polling after the save finished");
+  // The failed second poll is skipped; the third reply arrived before the result.
+  assert.deepEqual(seen.map(progress => progress.polls), [1, 3]);
+});
+
+// Objects from the background's vm context have another realm's prototypes.
+const plain = value => JSON.parse(JSON.stringify(value));
+function background(sendNativeMessage, downloadPost = c.downloadPost) {
+  let listener;
+  const context = vm.createContext({
+    XMediaCore: { ...c, downloadPost },
+    browser: { runtime: { id: "self", getURL: path => `safari-web-extension://id/${path}`, sendNativeMessage,
+      onMessage: { addListener: fn => { listener = fn; } } } }
+  });
+  return readFile(new URL("../Extension/background.js", import.meta.url), "utf8").then(source => {
+    vm.runInContext(source, context);
+    return listener;
+  });
+}
+
+test("background progress combines the current item with native transfer state", async () => {
+  let item, finish;
+  const native = [];
+  let nativeReply = { ok: true, progress: { phase: "downloading", receivedBytes: 10, expectedBytes: 20 } };
+  const listener = await background(async (_, message) => { native.push(message); return nativeReply; },
+    (_, { onItem }) => { item = onItem; return new Promise(resolve => { finish = resolve; }); });
+  const page = { id: "self", url: "https://x.com/home", tab: {} };
+  const ask = async (sender = page) => plain(await listener({ type: "getProgress", postId: id }, sender));
+  assert.deepEqual(await ask(), { ok: true, progress: null });
+  const saving = listener({ type: "downloadPost", postId: id }, page);
+  assert.deepEqual((await ask()).progress, { index: 0, count: 0 });
+  item({ index: 2, count: 3, basename: `example-${id}-2` });
+  assert.deepEqual((await ask()).progress,
+    { phase: "downloading", receivedBytes: 10, expectedBytes: 20, index: 2, count: 3 });
+  assert.deepEqual(plain(native.at(-1)), { type: "progress", basename: `example-${id}-2` });
+  // An older native side or a failed query still reports the item position.
+  nativeReply = { ok: false, errorCode: "invalid_request" };
+  assert.deepEqual((await ask()).progress, { index: 2, count: 3 });
+  assert.equal((await ask({ ...page, id: "evil" })).ok, false);
+  assert.equal((await listener({ type: "getProgress", postId: "../1" }, page)).ok, false);
+  finish({ ok: true, saved: [] }); await saving;
+  assert.deepEqual(await ask(), { ok: true, progress: null });
+});
+
+test("background reveals only saved file names and explains failures", async () => {
+  const native = [];
+  let nativeReply = { ok: true };
+  const listener = await background(async (_, message) => {
+    native.push(message);
+    if (nativeReply instanceof Error) throw nativeReply;
+    return nativeReply;
+  });
+  const popup = { id: "self", url: "safari-web-extension://id/popup.html" };
+  const reveal = async filenames => plain(await listener({ type: "revealFiles", filenames }, popup));
+  for (const filenames of [undefined, [], ["../secret.mp4"], ["a-1-1.mp4", "other.txt"], Array(5).fill("a-1-1.mp4")]) {
+    assert.equal((await reveal(filenames)).ok, false);
+  }
+  assert.equal(native.length, 0);
+  assert.equal((await listener({ type: "revealFiles", filenames: ["a-1-1.mp4"] }, { id: "evil", url: popup.url })).ok, false);
+  assert.deepEqual(await reveal(["a-1-1.mp4", "a-1-2 2.gif"]), { ok: true });
+  assert.deepEqual(plain(native), [{ type: "reveal", filenames: ["a-1-1.mp4", "a-1-2 2.gif"] }]);
+  nativeReply = { ok: false, errorCode: "not_found" };
+  assert.match((await reveal(["a-1-1.mp4"])).error, /見つかりません/);
+  nativeReply = { ok: false, errorCode: "invalid_request" };
+  assert.equal((await reveal(["a-1-1.mp4"])).error, "Finderで表示できませんでした。");
+  nativeReply = new Error("disconnected");
+  assert.equal((await reveal(["a-1-1.mp4"])).error, "Finderで表示できませんでした。");
+});
+
+test("every extension script parses, including those no other test executes", async () => {
+  for (const name of ["i18n", "core", "background", "content", "popup"]) {
+    const source = await readFile(new URL(`../Extension/${name}.js`, import.meta.url), "utf8");
+    assert.doesNotThrow(() => new vm.Script(source, { filename: `${name}.js` }), name);
+  }
+});
+
+test("notification text distinguishes saved, partially saved and failed posts", () => {
+  assert.deepEqual(plain(c.notificationContent({ ok: true, saved: ["a-1-1.mp4", "a-1-2.gif"], warnings: [] })),
+    { title: "保存しました", body: "a-1-1.mp4\na-1-2.gif", filenames: ["a-1-1.mp4", "a-1-2.gif"], revealTitle: "Finderで表示" });
+  // Only names this extension saves are offered to the Finder button.
+  assert.deepEqual(plain(c.notificationContent({ ok: true, saved: ["../other.mp4"] })).filenames, undefined);
+  // A GIF that fell back to MP4 is saved; the body explains why.
+  const fallback = c.notificationContent({ ok: false, saved: ["a-1-1.mp4"], warnings: ["a-1-1.mp4: GIF変換に失敗"] });
+  assert.equal(fallback.title, "保存しました");
+  assert.match(fallback.body, /GIF変換に失敗/);
+  const partial = c.notificationContent({ ok: false, saved: ["a-1-1.mp4"], warnings: [], error: "通信が切れました" });
+  assert.equal(partial.title, "一部のみ保存しました");
+  assert.deepEqual(plain(partial.filenames), ["a-1-1.mp4"]);
+  assert.match(partial.body, /a-1-1\.mp4[\s\S]*通信が切れました/);
+  const failed = c.notificationContent({ ok: false, saved: [], error: "失敗" });
+  assert.equal(failed.title, "保存できませんでした");
+  assert.equal(failed.revealTitle, undefined, "nothing to show in Finder");
+  assert.equal(c.notificationContent(undefined).title, "保存できませんでした");
+  assert.equal(c.notificationContent({ ok: false, saved: [], error: "x".repeat(3000) }).body.length, 2000);
+});
+
+test("background notifies once per finished post without delaying or failing the result", async () => {
+  const native = [];
+  let nativeFails = false;
+  const listener = await background(async (_, message) => {
+    native.push(message);
+    if (message.type === "notify" && nativeFails) throw new Error("old native side");
+    return { ok: true };
+  }, async () => ({ ok: true, saved: ["example-1-1.mp4"], warnings: [] }));
+  const page = { id: "self", url: "https://x.com/home", tab: {} };
+  assert.equal((await listener({ type: "downloadPost", postId: id }, page)).ok, true);
+  assert.deepEqual(plain(native), [{ type: "notify", title: "保存しました", body: "example-1-1.mp4",
+    filenames: ["example-1-1.mp4"], revealTitle: "Finderで表示" }]);
+  nativeFails = true;
+  assert.equal((await listener({ type: "downloadPost", postId: id }, page)).ok, true);
+  assert.equal(native.length, 2);
 });

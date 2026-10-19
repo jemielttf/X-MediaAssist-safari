@@ -212,6 +212,15 @@ li span {
 	transform: scale(.985)
 }
 
+.btn-sub {
+	background: var(--accent-soft);
+	color: var(--accent);
+}
+
+.btn[hidden] {
+	display: none;
+}
+
 :focus-visible {
 	outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
 	outline-offset: 2px

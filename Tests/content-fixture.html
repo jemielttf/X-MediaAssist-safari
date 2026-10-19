@@ -14,11 +14,22 @@
 <script>
 let fail = false;
 let count = 0;
+let started = 0;
+// Simulated save: 1 s fetching, 2 s download, 2 s GIF conversion.
+const simulatedProgress = () => {
+ const elapsed = Date.now() - started;
+ if (elapsed < 1000) return {index:0,count:0};
+ if (elapsed < 3000) return {index:1,count:2,phase:'downloading',receivedBytes:Math.round((elapsed - 1000) / 2000 * 8e6),expectedBytes:8e6};
+ return {index:2,count:2,phase:'converting',encodedFrames:Math.round((elapsed - 3000) / 2000 * 120),totalFrames:120};
+};
 globalThis.browser = { runtime: { sendMessage: async message => {
  if (message.type === 'checkConnection') return {ok:true,instance:'fixture'};
+ if (message.type === 'getProgress') return {ok:true,progress:simulatedProgress()};
  document.querySelector('#requests').textContent = JSON.stringify({count: ++count, ...message});
- await new Promise(done => setTimeout(done, 250));
- return fail ? {ok:false,saved:[],error:'テスト用の通信失敗です。'} : {ok:true,saved:[`example-${message.postId}-1.mp4`]};
+ if (message.type === 'revealFiles') return fail ? {ok:false,error:'テスト用：ファイルが見つかりません。'} : {ok:true};
+ started = Date.now();
+ await new Promise(done => setTimeout(done, 5000));
+ return fail ? {ok:false,saved:[],error:'テスト用の通信失敗です。'} : {ok:true,saved:[`example-${message.postId}-1.mp4`,`example-${message.postId}-2.gif`]};
 }}};
 document.querySelector('#recycle').onclick = () => document.querySelector('#permalink').href = 'https://x.com/example/status/1234567890';
 document.querySelector('#toggle').onclick = () => {fail = !fail;};

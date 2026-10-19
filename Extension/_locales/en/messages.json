@@ -54,7 +54,43 @@
     "message": "Keep this tab open until saving is complete."
   },
   "keep_popup_open": {
-    "message": "Downloading and converting. Keep this window open until saving is complete."
+    "message": "Keep this window open until saving is complete."
+  },
+  "progress_fetching": {
+    "message": "Fetching the post…"
+  },
+  "progress_preparing": {
+    "message": "Preparing…"
+  },
+  "progress_downloading": {
+    "message": "Downloading…"
+  },
+  "progress_downloading_bytes": {
+    "message": "Downloading $1 MB"
+  },
+  "progress_downloading_total": {
+    "message": "Downloading $1 / $2 MB ($3%)"
+  },
+  "progress_converting": {
+    "message": "Converting to GIF…"
+  },
+  "progress_converting_percent": {
+    "message": "Converting to GIF ($1%)"
+  },
+  "show_in_finder": {
+    "message": "Show in Finder"
+  },
+  "notify_saved": {
+    "message": "Saved"
+  },
+  "notify_partial": {
+    "message": "Partially saved"
+  },
+  "notify_failed": {
+    "message": "Couldn’t save"
+  },
+  "reveal_failed": {
+    "message": "Couldn’t show the file in Finder."
   },
   "invalid_post_url": {
     "message": "Enter a post URL in the form https://x.com/username/status/postID."
@@ -157,6 +193,9 @@
   },
   "native_write_failed": {
     "message": "Could not save the file. Check free disk space and access to Downloads."
+  },
+  "native_not_found": {
+    "message": "The saved file can’t be found. It may have been moved or deleted."
   },
   "native_http": {
     "message": "Could not download the video (HTTP $1)."

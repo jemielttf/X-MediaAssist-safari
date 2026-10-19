@@ -56,10 +56,26 @@ private final class GIFOutput {
     private let lock = NSLock()
     private var bytes = 0
     private var failure: Error?
-    init(file: FileHandle, limits: GIFConversionLimits, deadline: TimeInterval) {
+    private let progress: GIFConverter.FrameProgress?
+    private var encodedFrames = 0
+    private var totalFrames = 0
+    init(file: FileHandle, limits: GIFConversionLimits, deadline: TimeInterval,
+         progress: GIFConverter.FrameProgress?) {
         self.file = file
         self.deadline = deadline
+        self.progress = progress
         limit = limits.maximumOutputBytes
+    }
+    func start(totalFrames: Int) {
+        lock.lock(); self.totalFrames = totalFrames; lock.unlock()
+        progress?(0, totalFrames)
+    }
+    // gifski calls its progress callback once per added frame, from its writer thread.
+    func frameEncoded() {
+        lock.lock(); encodedFrames += 1
+        let encoded = encodedFrames, total = totalFrames
+        lock.unlock()
+        progress?(encoded, total)
     }
     func check() throws {
         lock.lock(); defer { lock.unlock() }
@@ -94,6 +110,8 @@ private struct GIFVideoSource: @unchecked Sendable {
 /// per 1/maximumFrameRate bucket, then decode, orient, scale and encode those frames.
 /// Only one conversion runs at a time; a second request fails fast with `.busy`.
 struct GIFConverter {
+    /// (frames encoded, frames to encode). Called from the encoder's threads.
+    typealias FrameProgress = @Sendable (Int, Int) -> Void
     private static let slot = DispatchSemaphore(value: 1)
     // gifski clamps delays to at least two centiseconds.
     private static let minimumFrameDuration = 0.02
@@ -137,7 +155,7 @@ struct GIFConverter {
 
     /// Writes a GIF to `output`. On any failure no partial `output` file is left behind.
     static func convert(_ input: URL, to output: URL, options: GIFConversionOptions = .defaults,
-                        limits: GIFConversionLimits = .init()) async throws {
+                        limits: GIFConversionLimits = .init(), progress: FrameProgress? = nil) async throws {
         guard reserveSlot() else { throw GIFConversionError.busy }
         defer { slot.signal() }
         let deadline = ProcessInfo.processInfo.systemUptime + limits.maximumSeconds
@@ -170,7 +188,7 @@ struct GIFConverter {
                 do {
                     try encode(asset: source.asset, track: source.track, duration: duration,
                                transform: source.transform, to: output, options: options,
-                               limits: limits, deadline: deadline)
+                               limits: limits, deadline: deadline, progress: progress)
                     continuation.resume()
                 } catch { continuation.resume(throwing: error) }
             }
@@ -179,13 +197,14 @@ struct GIFConverter {
 
     private static func encode(asset: AVAsset, track: AVAssetTrack, duration: Double,
                                transform: CGAffineTransform, to output: URL, options: GIFConversionOptions,
-                               limits: GIFConversionLimits, deadline: TimeInterval) throws {
+                               limits: GIFConversionLimits, deadline: TimeInterval,
+                               progress: FrameProgress?) throws {
         guard ProcessInfo.processInfo.systemUptime < deadline else { throw GIFConversionError.timedOut }
         guard FileManager.default.createFile(atPath: output.path, contents: nil,
                                              attributes: [.posixPermissions: 0o600])
         else { throw GIFConversionError.encoding }
         let file = try FileHandle(forWritingTo: output)
-        let state = GIFOutput(file: file, limits: limits, deadline: deadline)
+        let state = GIFOutput(file: file, limits: limits, deadline: deadline, progress: progress)
         var completed = false
         defer {
             try? file.close()
@@ -215,6 +234,7 @@ struct GIFConverter {
                                          maximumFrames: limits.maximumFrames)
         // gifski uses a positive first PTS as the final frame delay and shifts all PTS by it.
         let finalDelay = max(minimumFrameDuration, duration - selected.last!)
+        state.start(totalFrames: selected.count)
 
         // Created lazily with the first frame's size. If encoding stops early, abort the
         // output so gifski_finish() discards the rest instead of writing a partial GIF.
@@ -280,7 +300,8 @@ struct GIFConverter {
                     // Progress returning 0 cancels encoding; write returning non-zero fails it.
                     try check(gifski_set_progress_callback(created, { raw in
                         guard let raw else { return 0 }
-                        do { try Unmanaged<GIFOutput>.fromOpaque(raw).takeUnretainedValue().check(); return 1 }
+                        let state = Unmanaged<GIFOutput>.fromOpaque(raw).takeUnretainedValue()
+                        do { try state.check(); state.frameEncoded(); return 1 }
                         catch { return 0 }
                     }, context))
                     try check(gifski_set_write_callback(created, { count, buffer, raw in

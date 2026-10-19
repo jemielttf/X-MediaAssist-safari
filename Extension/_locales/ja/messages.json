@@ -54,7 +54,43 @@
     "message": "完了までこのタブを開いておいてください。"
   },
   "keep_popup_open": {
-    "message": "取得・変換中です。完了までこの画面を開いておいてください。"
+    "message": "完了までこの画面を開いておいてください。"
+  },
+  "progress_fetching": {
+    "message": "投稿情報を取得中…"
+  },
+  "progress_preparing": {
+    "message": "準備中…"
+  },
+  "progress_downloading": {
+    "message": "ダウンロード中…"
+  },
+  "progress_downloading_bytes": {
+    "message": "ダウンロード中 $1 MB"
+  },
+  "progress_downloading_total": {
+    "message": "ダウンロード中 $1 / $2 MB（$3%）"
+  },
+  "progress_converting": {
+    "message": "GIFに変換中…"
+  },
+  "progress_converting_percent": {
+    "message": "GIFに変換中（$1%）"
+  },
+  "show_in_finder": {
+    "message": "Finderで表示"
+  },
+  "notify_saved": {
+    "message": "保存しました"
+  },
+  "notify_partial": {
+    "message": "一部のみ保存しました"
+  },
+  "notify_failed": {
+    "message": "保存できませんでした"
+  },
+  "reveal_failed": {
+    "message": "Finderで表示できませんでした。"
   },
   "invalid_post_url": {
     "message": "https://x.com/ユーザー名/status/投稿ID のURLを入力してください。"
@@ -157,6 +193,9 @@
   },
   "native_write_failed": {
     "message": "ファイルを保存できません。空き容量とダウンロードフォルダへのアクセスを確認してください。"
+  },
+  "native_not_found": {
+    "message": "保存したファイルが見つかりません。移動または削除された可能性があります。"
   },
   "native_http": {
     "message": "動画を取得できませんでした（HTTP $1）。"
