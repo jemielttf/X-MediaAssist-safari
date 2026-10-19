@@ -57,7 +57,7 @@ final class MediaSave {
             do {
                 try await convert(temporary, gif, request.gifOptions)
                 return try MediaFile.publish(gif, directory: directory, basename: request.basename,
-                                             fileExtension: "gif").lastPathComponent
+                                             fileExtension: "gif", whereFroms: request.whereFroms).lastPathComponent
             } catch {
                 let conversionError = error as? GIFConversionError
                 let reason = conversionError?.localizedDescription ?? "GIFの生成または保存に失敗しました。"
@@ -65,7 +65,7 @@ final class MediaSave {
                 warningCode = conversionError?.warningCode ?? "gif_failed"
             }
         }
-        return try MediaFile.publish(temporary, directory: directory,
-                                     basename: request.basename).lastPathComponent
+        return try MediaFile.publish(temporary, directory: directory, basename: request.basename,
+                                     whereFroms: request.whereFroms).lastPathComponent
     }
 }

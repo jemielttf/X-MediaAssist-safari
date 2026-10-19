@@ -275,6 +275,8 @@ final class GIFConversionTests: XCTestCase {
         XCTAssertEqual(name1, "example-123-1 2.gif")
         let name2 = try await save.finish(input)
         XCTAssertEqual(name2, "example-123-1 3.gif")
+        XCTAssertEqual(try whereFroms(folder.appendingPathComponent(name0)),
+                       ["https://video.twimg.com/a.mp4", "https://x.com/example/status/123"])
         XCTAssertFalse(FileManager.default.fileExists(atPath: folder.appendingPathComponent("example-123-1.mp4").path))
         XCTAssertFalse(try FileManager.default.contentsOfDirectory(atPath: folder.path).contains { $0.hasPrefix(".xma-") })
     }
@@ -294,6 +296,8 @@ final class GIFConversionTests: XCTestCase {
         XCTAssertEqual(name3, "example-123-1.mp4")
         XCTAssertEqual(called, 1)
         XCTAssertEqual(try Data(contentsOf: folder.appendingPathComponent("example-123-1.mp4")), data)
+        XCTAssertEqual(try whereFroms(folder.appendingPathComponent(name3)),
+                       ["https://video.twimg.com/a.mp4", "https://x.com/example/status/123"])
         for request in [try request(type: "video"), try request(format: "mp4")] {
             _ = try await MediaSave(request: request, directory: folder, convert: convert).finish(input)
         }

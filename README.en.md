@@ -74,6 +74,8 @@ The save button in a post always uses Auto.
 
 Files are saved to your Mac’s Downloads folder. Existing files are never overwritten; a different filename is used if the name is already taken.
 
+Each saved file records the original post’s URL. You can see it under “Where from” in the Finder’s Get Info window.
+
 | Content | Support |
 | --- | --- |
 | Videos and animated GIFs in public posts | Supported |

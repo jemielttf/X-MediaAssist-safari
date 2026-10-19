@@ -66,6 +66,8 @@ struct MediaDownloadRequest {
     var convertsGIF: Bool { mediaType == "animated_gif" && format == "auto" }
     /// File name without extension, e.g. "example-123-1".
     var basename: String { "\(author)-\(postId)-\(mediaIndex)" }
+    /// Media URL, then the post, in the order Safari records "Where from" for downloads.
+    var whereFroms: [String] { [url.absoluteString, "https://x.com/\(author)/status/\(postId)"] }
 
     init(message: [String: Any], defaultGIFOptions: GIFConversionOptions = .defaults) throws {
         guard message["type"] as? String == "download",
@@ -112,11 +114,25 @@ enum MediaFile {
         }
     }
 
+    /// Finder's "Where from" / Spotlight's kMDItemWhereFroms: a binary plist of strings.
+    static func setWhereFroms(_ sources: [String], on file: URL) throws {
+        let data = try PropertyListSerialization.data(fromPropertyList: sources, format: .binary, options: 0)
+        let result = file.withUnsafeFileSystemRepresentation { path in
+            data.withUnsafeBytes { bytes in
+                setxattr(path!, "com.apple.metadata:kMDItemWhereFroms", bytes.baseAddress, bytes.count, 0, XATTR_NOFOLLOW)
+            }
+        }
+        guard result == 0 else { throw MediaDownloadError.writeFailed }
+    }
+
     // link(2) publishes a complete file atomically, failing if the name exists.
     // Temporary and final files are in the same directory/filesystem.
     static func publish(_ temporary: URL, directory: URL, basename: String,
-                        fileExtension: String = "mp4") throws -> URL {
+                        fileExtension: String = "mp4", whereFroms: [String] = []) throws -> URL {
         guard ["mp4", "gif"].contains(fileExtension) else { throw MediaDownloadError.invalidRequest }
+        // Set before linking: the hard link shares the inode, so the file never appears
+        // without it. Provenance is informational; a volume without xattrs must not fail the save.
+        if !whereFroms.isEmpty { try? setWhereFroms(whereFroms, on: temporary) }
         // "name.mp4", then "name 2.mp4", "name 3.mp4", ... like Finder duplicates.
         for suffix in 1...1000 {
             let name = basename + (suffix == 1 ? "" : " \(suffix)") + "." + fileExtension
@@ -302,7 +318,8 @@ final class MediaDownload: NSObject, URLSessionDataDelegate, @unchecked Sendable
                 }
                 return
             }
-            let saved = try MediaFile.publish(temporary, directory: directory, basename: request.basename)
+            let saved = try MediaFile.publish(temporary, directory: directory, basename: request.basename,
+                                              whereFroms: request.whereFroms)
             result = .success(saved.lastPathComponent)
         } catch { result = .failure(error) }
         complete(result, session: session)

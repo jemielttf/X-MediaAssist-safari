@@ -4,6 +4,17 @@ import XMediaAssistPreferences
 
 private let mp4 = Data([0, 0, 0, 24]) + Data("ftypisom".utf8) + Data(repeating: 0, count: 20)
 
+/// Reads Finder's "Where from" attribute; nil when the file has none.
+func whereFroms(_ file: URL) throws -> [String]? {
+    let name = "com.apple.metadata:kMDItemWhereFroms"
+    let size = getxattr(file.path, name, nil, 0, 0, 0)
+    guard size >= 0 else { return nil }
+    var data = Data(count: size)
+    let read = data.withUnsafeMutableBytes { getxattr(file.path, name, $0.baseAddress, size, 0, 0) }
+    XCTAssertEqual(read, size)
+    return try PropertyListSerialization.propertyList(from: data, format: nil) as? [String]
+}
+
 private final class FixtureProtocol: URLProtocol {
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
@@ -147,6 +158,13 @@ final class MediaDownloadTests: XCTestCase {
         let name = try download("ok", into: folder).get()
         XCTAssertEqual(try Data(contentsOf: folder.appendingPathComponent(name)), mp4)
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: folder.path), [name])
+    }
+    func testPublishedFileRecordsMediaAndPostAsWhereFrom() throws {
+        let folder = try directory()
+        let name = try download("ok", into: folder).get()
+        XCTAssertEqual(try whereFroms(folder.appendingPathComponent(name)), [
+            "https://video.twimg.com/ok.mp4", "https://x.com/example/status/719944021058060289"
+        ])
     }
     func testDuplicateSavePreservesExistingFile() throws {
         let folder = try directory()
