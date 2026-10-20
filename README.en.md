@@ -103,7 +103,7 @@ Adjust quality and file size with these three settings:
 | Setting | Options | Default |
 | --- | --- | --- |
 | Quality | High / Medium / Low | High |
-| Max Frame Rate | 30 / 25 / 20 / 15 fps | 20 fps |
+| Max FPS | 30 / 25 / 20 / 15 fps | 20 fps |
 | Output Size | 100% / 75% / 50% | 100% |
 
 **To make a smaller file, lower one or more of these settings.**
@@ -117,7 +117,7 @@ GIF settings are not used when MP4 is selected.
 
 ### How the settings work
 
-**Max Frame Rate** limits the number of frames while preserving their original timing. It does not convert the video to a fixed frame rate.
+**Max FPS** (maximum frame rate) limits the number of frames while preserving their original timing. It does not convert the video to a fixed frame rate.
 
 - A 30 fps video with a 20 fps limit is reduced to approximately 20 fps.
 - A 15 fps video with a 20 fps limit keeps its frame count; no frames are added.

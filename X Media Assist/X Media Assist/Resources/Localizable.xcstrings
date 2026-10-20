@@ -330,13 +330,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Max Frame Rate"
+            "value": "Max FPS"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最大フレームレート"
+            "value": "最大fps"
           }
         }
       }

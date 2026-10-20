@@ -251,12 +251,28 @@ li span {
 	font-size: 12.5px
 }
 
+/* A label shares its line with its options (app window and popup). */
 .row {
-	padding: 5px 0 0
+	display: flex;
+	align-items: center;
+	gap: 10px;
 }
 
 .row+.row {
-	margin-top: 7px
+	margin-top: 8px
+}
+
+.row .label {
+	flex: none;
+	/* A longer label (e.g. "Save Format") widens only its own row. */
+	min-width: 6.5em;
+	white-space: nowrap;
+	margin: 0;
+}
+
+.row .seg {
+	flex: 1;
+	min-width: 0;
 }
 
 .label {
@@ -457,16 +473,13 @@ body.popup {
 	margin-top: 12px
 }
 
-/* Compact popup: labels share a line with their options, tighter spacing. */
+/* Compact popup: tighter spacing and smaller labels. */
 .popup .field {
 	margin-top: 10px;
 }
 
 .popup .row {
-	display: flex;
-	align-items: center;
 	gap: 8px;
-	padding: 0;
 }
 
 .popup .row + .row {
@@ -474,17 +487,7 @@ body.popup {
 }
 
 .popup .row .label {
-	flex: none;
-	/* A longer label (e.g. "Save Format") widens only its own row. */
-	min-width: 6.5em;
-	white-space: nowrap;
-	margin: 0;
 	font-size: 12px;
-}
-
-.popup .row .seg {
-	flex: 1;
-	min-width: 0;
 }
 
 .popup .seg {
