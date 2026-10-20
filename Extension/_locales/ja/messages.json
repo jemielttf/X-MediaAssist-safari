@@ -30,7 +30,7 @@
     "message": "低"
   },
   "max_frame_rate": {
-    "message": "最大フレームレート"
+    "message": "最大fps"
   },
   "output_size": {
     "message": "出力サイズ"

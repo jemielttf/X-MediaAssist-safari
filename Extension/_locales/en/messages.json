@@ -30,7 +30,7 @@
     "message": "Low"
   },
   "max_frame_rate": {
-    "message": "Max Frame Rate"
+    "message": "Max FPS"
   },
   "output_size": {
     "message": "Output Size"

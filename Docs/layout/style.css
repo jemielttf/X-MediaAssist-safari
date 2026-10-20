@@ -383,22 +383,24 @@ body.popup {
 
 .popup .app {
 	max-width: none;
-	padding: 20px 18px 22px;
+	padding: 14px 14px 16px;
 }
 
 .popup h1 {
-	font-size: 20px
+	font-size: 15px
 }
 
 .popup .card {
 	box-shadow: none;
 	border: 1px solid var(--line);
-	padding: 16px;
+	border-radius: 14px;
+	padding: 10px 12px 12px;
 	margin-top: 10px
 }
 
 .popup .btn {
-	margin-top: 12px
+	margin-top: 10px;
+	padding: 11px
 }
 
 .field {
@@ -411,14 +413,14 @@ body.popup {
 
 .input {
 	width: 100%;
-	height: 34px;
+	height: 38px;
 	padding: 0 14px;
 	border: 1px solid var(--line);
 	border-radius: 999px;
 	background: var(--surface);
 	color: var(--ink);
 	font: inherit;
-	font-size: 13px;
+	font-size: 15px;
 	transition: border-color .15s, box-shadow .15s
 }
 
@@ -453,6 +455,72 @@ body.popup {
 
 .popup .link {
 	margin-top: 12px
+}
+
+/* Compact popup: labels share a line with their options, tighter spacing. */
+.popup .field {
+	margin-top: 10px;
+}
+
+.popup .row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 0;
+}
+
+.popup .row + .row {
+	margin-top: 6px;
+}
+
+.popup .row .label {
+	flex: none;
+	/* A longer label (e.g. "Save Format") widens only its own row. */
+	min-width: 6.5em;
+	white-space: nowrap;
+	margin: 0;
+	font-size: 12px;
+}
+
+.popup .row .seg {
+	flex: 1;
+	min-width: 0;
+}
+
+.popup .seg {
+	padding: 3px;
+}
+
+.popup .seg span {
+	padding: 3px 0;
+}
+
+.popup .head {
+	margin-bottom: 6px;
+}
+
+.popup h2 {
+	font-size: 12px;
+}
+
+.popup #status {
+	margin: 8px 2px 0;
+}
+
+.popup .btn-sub {
+	margin-top: 8px;
+	padding: 9px;
+}
+
+/* Hidden on screen, still read by assistive technology. */
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
 }
 
 /* Live app states and bundled resources. */
