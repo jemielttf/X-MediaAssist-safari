@@ -147,3 +147,30 @@ test("popup shows progress while saving and reveals only saved files in Finder",
   assert.equal(ui.elements.status.textContent, `${result}\n見つかりません`);
   assert.equal(ui.elements.reveal.disabled, false);
 });
+
+test("popup re-enables the Finder button and shows an error when the reveal reply is lost", async () => {
+  const messages = [];
+  const ui = popup(async message => {
+    messages.push(message);
+    if (message.type === "getGIFOptions") return { ok: true, gifOptions: { quality: 95, maximumFrameRate: 20, scale: 1 } };
+    if (message.type === "checkConnection") return { ok: true, instance: "background" };
+    if (message.type === "revealFiles") return new Promise(() => {});
+    return { ok: true, saved: ["example-123-1.gif"] };
+  });
+  await settle();
+  await ui.submit();
+  assert.equal(ui.elements.reveal.hidden, false);
+  const result = ui.elements.status.textContent;
+  const revealing = ui.elements.reveal.listeners.click();
+  await settle();
+  assert.equal(ui.elements.reveal.disabled, true);
+  assert.equal(JSON.stringify(messages.at(-1)), JSON.stringify({ type: "revealFiles", filenames: ["example-123-1.gif"] }));
+  const entry = [...ui.timers.entries()].find(([, timer]) => timer.milliseconds === 20000);
+  assert.ok(entry, "a pending reveal request must have a 20-second deadline");
+  ui.timers.delete(entry[0]);
+  entry[1].callback();
+  await revealing;
+  assert.equal(ui.elements.reveal.disabled, false);
+  assert.equal(ui.elements.status.textContent, `${result}\nFinderで表示できませんでした。`);
+  assert.equal(ui.timers.size, 0);
+});

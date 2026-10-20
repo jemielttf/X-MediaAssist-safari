@@ -123,6 +123,9 @@
 
   // --- Messaging helpers ---------------------------------------------------
 
+  // Longer than the background's 15-second native-call limit so its ordinary error response arrives first.
+  const REVEAL_TIMEOUT_MS = 20000;
+
   // A rejected/timed-out message does not cancel native work. Never retry automatically.
   async function withTimeout(operation, milliseconds, message) {
     let timer;
@@ -300,7 +303,7 @@
   }
 
   globalThis.XMediaCore = Object.freeze({
-    t, NATIVE_APP, GIF_DEFAULTS, validateGIFOptions, isPostId, parsePostURL, isXPage, isMP4URL,
+    t, NATIVE_APP, GIF_DEFAULTS, REVEAL_TIMEOUT_MS, validateGIFOptions, isPostId, parsePostURL, isXPage, isMP4URL,
     isSavedFilename, syndicationURL, extractMedia, withTimeout, pingNative, requestDownload, downloadPost,
     nativeError, progressMessage, resultMessage, notificationContent
   });

@@ -90,7 +90,9 @@ reveal.addEventListener("click", async () => {
   if (reveal.disabled) return;
   reveal.disabled = true;
   try {
-    const reply = await browser.runtime.sendMessage({ type: "revealFiles", filenames: saved });
+    const reply = await XMediaCore.withTimeout(
+      () => browser.runtime.sendMessage({ type: "revealFiles", filenames: saved }),
+      XMediaCore.REVEAL_TIMEOUT_MS, t("reveal_failed"));
     status.textContent = reply?.ok ? resultText : `${resultText}\n${reply?.error || t("reveal_failed")}`;
   } catch {
     status.textContent = `${resultText}\n${t("reveal_failed")}`;

@@ -97,7 +97,9 @@
         if (!event.isTrusted || reveal.disabled) return;
         reveal.disabled = true;
         try {
-          const reply = await sendMessage({ type: "revealFiles", filenames: saved });
+          const reply = await core.withTimeout(
+            () => sendMessage({ type: "revealFiles", filenames: saved }),
+            core.REVEAL_TIMEOUT_MS, t("reveal_failed"));
           status.textContent = reply?.ok ? resultText : `${resultText}\n${reply?.error || t("reveal_failed")}`;
         } catch {
           status.textContent = `${resultText}\n${t("reveal_failed")}`;
