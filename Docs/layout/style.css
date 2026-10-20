@@ -423,7 +423,8 @@ body.popup {
 	margin-top: 14px
 }
 
-.field .label {
+/* Only a label stacked above its control; a .row label shares the line. */
+.field:not(.row) .label {
 	margin-bottom: 8px
 }
 
