@@ -3,8 +3,8 @@
 // Edit that file instead of choosing a Team in Signing & Capabilities,
 // which writes the Team ID back into project.pbxproj.
 
-MARKETING_VERSION = 0.3.6
-CURRENT_PROJECT_VERSION = 27
+MARKETING_VERSION = 0.3.7
+CURRENT_PROJECT_VERSION = 31
 
 DEVELOPMENT_TEAM =
 

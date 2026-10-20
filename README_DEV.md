@@ -31,7 +31,7 @@ cp "X Media Assist/Config/Signing.local.xcconfig.example" "X Media Assist/Config
 
 共有の `Signing.xcconfig` がこのファイルを任意読み込みし、本体・ExtensionのDebug/Releaseへ同じTeam IDを適用します。`Signing.local.xcconfig` はGit管理対象外です。ファイルがない場合はTeam IDが空になるため、署名付きビルドにはローカル設定またはビルド時の `DEVELOPMENT_TEAM` 指定が必要です。Team IDの変更はこのファイルで行ってください。XcodeのSigning & CapabilitiesでTeamを選び直すと、`project.pbxproj` に値が書き戻されます。
 
-バージョン番号（`MARKETING_VERSION`）とbuild番号（`CURRENT_PROJECT_VERSION`）は共有の `Signing.xcconfig` で管理し、本体・ExtensionのDebug/Releaseへ共通で適用します。`Signing.local.xcconfig` にはTeam IDだけを記述してください。バージョン番号を変更するときは、`Extension/manifest.json` の `version` も同じ値へ更新します。
+バージョン番号（`MARKETING_VERSION`）とbuild番号（`CURRENT_PROJECT_VERSION`）は共有の `Signing.xcconfig` で管理し、本体・ExtensionのDebug/Releaseへ共通で適用します。`Signing.local.xcconfig` にはTeam IDだけを記述してください。Extensionの `Generate manifest` ビルドフェーズが、`Extension/manifest.json.in` の `@MARKETING_VERSION@` を解決済みの `MARKETING_VERSION` に置き換え、バンドル内の `manifest.json` を生成します。バージョン番号の変更は `Signing.xcconfig` だけで行えます。テンプレートはビルドで書き換えず、生成したmanifestはGit管理しません。
 
 gifskiは固定コミットを参照するGit submoduleです。新規取得時は `git clone --recurse-submodules https://github.com/jemielttf/X-MediaAssist-safari.git` を使用するか、既存のcloneで以下の初期化コマンドを実行してください。
 

@@ -44,7 +44,6 @@
 		BFF2F3073061180600D8D517 /* core.js in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F2FF3061180600D8D517 /* core.js */; };
 		BFF2F3083061180600D8D517 /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3003061180600D8D517 /* background.js */; };
 		BFF2F3093061180600D8D517 /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3013061180600D8D517 /* popup.html */; };
-		BFF2F30A3061180600D8D517 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3023061180600D8D517 /* manifest.json */; };
 		BFF2F30B3061180600D8D517 /* popup.css in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3033061180600D8D517 /* popup.css */; };
 		BFF2F30C3061180600D8D517 /* content.js in Resources */ = {isa = PBXBuildFile; fileRef = BFF2F3043061180600D8D517 /* content.js */; };
 /* End PBXBuildFile section */
@@ -111,7 +110,7 @@
 		BFF2F2FF3061180600D8D517 /* core.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = core.js; path = ../../Extension/core.js; sourceTree = "<group>"; };
 		BFF2F3003061180600D8D517 /* background.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = background.js; path = ../../Extension/background.js; sourceTree = "<group>"; };
 		BFF2F3013061180600D8D517 /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = popup.html; path = ../../Extension/popup.html; sourceTree = "<group>"; };
-		BFF2F3023061180600D8D517 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../Extension/manifest.json; sourceTree = "<group>"; };
+		BFF2F3023061180600D8D517 /* manifest.json.in */ = {isa = PBXFileReference; lastKnownFileType = text; name = manifest.json.in; path = ../../Extension/manifest.json.in; sourceTree = "<group>"; };
 		BFF2F3033061180600D8D517 /* popup.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; name = popup.css; path = ../../Extension/popup.css; sourceTree = "<group>"; };
 		BFF2F3043061180600D8D517 /* content.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = content.js; path = ../../Extension/content.js; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -227,7 +226,7 @@
 				A50000000000000000000008 /* _locales */,
 				BFF2F3003061180600D8D517 /* background.js */,
 				BFF2F3013061180600D8D517 /* popup.html */,
-				BFF2F3023061180600D8D517 /* manifest.json */,
+				BFF2F3023061180600D8D517 /* manifest.json.in */,
 				BFF2F3033061180600D8D517 /* popup.css */,
 				BFF2F3043061180600D8D517 /* content.js */,
 			);
@@ -265,6 +264,7 @@
 				BFF2F2E73061180600D8D517 /* Sources */,
 				BFF2F2E83061180600D8D517 /* Frameworks */,
 				BFF2F2E93061180600D8D517 /* Resources */,
+				A70000000000000000000001 /* Generate manifest */,
 			);
 			buildRules = (
 			);
@@ -348,13 +348,26 @@
 				BF595481306195A2005860FA /* X-Media-Assist.svg in Resources */,
 				BF595482306195A2005860FA /* X-Media-Assist_toolbar-icon.svg in Resources */,
 				BFF2F3053061180600D8D517 /* popup.js in Resources */,
-				BFF2F30A3061180600D8D517 /* manifest.json in Resources */,
 				BFF2F3063061180600D8D517 /* content.css in Resources */,
 			);
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		A70000000000000000000001 /* Generate manifest */ = {
+			isa = PBXShellScriptBuildPhase;
+			inputPaths = (
+				"$(SRCROOT)/../Extension/manifest.json.in",
+				"$(SRCROOT)/../script/generate_manifest.sh",
+				"$(SRCROOT)/Config/Signing.xcconfig",
+			);
+			name = "Generate manifest";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/manifest.json",
+			);
+			shellPath = /bin/sh;
+			shellScript = "/bin/sh \"$SCRIPT_INPUT_FILE_1\"\n";
+		};
 		A10000000000000000000007 /* Build gifski */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;

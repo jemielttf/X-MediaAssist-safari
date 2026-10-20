@@ -27,7 +27,7 @@ test("both WebExtension catalogs cover every UI key with matching substitutions"
   for (const path of ["Extension/core.js", "Extension/popup.js", "Extension/content.js", "Extension/background.js", "Extension/popup.html"]) {
     for (const match of (await read(path)).matchAll(/(?:\bt\("|data-i18n=")([a-z0-9_]+)/g)) assert.ok(messages.en[match[1]], `${path}: ${match[1]}`);
   }
-  const manifest = JSON.parse(await read("Extension/manifest.json"));
+  const manifest = JSON.parse(await read("Extension/manifest.json.in"));
   assert.equal(manifest.default_locale, "en");
   assert.equal(manifest.description, "__MSG_extension_description__");
 });
